@@ -1,580 +1,292 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
-import albumPhoto1 from './assets/album-photo-1.svg'
-import albumPhoto2 from './assets/album-photo-2.svg'
-import albumPhoto3 from './assets/album-photo-3.svg'
-import albumPhoto4 from './assets/album-photo-4.svg'
-import albumPhoto5 from './assets/album-photo-5.svg'
+import addHomeImage from '@shared-assets/addhome.png'
+import anomalyImage from '@shared-assets/check.png'
+import clockImage from '@shared-assets/clock.png'
+import newHomeImage from '@shared-assets/homeplus.png'
+import laundryBannerImage from '@shared-assets/home_laundry.png'
+import home3dImage from '@shared-assets/image2.png'
+import playBannerImage from '@shared-assets/image4.png'
+import floatingInnerImage from '@shared-assets/image5.png'
+import lifeAgentImage from '@shared-assets/lifeagent.png'
+import plusImage from '@shared-assets/plus.png'
+import bellIcon from '@shared-assets/icons/a_button.svg'
+import plusButtonIcon from '@shared-assets/icons/button_plus.svg'
+import careIcon from '@shared-assets/icons/care.svg'
+import deviceIcon from '@shared-assets/icons/device.svg'
+import homeIcon from '@shared-assets/icons/home.svg'
+import homeMoreIcon from '@shared-assets/icons/home_more.svg'
+import menuIcon from '@shared-assets/icons/menu.svg'
+import moreButtonIcon from '@shared-assets/icons/more_button.svg'
+import smartGoIcon from '@shared-assets/icons/smart_go.svg'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1'
-const SESSION_STORAGE_KEY = 'thinq-parent-auth-session'
-
-const albumCards = [
-  { id: 1, image: albumPhoto1, alt: 'Baby album card 1' },
-  { id: 2, image: albumPhoto2, alt: 'Baby album card 2' },
-  { id: 3, image: albumPhoto3, alt: 'Baby album card 3' },
-  { id: 4, image: albumPhoto4, alt: 'Baby album card 4' },
-  { id: 5, image: albumPhoto5, alt: 'Baby album card 5' },
-]
-
-const diaryCards = [
-  {
-    title: 'Daily diary',
-    body: 'Capture the moments that mattered today and keep the family timeline in one place.',
-    action: 'Write now',
-    type: 'primary',
-  },
-  {
-    title: 'AI summary',
-    body: 'Track feeding, naps, and mood notes. The summary block can be connected to the backend next.',
-    action: 'View log',
-    type: 'secondary',
-  },
-]
+const HOME_NAME = '사용자 홈'
 
 const navItems = [
-  { key: 'home', label: 'Home', icon: 'home' },
-  { key: 'baby', label: 'Baby', icon: 'baby' },
-  { key: 'timer', label: 'Timer', icon: 'timer' },
-  { key: 'chat', label: 'Chat', icon: 'chat' },
-  { key: 'pin', label: 'Community', icon: 'pin' },
+  { key: 'home', label: '홈', icon: homeIcon },
+  { key: 'device', label: '디바이스', icon: deviceIcon },
+  { key: 'care', label: '케어', icon: careIcon },
+  { key: 'menu', label: '메뉴', icon: menuIcon },
 ]
 
-function readStoredSession() {
-  try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+const settingCards = [
+  {
+    title: '새로운 홈 만들기',
+    description: '새로운 홈을 추가해보세요.',
+    image: newHomeImage,
+    className: 'square',
+  },
+  {
+    title: '다른 홈 초대받기',
+    description: 'QR 스캔을 통해 새로운 홈\n멤버가 되어보세요.',
+    image: addHomeImage,
+    className: 'square',
+  },
+  {
+    title: '라이프 에이전트',
+    description: '생활 속에서 가전의 도움을 받아보세요.',
+    image: lifeAgentImage,
+    className: 'wide',
+  },
+]
+
+function AssetIcon({ src, alt = '', className = '', size = 20 }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={`asset-icon ${className}`.trim()}
+      style={{ width: size, height: size }}
+    />
+  )
 }
 
-function persistSession(sessionData) {
-  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData))
+function HeaderAction({ icon, label, compact = false }) {
+  return (
+    <button type="button" className="header-action" aria-label={label}>
+      <AssetIcon src={icon} size={compact ? 14 : 22} />
+    </button>
+  )
 }
 
-function clearStoredSession() {
-  sessionStorage.removeItem(SESSION_STORAGE_KEY)
+function HomeSelectionSheet({ onClose, onOpenSettings }) {
+  return (
+    <div className="sheet-overlay" onClick={onClose} role="presentation">
+      <section
+        className="home-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="홈 선택"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <span className="sheet-handle" aria-hidden="true" />
+        <h2>홈 선택</h2>
+        <button type="button" className="sheet-home-option">
+          <span className="sheet-check" aria-hidden="true">
+            ✓
+          </span>
+          <span>{HOME_NAME}</span>
+        </button>
+        <button type="button" className="sheet-settings-link" onClick={onOpenSettings}>
+          홈 설정
+          <span aria-hidden="true">›</span>
+        </button>
+      </section>
+    </div>
+  )
 }
 
-function normalizeSession(response) {
-  return {
-    sessionToken: response.session_token,
-    user: {
-      userId: response.user.user_id,
-      loginId: response.user.login_id,
-      name: response.user.name,
-      createdAt: response.user.created_at,
-    },
-  }
+function HomeScreen({ activeTab, onChangeTab, onOpenSheet, isHomeSheetOpen }) {
+  return (
+    <>
+      <header className="home-header">
+        <button type="button" className="home-selector" onClick={onOpenSheet} aria-label="홈 선택">
+          <strong>{HOME_NAME}</strong>
+          <AssetIcon src={homeMoreIcon} size={16} />
+        </button>
+
+        <div className="header-actions">
+          <HeaderAction icon={plusButtonIcon} label="추가" />
+          <HeaderAction icon={bellIcon} label="알림" />
+          <HeaderAction icon={moreButtonIcon} label="더보기" compact />
+        </div>
+      </header>
+
+      <div className="home-content">
+        <section className="hero-card">
+          <img src={anomalyImage} alt="" className="hero-card-icon" />
+          <div className="hero-copy">
+            <p>제품에 이상 징후가 발견되면 전문 상담사가</p>
+            <p>알려드려요.</p>
+            <button type="button" className="primary-pill">
+              지금 알아보기
+            </button>
+          </div>
+        </section>
+
+        <section className="hero-card second">
+          <img src={home3dImage} alt="" className="hero-card-icon map" />
+          <div className="hero-copy">
+            <p>3D 홈뷰로 우리집과 제품의 실시간 상태를</p>
+            <p>한눈에 확인해보세요.</p>
+            <button type="button" className="primary-pill">
+              3D 홈뷰 만들기
+            </button>
+          </div>
+        </section>
+
+        <section className="section-block">
+          <h2>즐겨 찾는 제품</h2>
+          <div className="favorite-panel">
+            <p>제품을 추가하고 즐겨 찾는 제품으로 배치하면 홈 화면에서 바로</p>
+            <p>사용할 수 있어요.</p>
+            <button type="button" className="favorite-button">
+              <img src={plusImage} alt="" />
+              <span>제품 추가</span>
+            </button>
+          </div>
+        </section>
+
+        <section className="section-block">
+          <img src={playBannerImage} alt="ThinQ PLAY 배너" className="play-banner" />
+        </section>
+
+        <section className="section-block">
+          <div className="section-row">
+            <h2>스마트 루틴</h2>
+            <AssetIcon src={smartGoIcon} size={18} />
+          </div>
+
+          <button type="button" className="routine-button">
+            <img src={clockImage} alt="" />
+            <span>루틴 알아보기</span>
+          </button>
+        </section>
+
+        <section className="section-block thinq-section">
+          <h2>ThinQ 활용하기</h2>
+          <img src={laundryBannerImage} alt="ThinQ 활용 배너" className="laundry-banner" />
+        </section>
+      </div>
+
+      {!isHomeSheetOpen ? (
+        <button type="button" className="floating-button" aria-label="ThinQ 도우미">
+          <img src={floatingInnerImage} alt="" />
+        </button>
+      ) : null}
+
+      <nav className="bottom-nav" aria-label="주요 메뉴">
+        {navItems.map((item, index) => (
+          <button
+            key={item.key}
+            type="button"
+            className={`bottom-nav-item ${activeTab === index ? 'active' : ''}`}
+            aria-current={activeTab === index ? 'page' : undefined}
+            onClick={() => onChangeTab(index)}
+          >
+            <span className="bottom-nav-icon-frame" aria-hidden="true">
+              <AssetIcon
+                src={item.icon}
+                size={34}
+                className={`bottom-nav-icon ${activeTab === index ? 'active-nav-icon' : ''}`}
+              />
+            </span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+    </>
+  )
 }
 
-function normalizeUser(response) {
-  return {
-    userId: response.user_id,
-    loginId: response.login_id,
-    name: response.name,
-    createdAt: response.created_at,
-  }
+function SettingCard({ title, description, image, className }) {
+  return (
+    <button type="button" className={`setting-card ${className}`}>
+      <div className="setting-card-copy">
+        <strong>{title}</strong>
+        <p>{description}</p>
+      </div>
+      <img src={image} alt="" className={`setting-card-image ${className}`} />
+    </button>
+  )
 }
 
-async function requestJson(path, options = {}) {
-  const headers = new Headers(options.headers ?? {})
+function HomeSettingsScreen({ onBack }) {
+  return (
+    <>
+      <header className="settings-header">
+        <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
+          <span />
+        </button>
+        <h1>홈 설정</h1>
+        <button type="button" className="settings-plus-button" aria-label="홈 추가">
+          +
+        </button>
+      </header>
 
-  if (options.sessionToken) {
-    headers.set('Authorization', `Bearer ${options.sessionToken}`)
-  }
+      <div className="settings-content">
+        <button type="button" className="current-home-card">
+          <span className="current-home-preview" aria-hidden="true" />
+          <strong>{HOME_NAME}</strong>
+          <span className="current-home-state">현재 홈</span>
+          <span className="current-home-arrow" aria-hidden="true" />
+        </button>
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body,
-  })
-
-  if (response.status === 204) {
-    return null
-  }
-
-  const responseText = await response.text()
-  const data = responseText ? JSON.parse(responseText) : null
-
-  if (!response.ok) {
-    throw new Error(data?.detail ?? 'Request failed.')
-  }
-
-  return data
+        <section className="settings-section">
+          <h2>홈 추가하기</h2>
+          <div className="settings-grid">
+            {settingCards.slice(0, 2).map((card) => (
+              <SettingCard
+                key={card.title}
+                title={card.title}
+                description={card.description}
+                image={card.image}
+                className={card.className}
+              />
+            ))}
+          </div>
+          <SettingCard
+            title={settingCards[2].title}
+            description={settingCards[2].description}
+            image={settingCards[2].image}
+            className={settingCards[2].className}
+          />
+        </section>
+      </div>
+    </>
+  )
 }
 
 function App() {
-  const albumRowRef = useRef(null)
-  const [initialSessionToken] = useState(() => readStoredSession()?.sessionToken ?? null)
-  const [albumProgress, setAlbumProgress] = useState({ width: 42, left: 0 })
-  const [activeNav, setActiveNav] = useState('home')
-  const [session, setSession] = useState(() => readStoredSession())
-  const [isBootstrapping, setIsBootstrapping] = useState(Boolean(initialSessionToken))
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [authMode, setAuthMode] = useState('login')
-  const [authError, setAuthError] = useState('')
-  const [authMessage, setAuthMessage] = useState(
-    initialSessionToken ? '' : 'Home opens after login or sign up.',
-  )
-  const [formValues, setFormValues] = useState({
-    loginId: '',
-    password: '',
-    name: '',
-  })
+  const [activeTab, setActiveTab] = useState(0)
+  const [currentScreen, setCurrentScreen] = useState('home')
+  const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
 
-  useEffect(() => {
-    const syncAlbumProgress = () => {
-      const albumRow = albumRowRef.current
-
-      if (!albumRow) {
-        return
-      }
-
-      const maxScrollLeft = albumRow.scrollWidth - albumRow.clientWidth
-
-      if (maxScrollLeft <= 0) {
-        setAlbumProgress({ width: 100, left: 0 })
-        return
-      }
-
-      const visibleRatio = albumRow.clientWidth / albumRow.scrollWidth
-      const thumbWidth = Math.max(visibleRatio * 100, 18)
-      const maxLeft = 100 - thumbWidth
-      const thumbLeft = (albumRow.scrollLeft / maxScrollLeft) * maxLeft
-
-      setAlbumProgress({ width: thumbWidth, left: thumbLeft })
-    }
-
-    const albumRow = albumRowRef.current
-
-    syncAlbumProgress()
-
-    if (!albumRow) {
-      return undefined
-    }
-
-    albumRow.addEventListener('scroll', syncAlbumProgress, { passive: true })
-    window.addEventListener('resize', syncAlbumProgress)
-
-    return () => {
-      albumRow.removeEventListener('scroll', syncAlbumProgress)
-      window.removeEventListener('resize', syncAlbumProgress)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!initialSessionToken) {
-      return undefined
-    }
-
-    let ignore = false
-
-    const restoreSession = async () => {
-      setIsBootstrapping(true)
-
-      try {
-        const user = await requestJson('/auth/me', {
-          sessionToken: initialSessionToken,
-        })
-
-        if (ignore) {
-          return
-        }
-
-        const restoredSession = {
-          sessionToken: initialSessionToken,
-          user: normalizeUser(user),
-        }
-
-        persistSession(restoredSession)
-        setSession(restoredSession)
-        setAuthError('')
-      } catch (error) {
-        if (ignore) {
-          return
-        }
-
-        clearStoredSession()
-        setSession(null)
-        setAuthError(error.message)
-        setAuthMessage('Saved session expired. Please log in again.')
-      } finally {
-        if (!ignore) {
-          setIsBootstrapping(false)
-        }
-      }
-    }
-
-    restoreSession()
-
-    return () => {
-      ignore = true
-    }
-  }, [initialSessionToken])
-
-  const currentNav = navItems.find((item) => item.key === activeNav) ?? navItems[0]
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target
-
-    setFormValues((current) => ({
-      ...current,
-      [name]: value,
-    }))
+  const openSettings = () => {
+    setIsHomeSheetOpen(false)
+    setCurrentScreen('settings')
   }
-
-  const handleHomeClick = () => {
-    setActiveNav('home')
-
-    if (!session?.sessionToken) {
-      setAuthMessage('Log in or sign up to enter Home.')
-      setAuthError('')
-    }
-  }
-
-  const handleNavClick = (key) => {
-    if (key === 'home') {
-      handleHomeClick()
-      return
-    }
-
-    setActiveNav(key)
-    setAuthError('')
-    setAuthMessage('')
-  }
-
-  const handleAuthSubmit = async (event) => {
-    event.preventDefault()
-    setIsSubmitting(true)
-    setAuthError('')
-    setAuthMessage('')
-
-    try {
-      const payload =
-        authMode === 'signup'
-          ? {
-              login_id: formValues.loginId.trim(),
-              password: formValues.password,
-              name: formValues.name.trim(),
-            }
-          : {
-              login_id: formValues.loginId.trim(),
-              password: formValues.password,
-            }
-
-      const response = await requestJson(authMode === 'signup' ? '/auth/signup' : '/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      const nextSession = normalizeSession(response)
-
-      persistSession(nextSession)
-      setSession(nextSession)
-      setActiveNav('home')
-      setFormValues({
-        loginId: '',
-        password: '',
-        name: '',
-      })
-      setAuthMessage(
-        authMode === 'signup'
-          ? `${nextSession.user.name}, your account is ready.`
-          : `Welcome back, ${nextSession.user.name}.`,
-      )
-    } catch (error) {
-      setAuthError(error.message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    const currentSessionToken = session?.sessionToken
-
-    if (currentSessionToken) {
-      try {
-        await requestJson('/auth/logout', {
-          method: 'POST',
-          sessionToken: currentSessionToken,
-        })
-      } catch {
-        // Clear the browser session even when the backend token is already gone.
-      }
-    }
-
-    clearStoredSession()
-    setSession(null)
-    setActiveNav('home')
-    setAuthMode('login')
-    setAuthError('')
-    setAuthMessage('You have been logged out. Log in again to open Home.')
-  }
-
-  const renderAuthPanel = () => (
-    <section className="auth-panel">
-      <article className="auth-card">
-        <p className="eyebrow">Home access</p>
-        <h2>Login or create an account</h2>
-        <p className="auth-copy">
-          The existing home layout stays in place. When there is no session, Home switches to the
-          authentication view first.
-        </p>
-
-        <div className="auth-switcher" role="tablist" aria-label="Authentication mode">
-          <button
-            type="button"
-            className={`auth-tab ${authMode === 'login' ? 'active' : ''}`}
-            onClick={() => setAuthMode('login')}
-          >
-            Login
-          </button>
-          <button
-            type="button"
-            className={`auth-tab ${authMode === 'signup' ? 'active' : ''}`}
-            onClick={() => setAuthMode('signup')}
-          >
-            Sign up
-          </button>
-        </div>
-
-        <form className="auth-form" onSubmit={handleAuthSubmit}>
-          <label className="auth-field">
-            <span>Login ID</span>
-            <input
-              name="loginId"
-              value={formValues.loginId}
-              onChange={handleInputChange}
-              placeholder="at least 4 characters"
-              autoComplete="username"
-              required
-              minLength={4}
-            />
-          </label>
-
-          {authMode === 'signup' ? (
-            <label className="auth-field">
-              <span>Name</span>
-              <input
-                name="name"
-                value={formValues.name}
-                onChange={handleInputChange}
-                placeholder="display name"
-                autoComplete="name"
-                required
-              />
-            </label>
-          ) : null}
-
-          <label className="auth-field">
-            <span>Password</span>
-            <input
-              type="password"
-              name="password"
-              value={formValues.password}
-              onChange={handleInputChange}
-              placeholder="at least 6 characters"
-              autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-              required
-              minLength={6}
-            />
-          </label>
-
-          {authMessage ? <p className="auth-feedback success">{authMessage}</p> : null}
-          {authError ? <p className="auth-feedback error">{authError}</p> : null}
-
-          <button type="submit" className="submit-button" disabled={isSubmitting}>
-            {isSubmitting ? 'Processing...' : authMode === 'signup' ? 'Create account' : 'Login'}
-          </button>
-        </form>
-      </article>
-
-      <article className="auth-side-card">
-        <p className="eyebrow">Session rule</p>
-        <h3>Home button behavior</h3>
-        <p>
-          No session in the browser means Home opens this panel. An active session brings the user
-          back to the original home state immediately.
-        </p>
-      </article>
-    </section>
-  )
-
-  const renderHomeContent = () => {
-    if (isBootstrapping) {
-      return (
-        <section className="loading-card">
-          <p className="eyebrow">Session check</p>
-          <h2>Restoring your home screen</h2>
-          <p>Validating the saved session with the backend.</p>
-        </section>
-      )
-    }
-
-    if (!session?.sessionToken) {
-      return renderAuthPanel()
-    }
-
-    return (
-      <>
-        <section className="dday-card">
-          <div>
-            <p className="dday-label">Signed in as {session.user.name}</p>
-            <strong className="welcome-text">@{session.user.loginId}</strong>
-          </div>
-          <div className="dday-count">
-            <span className="heart" aria-hidden="true" />
-            <strong>Home ready</strong>
-          </div>
-        </section>
-
-        <section className="section-block compact-block">
-          <div className="section-head">
-            <h2>Baby album</h2>
-            <button type="button" className="chevron-button" aria-label="Open album">
-              <span />
-            </button>
-          </div>
-
-          <div ref={albumRowRef} className="album-row" aria-label="Baby album carousel">
-            {albumCards.map((card) => (
-              <article key={card.id} className="album-card">
-                <img src={card.image} alt={card.alt} className="album-image" />
-              </article>
-            ))}
-          </div>
-          <div className="album-progress" aria-hidden="true">
-            <span
-              className="album-progress-thumb"
-              style={{
-                width: `${albumProgress.width}%`,
-                left: `${albumProgress.left}%`,
-              }}
-            />
-          </div>
-        </section>
-
-        <section className="diary-grid">
-          {diaryCards.map((card) => (
-            <article key={card.title} className={`diary-card ${card.type}`}>
-              <div className="diary-header">
-                <h3>{card.title}</h3>
-                {card.type === 'secondary' ? <span className="mini-mark">AI</span> : null}
-              </div>
-              <p>{card.body}</p>
-              <button type="button" className={`action-chip ${card.type}`}>
-                {card.type === 'primary' ? <span className="plus-mark">+</span> : null}
-                {card.action}
-              </button>
-            </article>
-          ))}
-        </section>
-
-        <section className="section-block compact-block mode-section">
-          <div className="section-head">
-            <div>
-              <h2>Sleep mode</h2>
-              <p className="section-copy">
-                Keep the existing quick toggle area and reserve it for the next backend connection.
-              </p>
-            </div>
-            <button type="button" className="chevron-button" aria-label="Open sleep mode">
-              <span />
-            </button>
-          </div>
-
-          <div className="sleep-toggle-row">
-            <span className="toggle-label">Turn on sleep mode</span>
-            <button type="button" className="sleep-toggle" aria-pressed="false">
-              <span />
-            </button>
-          </div>
-        </section>
-
-        <section className="mbti-section">
-          <h2>Parent style quiz</h2>
-          <article className="mbti-card">
-            <p>Keep this card as the bottom summary area of the home layout.</p>
-            <button type="button" className="measure-button">
-              Start quiz
-            </button>
-          </article>
-        </section>
-      </>
-    )
-  }
-
-  const renderSecondaryScreen = () => (
-    <section className="placeholder-card">
-      <p className="eyebrow">{currentNav.label}</p>
-      <h2>{session?.sessionToken ? 'Feature preview' : 'Login required'}</h2>
-      <p>
-        {session?.sessionToken
-          ? 'The rest of the tabs can keep their current placeholders. Press Home to return to the authenticated home screen.'
-          : 'Press Home first. Without a session, the app should move to login or sign up before showing Home.'}
-      </p>
-      {!session?.sessionToken ? (
-        <button type="button" className="submit-button secondary" onClick={handleHomeClick}>
-          Go to Home login
-        </button>
-      ) : null}
-    </section>
-  )
 
   return (
     <main className="app-shell">
-      <section className="phone-frame" aria-label="Mom mode mobile mockup">
-        <header className="status-bar">
-          <span>2:54</span>
-          <span className="status-pill" aria-hidden="true" />
-        </header>
+      <section className={`phone-shell ${currentScreen === 'home' ? 'home-mode' : 'settings-mode'}`}>
+        {currentScreen === 'home' ? (
+          <HomeScreen
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            onOpenSheet={() => setIsHomeSheetOpen(true)}
+            isHomeSheetOpen={isHomeSheetOpen}
+          />
+        ) : (
+          <HomeSettingsScreen onBack={() => setCurrentScreen('home')} />
+        )}
 
-        <div className="screen">
-          <section className="topbar">
-            <button type="button" className="icon-button back-button" aria-label="Go back">
-              <span />
-            </button>
-            <h1>{currentNav.key === 'home' ? 'Mom mode' : currentNav.label}</h1>
-            {session?.sessionToken && currentNav.key === 'home' ? (
-              <button
-                type="button"
-                className="icon-button logout-button"
-                aria-label="Log out"
-                onClick={handleLogout}
-              >
-                Out
-              </button>
-            ) : (
-              <button type="button" className="icon-button menu-button" aria-label="More">
-                <span />
-                <span />
-                <span />
-              </button>
-            )}
-          </section>
-
-          {activeNav === 'home' ? renderHomeContent() : renderSecondaryScreen()}
-        </div>
-
-        <nav className="bottom-nav" aria-label="Primary">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              className={`nav-item ${item.key === activeNav ? 'active' : ''}`}
-              aria-current={item.key === activeNav ? 'page' : undefined}
-              onClick={() => handleNavClick(item.key)}
-            >
-              <span className={`nav-icon ${item.icon}`} aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+        {currentScreen === 'home' && isHomeSheetOpen ? (
+          <HomeSelectionSheet
+            onClose={() => setIsHomeSheetOpen(false)}
+            onOpenSettings={openSettings}
+          />
+        ) : null}
       </section>
     </main>
   )
