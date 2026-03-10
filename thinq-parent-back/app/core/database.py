@@ -1,5 +1,8 @@
+from collections.abc import Generator
+
 import oracledb
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -7,8 +10,8 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-_engine = None
-_session_factory = None
+_engine: Engine | None = None
+_session_factory: sessionmaker[Session] | None = None
 
 
 class Base(DeclarativeBase):
@@ -53,7 +56,7 @@ def _build_database_url() -> URL:
     )
 
 
-def get_engine():
+def get_engine() -> Engine:
     global _engine
 
     if _engine is None:
@@ -62,6 +65,7 @@ def get_engine():
             _build_database_url(),
             echo=settings.oracle_echo_sql,
             pool_pre_ping=True,
+            max_identifier_length=settings.oracle_max_identifier_length,
         )
     return _engine
 
@@ -78,3 +82,11 @@ def get_session_factory() -> sessionmaker[Session]:
             class_=Session,
         )
     return _session_factory
+
+
+def get_db_session() -> Generator[Session, None, None]:
+    session = get_session_factory()()
+    try:
+        yield session
+    finally:
+        session.close()

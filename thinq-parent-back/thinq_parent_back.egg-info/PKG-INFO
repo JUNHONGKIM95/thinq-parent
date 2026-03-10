@@ -40,6 +40,8 @@ If your Oracle 11g instance uses a SID instead of a service name, set `ORACLE_SI
 
 `python-oracledb` connects to Oracle 11g through thick mode, so set `ORACLE_CLIENT_LIB_DIR` when Oracle Instant Client is not already available on the system `PATH`.
 
+App settings use the `APP_` prefix to avoid collisions with machine-wide environment variables.
+
 ## Test
 
 ```powershell
