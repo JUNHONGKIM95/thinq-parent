@@ -31,6 +31,9 @@ import homeMoreIcon from '@shared-assets/icons/home_more.svg'
 import menuIcon from '@shared-assets/assets/icons/menu.svg'
 import moreButtonIcon from '@shared-assets/icons/more_button.svg'
 import smartGoIcon from '@shared-assets/icons/smart_go.svg'
+import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
+import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
+import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
 
 const HOME_NAME = '사용자 홈'
 
@@ -378,7 +381,7 @@ function ChatExpertScreen({ onBack }) {
   )
 }
 
-function ParentModeScreen({ onBack, onOpenChat }) {
+function ParentModeScreen({ onBack, onOpenChat, onOpenMombti }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
 
   useEffect(() => {
@@ -518,7 +521,7 @@ function ParentModeScreen({ onBack, onOpenChat }) {
           </span>
           <span className="parent-mode-nav-label">커뮤니티</span>
         </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="MY">
+        <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMombti}>
           <span className="parent-mode-nav-icon-frame" aria-hidden="true">
             <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
           </span>
@@ -538,6 +541,7 @@ function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [currentScreen, setCurrentScreen] = useState('home')
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
+  const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
 
   const openSettings = () => {
     setIsHomeSheetOpen(false)
@@ -556,11 +560,17 @@ function App() {
     setCurrentScreen('parent-mode-chat')
   }
 
+  const openMombti = () => {
+    setCurrentScreen('mombti')
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
       : currentScreen === 'parent-mode' || currentScreen === 'parent-mode-chat'
         ? 'parent-mode'
+        : currentScreen === 'mombti'
+          ? 'mombti-mode'
         : 'settings-mode'
 
   return (
@@ -590,11 +600,16 @@ function App() {
           <ParentModeScreen
             onBack={() => setCurrentScreen('life-agent')}
             onOpenChat={openParentModeChat}
+            onOpenMombti={openMombti}
           />
         )}
 
         {currentScreen === 'parent-mode-chat' && (
           <ChatExpertScreen onBack={() => setCurrentScreen('parent-mode')} />
+        )}
+
+        {currentScreen === 'mombti' && (
+          <MombtiDetailScreen data={mombti} onBack={() => setCurrentScreen('parent-mode')} />
         )}
 
         {currentScreen === 'home' && isHomeSheetOpen ? (
