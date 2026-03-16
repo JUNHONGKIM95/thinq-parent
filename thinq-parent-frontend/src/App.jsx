@@ -38,6 +38,7 @@ import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
 import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
+import MombtiTestScreen from './features/mombti/MombtiTestScreen'
 import MyScreen from './features/my/MyScreen'
 import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
 
@@ -582,6 +583,10 @@ function App() {
     setCurrentScreen('mombti')
   }
 
+  const openMombtiTest = () => {
+    setCurrentScreen('mombti-test')
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
@@ -589,7 +594,7 @@ function App() {
         ? 'parent-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
-        : currentScreen === 'mombti' || currentScreen === 'mombti-menu'
+        : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
           ? 'mombti-mode'
         : 'settings-mode'
 
@@ -645,7 +650,14 @@ function App() {
           <MombtiMenuScreen
             onBack={() => setCurrentScreen('my')}
             onOpenResult={openMombtiResult}
-            onOpenTest={openMombtiResult}
+            onOpenTest={openMombtiTest}
+          />
+        )}
+
+        {currentScreen === 'mombti-test' && (
+          <MombtiTestScreen
+            onBack={() => setCurrentScreen('mombti-menu')}
+            onComplete={() => setCurrentScreen('mombti')}
           />
         )}
 
