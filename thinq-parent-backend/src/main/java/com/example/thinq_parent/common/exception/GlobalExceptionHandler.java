@@ -20,6 +20,18 @@ public class GlobalExceptionHandler {
 				.body(ApiResponse.error(exception.getMessage()));
 	}
 
+	@ExceptionHandler(DuplicateResourceException.class)
+	public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException exception) {
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(ApiResponse.error(exception.getMessage()));
+	}
+
+	@ExceptionHandler(InvalidRequestException.class)
+	public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(InvalidRequestException exception) {
+		return ResponseEntity.badRequest()
+				.body(ApiResponse.error(exception.getMessage()));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException exception) {
 		String message = exception.getBindingResult()
