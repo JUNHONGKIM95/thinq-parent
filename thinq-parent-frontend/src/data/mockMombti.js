@@ -1,4 +1,4 @@
-import ptieImage from '@shared-assets/srg/PTIE.png'
+import ptieImage from '@shared-assets/srg/PTIE.svg'
 
 export const mockMombtiRow = {
   mbti_id: 1,

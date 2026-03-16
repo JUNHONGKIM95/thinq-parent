@@ -202,11 +202,11 @@ function HomeScreen({ activeTab, onChangeTab, onOpenSheet, isHomeSheetOpen }) {
             <span className="bottom-nav-icon-frame" aria-hidden="true">
               <AssetIcon
                 src={item.icon}
-                size={34}
+                size={24}
                 className={`bottom-nav-icon ${activeTab === index ? 'active-nav-icon' : ''}`}
               />
             </span>
-            <span>{item.label}</span>
+            <span className="bottom-nav-label">{item.label}</span>
           </button>
         ))}
       </nav>
@@ -515,13 +515,13 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMombti }) {
           </span>
           <span className="parent-mode-nav-label">가전육아</span>
         </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티">
+        <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티" onClick={onOpenMombti}>
           <span className="parent-mode-nav-icon-frame" aria-hidden="true">
             <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
           </span>
           <span className="parent-mode-nav-label">커뮤니티</span>
         </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMombti}>
+        <button type="button" className="parent-mode-nav-item" aria-label="MY" >
           <span className="parent-mode-nav-icon-frame" aria-hidden="true">
             <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
           </span>
