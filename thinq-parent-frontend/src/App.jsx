@@ -19,6 +19,9 @@ import parentModeBabyIcon from '@shared-assets/srg/부모모드가전육아_아�
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import chatFloatingIcon from '@shared-assets/srg/chat_floating.svg'
+import sendDuotoneIcon from '@shared-assets/srg/Send_duotone_line.svg'
+import sendMessageBubble from '@shared-assets/srg/send_message.svg'
+import takeMessageBubble from '@shared-assets/srg/take_message.svg'
 import bellIcon from '@shared-assets/icons/a_button.svg'
 import plusButtonIcon from '@shared-assets/icons/button_plus.svg'
 import careIcon from '@shared-assets/assets/icons/care.svg'
@@ -324,7 +327,58 @@ function LifeAgentScreen({ onBack, onOpenParentMode }) {
   )
 }
 
-function ParentModeScreen({ onBack }) {
+function ChatExpertScreen({ onBack }) {
+  const [message, setMessage] = useState('')
+
+  return (
+    <div className="chat-expert-shell">
+      <div className="chat-expert-card" aria-hidden="true" />
+      <span className="chat-expert-status-time" aria-hidden="true">
+        2:54
+      </span>
+      <span className="chat-expert-status-island" aria-hidden="true" />
+
+      <header className="chat-expert-header">
+        <button type="button" className="chat-expert-back" onClick={onBack} aria-label="뒤로가기">
+          <span />
+        </button>
+        <span className="chat-expert-title-bold">챗태피티</span>
+        <span className="chat-expert-title-regular">전문가</span>
+        <button type="button" className="chat-expert-menu" aria-label="메뉴">
+          <span />
+          <span />
+          <span />
+        </button>
+      </header>
+
+      <div className="chat-expert-messages">
+        <div className="chat-expert-bubble chat-expert-bubble-bot">
+          <img src={takeMessageBubble} alt="" className="chat-expert-bubble-shape" aria-hidden="true" />
+          <p>안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.</p>
+        </div>
+        <div className="chat-expert-bubble chat-expert-bubble-user">
+          <img src={sendMessageBubble} alt="" className="chat-expert-bubble-shape" aria-hidden="true" />
+          <p>질문내용</p>
+        </div>
+      </div>
+
+      <div className="chat-expert-input-area">
+        <input
+          type="text"
+          placeholder="메세지를 입력하세요."
+          aria-label="메세지를 입력하세요."
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+        />
+        <button type="button" className="chat-expert-send-btn" aria-label="전송">
+          <img src={sendDuotoneIcon} alt="" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ParentModeScreen({ onBack, onOpenChat }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
 
   useEffect(() => {
@@ -472,7 +526,7 @@ function ParentModeScreen({ onBack }) {
         </button>
       </nav>
 
-      <button type="button" className="parent-mode-fab" aria-label="채팅">
+      <button type="button" className="parent-mode-fab" aria-label="채팅" onClick={onOpenChat}>
         <img src={chatFloatingIcon} alt="" className="parent-mode-fab-icon" aria-hidden="true" />
       </button>
       </div>
@@ -498,10 +552,14 @@ function App() {
     setCurrentScreen('parent-mode')
   }
 
+  const openParentModeChat = () => {
+    setCurrentScreen('parent-mode-chat')
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
-      : currentScreen === 'parent-mode'
+      : currentScreen === 'parent-mode' || currentScreen === 'parent-mode-chat'
         ? 'parent-mode'
         : 'settings-mode'
 
@@ -529,7 +587,14 @@ function App() {
         )}
 
         {currentScreen === 'parent-mode' && (
-          <ParentModeScreen onBack={() => setCurrentScreen('life-agent')} />
+          <ParentModeScreen
+            onBack={() => setCurrentScreen('life-agent')}
+            onOpenChat={openParentModeChat}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-chat' && (
+          <ChatExpertScreen onBack={() => setCurrentScreen('parent-mode')} />
         )}
 
         {currentScreen === 'home' && isHomeSheetOpen ? (

@@ -718,6 +718,8 @@
   border-radius: 11px;
   position: relative;
   box-sizing: border-box;
+  display:flex;
+  align-items: center;
 }
 
 .parent-mode-meet-title {
@@ -731,9 +733,10 @@
 
 .parent-mode-meet-meta {
   position: absolute;
-  top: 12px;
+  top: 50%;
   right: 20px;
   margin: 0;
+  transform: translateY(-50%);
   font-size: 1.25rem;
   font-weight: 300;
   line-height: 23px;
@@ -1166,6 +1169,227 @@
 .parent-mode-fab-icon {
   width: 60px;
   height: 60px;
+  display: block;
+  object-fit: contain;
+}
+
+.chat-expert-shell {
+  position: absolute;
+  inset: 0;
+  background: #f0f1f5;
+  overflow: hidden;
+}
+
+.chat-expert-card {
+  position: absolute;
+  width: calc(355 / 393 * 100%);
+  height: calc(743 / 852 * 100%);
+  left: calc(19 / 393 * 100%);
+  top: calc(90 / 852 * 100%);
+  background: #ffffff;
+  border-radius: 13px;
+}
+
+.chat-expert-status-island {
+  display: none;
+}
+
+.chat-expert-status-time {
+  display: none;
+}
+
+.chat-expert-header {
+  position: absolute;
+  left: calc(15 / 393 * 100%);
+  top: calc(46 / 852 * 100%);
+  right: calc(13 / 393 * 100%);
+  height: calc(26 / 852 * 100%);
+  display: flex;
+  align-items: center;
+}
+
+.chat-expert-back,
+.chat-expert-menu,
+.chat-expert-send-btn {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.chat-expert-back {
+  position: relative;
+  width: calc(24 / 365 * 100%);
+  height: 100%;
+  flex: 0 0 calc(24 / 365 * 100%);
+}
+
+.chat-expert-back span {
+  box-sizing: border-box;
+  position: absolute;
+  left: 16.67%;
+  right: 20.83%;
+  top: 25%;
+  bottom: 25%;
+  border-left: 1px solid #222222;
+  border-bottom: 1px solid #222222;
+  transform: rotate(45deg);
+}
+
+.chat-expert-title-bold,
+.chat-expert-title-regular {
+  position: absolute;
+  top: calc(3 / 26 * 100%);
+  display: flex;
+  align-items: center;
+  color: #000000;
+  font-family: 'LG Smart UI', system-ui, sans-serif;
+  font-style: normal;
+  font-size: calc(20 / 393 * 100vw);
+  line-height: 1.15;
+}
+
+.chat-expert-title-bold {
+  left: calc(31 / 365 * 100%);
+  width: calc(72 / 365 * 100%);
+  height: calc(22 / 26 * 100%);
+  font-weight: 700;
+}
+
+.chat-expert-title-regular {
+  left: calc(106 / 365 * 100%);
+  width: calc(72 / 365 * 100%);
+  height: calc(22 / 26 * 100%);
+  font-weight: 400;
+}
+
+.chat-expert-menu {
+  position: absolute;
+  width: calc(26 / 365 * 100%);
+  height: 100%;
+  left: calc(339 / 365 * 100%);
+  top: 0;
+}
+
+.chat-expert-menu span {
+  position: absolute;
+  left: 20.83%;
+  right: 20.83%;
+  height: calc(2 / 26 * 100%);
+  background: #222222;
+  border-radius: 2px;
+}
+
+.chat-expert-menu span:nth-child(1) {
+  top: 29.17%;
+}
+
+.chat-expert-menu span:nth-child(2) {
+  top: 50%;
+}
+
+.chat-expert-menu span:nth-child(3) {
+  top: 70.83%;
+}
+
+.chat-expert-messages {
+  position: absolute;
+  left: calc(45.5 / 393 * 100%);
+  top: calc(123 / 852 * 100%);
+  width: calc(302.5 / 393 * 100%);
+}
+
+.chat-expert-bubble {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 302.5 / 54.5;
+}
+
+.chat-expert-bubble + .chat-expert-bubble {
+  margin-top: calc(15.5 / 852 * 100%);
+}
+
+.chat-expert-bubble-shape {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.chat-expert-bubble p {
+  position: absolute;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  color: #000000;
+  font-family: 'LG Smart UI', system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: calc(14 / 302.5 * 100%);
+  line-height: 1.142857;
+  letter-spacing: -0.03em;
+}
+
+.chat-expert-bubble-bot p {
+  width: calc(266 / 302.5 * 100%);
+  min-height: calc(13 / 54.5 * 100%);
+  left: calc(24.5 / 302.5 * 100%);
+  top: calc(15 / 54.5 * 100%);
+}
+
+.chat-expert-bubble-user p {
+  width: calc(261 / 302.5 * 100%);
+  min-height: calc(13 / 54.5 * 100%);
+  left: calc(24.5 / 302.5 * 100%);
+  top: calc(15 / 54.5 * 100%);
+}
+
+.chat-expert-input-area {
+  box-sizing: border-box;
+  position: absolute;
+  width: calc(328 / 393 * 100%);
+  height: calc(40 / 852 * 100%);
+  left: calc(32 / 393 * 100%);
+  top: calc(783 / 852 * 100%);
+  border: 1px solid #a0a0a0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 calc(8 / 393 * 100%) 0 calc(13 / 393 * 100%);
+  gap: calc(8 / 393 * 100%);
+  background: #ffffff;
+}
+
+.chat-expert-input-area input {
+  width: 100%;
+  min-height: calc(13 / 40 * 100%);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #000000;
+  font-family: 'LG Smart UI', system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: calc(14 / 328 * 100%);
+  line-height: 1.142857;
+  letter-spacing: -0.03em;
+}
+
+.chat-expert-input-area input::placeholder {
+  color: #606060;
+}
+
+.chat-expert-send-btn {
+  width: calc(29 / 328 * 100%);
+  height: calc(29 / 40 * 100%);
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+}
+
+.chat-expert-send-btn img {
+  width: 100%;
+  height: 100%;
   display: block;
   object-fit: contain;
 }
