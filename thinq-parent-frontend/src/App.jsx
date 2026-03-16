@@ -29,10 +29,16 @@ import deviceIcon from '@shared-assets/assets/icons/device.svg'
 import homeIcon from '@shared-assets/assets/icons/home.svg'
 import homeMoreIcon from '@shared-assets/icons/home_more.svg'
 import menuIcon from '@shared-assets/assets/icons/menu.svg'
+import headerMenuIcon from '@shared-assets/srg/Menu.svg'
 import moreButtonIcon from '@shared-assets/icons/more_button.svg'
 import smartGoIcon from '@shared-assets/icons/smart_go.svg'
+import { mockChildProfile } from './data/mockChildProfile'
+import { mockMyPage } from './data/mockMyPage'
 import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
+import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
+import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
+import MyScreen from './features/my/MyScreen'
 import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
 
 const HOME_NAME = '사용자 홈'
@@ -348,9 +354,7 @@ function ChatExpertScreen({ onBack }) {
         <span className="chat-expert-title-bold">챗태피티</span>
         <span className="chat-expert-title-regular">전문가</span>
         <button type="button" className="chat-expert-menu" aria-label="메뉴">
-          <span />
-          <span />
-          <span />
+          <img src={headerMenuIcon} alt="" className="chat-expert-menu-icon" aria-hidden="true" />
         </button>
       </header>
 
@@ -381,7 +385,7 @@ function ChatExpertScreen({ onBack }) {
   )
 }
 
-function ParentModeScreen({ onBack, onOpenChat, onOpenMombti }) {
+function ParentModeScreen({ onBack, onOpenChat, onOpenMy }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
 
   useEffect(() => {
@@ -515,13 +519,13 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMombti }) {
           </span>
           <span className="parent-mode-nav-label">가전육아</span>
         </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티" onClick={onOpenMombti}>
+        <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티">
           <span className="parent-mode-nav-icon-frame" aria-hidden="true">
             <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
           </span>
           <span className="parent-mode-nav-label">커뮤니티</span>
         </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="MY" >
+        <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMy}>
           <span className="parent-mode-nav-icon-frame" aria-hidden="true">
             <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
           </span>
@@ -541,6 +545,8 @@ function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [currentScreen, setCurrentScreen] = useState('home')
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
+  const myPage = mockMyPage
+  const childProfile = mockChildProfile
   const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
 
   const openSettings = () => {
@@ -560,7 +566,19 @@ function App() {
     setCurrentScreen('parent-mode-chat')
   }
 
+  const openMyScreen = () => {
+    setCurrentScreen('my')
+  }
+
+  const openChildProfile = () => {
+    setCurrentScreen('child-profile')
+  }
+
   const openMombti = () => {
+    setCurrentScreen('mombti-menu')
+  }
+
+  const openMombtiResult = () => {
     setCurrentScreen('mombti')
   }
 
@@ -569,7 +587,9 @@ function App() {
       ? 'home-mode'
       : currentScreen === 'parent-mode' || currentScreen === 'parent-mode-chat'
         ? 'parent-mode'
-        : currentScreen === 'mombti'
+        : currentScreen === 'my' || currentScreen === 'child-profile'
+          ? 'my-mode'
+        : currentScreen === 'mombti' || currentScreen === 'mombti-menu'
           ? 'mombti-mode'
         : 'settings-mode'
 
@@ -600,7 +620,7 @@ function App() {
           <ParentModeScreen
             onBack={() => setCurrentScreen('life-agent')}
             onOpenChat={openParentModeChat}
-            onOpenMombti={openMombti}
+            onOpenMy={openMyScreen}
           />
         )}
 
@@ -608,8 +628,29 @@ function App() {
           <ChatExpertScreen onBack={() => setCurrentScreen('parent-mode')} />
         )}
 
+        {currentScreen === 'my' && (
+          <MyScreen
+            data={myPage}
+            onBack={() => setCurrentScreen('parent-mode')}
+            onOpenChildProfile={openChildProfile}
+            onOpenMombti={openMombti}
+          />
+        )}
+
+        {currentScreen === 'child-profile' && (
+          <ChildProfileScreen data={childProfile} onBack={() => setCurrentScreen('my')} />
+        )}
+
+        {currentScreen === 'mombti-menu' && (
+          <MombtiMenuScreen
+            onBack={() => setCurrentScreen('my')}
+            onOpenResult={openMombtiResult}
+            onOpenTest={openMombtiResult}
+          />
+        )}
+
         {currentScreen === 'mombti' && (
-          <MombtiDetailScreen data={mombti} onBack={() => setCurrentScreen('parent-mode')} />
+          <MombtiDetailScreen data={mombti} onBack={() => setCurrentScreen('mombti-menu')} />
         )}
 
         {currentScreen === 'home' && isHomeSheetOpen ? (
