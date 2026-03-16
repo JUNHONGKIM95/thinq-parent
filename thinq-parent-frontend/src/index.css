@@ -1,0 +1,58 @@
+@font-face {
+  font-family: 'LGSmartUI';
+  src: url('../assets/fonts/LGSmHaL.ttf') format('truetype');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'LGSmartUI';
+  src: url('../assets/fonts/LGSmHaR.ttf') format('truetype');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'LGSmartUI';
+  src: url('../assets/fonts/LGSmHaSB.ttf') format('truetype');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'LGSmartUI';
+  src: url('../assets/fonts/LGSmHaB.ttf') format('truetype');
+  font-weight: 700;
+}
+
+:root {
+  font-family: 'LGSmartUI', 'Noto Sans KR', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #181311;
+  background: #dbe9ef;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  background: #dbe9ef;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
