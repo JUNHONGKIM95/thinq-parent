@@ -41,6 +41,7 @@ import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
 import MombtiTestScreen from './features/mombti/MombtiTestScreen'
+import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
 import ParentScheduleScreen from './features/parent/ParentScheduleScreen'
 import MyScreen from './features/my/MyScreen'
 import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
@@ -428,7 +429,7 @@ function ChatExpertScreen({ onBack }) {
   )
 }
 
-function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregnancySummary }) {
+function ParentModeScreen({ onBack, onOpenChat, onOpenDevice, onOpenMy, onOpenSchedule, pregnancySummary }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
 
   useEffect(() => {
@@ -495,13 +496,8 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregna
             <button
               type="button"
               className="parent-mode-card parent-mode-calendar parent-mode-card-button"
-              onClick={(event) => {
-                if (event.target.closest('h3')) {
-                  onOpenSchedule()
-                }
-              }}
             >
-              <h3>캘린더</h3>
+              <h3 onClick={onOpenSchedule}>캘린더</h3>
               <p className="parent-mode-date-line">
                 <span className="parent-mode-date">27</span>
                 <span className="parent-mode-day">금</span>
@@ -518,7 +514,18 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregna
               </div>
             </button>
             <section className="parent-mode-card parent-mode-todo">
-              <div className="parent-mode-todo-head">
+              <div
+                className="parent-mode-todo-head"
+                onClick={onOpenSchedule}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onOpenSchedule()
+                  }
+                }}
+              >
                 <h3>TO DO</h3>
                 <span className="parent-mode-week">25주차</span>
               </div>
@@ -561,7 +568,12 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregna
             </span>
             <span className="parent-mode-nav-label">홈</span>
           </button>
-          <button type="button" className="parent-mode-nav-item parent-mode-nav-item--active" aria-label="가전육아">
+          <button
+            type="button"
+            className="parent-mode-nav-item parent-mode-nav-item--active"
+            aria-label="가전육아"
+            onClick={onOpenDevice}
+          >
             <span className="parent-mode-nav-icon-frame" aria-hidden="true">
               <img src={parentModeBabyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
             </span>
@@ -639,6 +651,10 @@ function App() {
     setCurrentScreen('parent-mode-chat')
   }
 
+  const openParentDevice = () => {
+    setCurrentScreen('parent-mode-device')
+  }
+
   const openMyScreen = () => {
     setCurrentScreen('my')
   }
@@ -667,6 +683,7 @@ function App() {
     currentScreen === 'home'
       ? 'home-mode'
       : currentScreen === 'parent-mode' ||
+        currentScreen === 'parent-mode-device' ||
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
@@ -703,9 +720,24 @@ function App() {
           <ParentModeScreen
             onBack={() => setCurrentScreen('life-agent')}
             onOpenChat={openParentModeChat}
+            onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             onOpenSchedule={openParentSchedule}
             pregnancySummary={pregnancySummary}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-device' && (
+          <ParentDeviceScreen
+            onBack={() => setCurrentScreen('parent-mode')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            navIcons={{
+              home: parentModeHomeIcon,
+              device: parentModeBabyIcon,
+              community: parentModeCommunityIcon,
+              my: parentModeMyIcon,
+            }}
           />
         )}
 

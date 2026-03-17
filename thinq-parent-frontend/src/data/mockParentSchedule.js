@@ -48,8 +48,8 @@
         label: '27',
         inMonth: true,
         markers: [
-          { key: 'ob', label: '산부인과', tone: 'primary' },
-          { key: 'carrot', label: '당근', tone: 'secondary' },
+          { key: 'ob', label: '산부인과', typeKey: 'baby', color: '#ff3b3b', textColor: '#ffffff' },
+          { key: 'carrot', label: '당근', typeKey: 'personal', color: '#fef19f', textColor: '#000000' },
         ],
       },
       { key: '2026-03-28', label: '28', inMonth: true },
@@ -75,7 +75,7 @@
           time: '15:00',
           location: '분당제일여성병원',
           note: '철분제 조절 필요한지 물어보기',
-          tone: 'primary',
+          typeKey: 'baby',
         },
         {
           key: 'carrot',
@@ -83,17 +83,45 @@
           time: '21:30',
           location: '미금역',
           note: '아기용품, 현금3만원 준비',
-          tone: 'secondary',
+          typeKey: 'personal',
         },
       ],
     },
   },
   todo: {
-    weekLabel: '25주차',
-    recommended: [
-      { key: 'exam', text: '임신성 당뇨 선별검사 받기', checked: true },
-      { key: 'exercise', text: '골반저근 운동', checked: false },
-    ],
-    myList: [{ key: 'reading', text: '육아 독서 읽기', checked: true }],
+    default: {
+      weekLabel: '25주차',
+      recommended: [
+        { key: 'water', text: '물 자주 마시기', checked: false },
+        { key: 'stretch', text: '가벼운 스트레칭 하기', checked: true },
+      ],
+      myList: [{ key: 'journal', text: '오늘 컨디션 기록하기', checked: false }],
+    },
+    byDate: {
+      '2026-03-27': {
+        weekLabel: '25주차',
+        recommended: [
+          { key: 'exam', text: '임신성 당뇨 선별검사 받기', checked: true },
+          { key: 'exercise', text: '골반저근 운동', checked: false },
+        ],
+        myList: [{ key: 'reading', text: '육아 독서 읽기', checked: true }],
+      },
+      '2026-03-26': {
+        weekLabel: '25주차',
+        recommended: [
+          { key: 'walk', text: '20분 산책하기', checked: false },
+          { key: 'vitamin', text: '영양제 챙겨 먹기', checked: true },
+        ],
+        myList: [{ key: 'bag', text: '병원 갈 가방 미리 챙기기', checked: false }],
+      },
+      '2026-03-28': {
+        weekLabel: '26주차',
+        recommended: [
+          { key: 'rest', text: '오후에 30분 휴식하기', checked: false },
+          { key: 'snack', text: '간식 미리 준비하기', checked: true },
+        ],
+        myList: [{ key: 'photo', text: '배냇저고리 사진 저장하기', checked: false }],
+      },
+    },
   },
 }
