@@ -1,4 +1,5 @@
 
+
 # thinq-parent-backend
 
 Spring Boot REST API scaffold for the `parent_mode` MySQL schema.
