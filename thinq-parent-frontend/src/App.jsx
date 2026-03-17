@@ -76,34 +76,39 @@ const settingCards = [
 ]
 
 const DEFAULT_PREGNANCY_SUMMARY = {
-  meetingTitle: '틔움이 만나기',
+  babyNickname: '틔움이',
   daysUntilDueDate: 102,
-  daysUntilDueDateText: '102일 전',
+}
+
+function getMeetingName(summary) {
+  if (summary?.babyNickname) {
+    return summary.babyNickname
+  }
+
+  if (summary?.meetingTitle) {
+    return summary.meetingTitle.replace(/\s*만나기$/, '')
+  }
+
+  return DEFAULT_PREGNANCY_SUMMARY.babyNickname
 }
 
 async function fetchPregnancySummary(userId = 3) {
-  const candidates = [
-    `${API_BASE_URL}/api/pregnancy/summary?userId=${userId}`,
-    `${API_BASE_URL}/pregnancy/summary?userId=${userId}`,
-    `${API_BASE_URL}/api/pregnancy-summary?userId=${userId}`,
-  ]
+  const url = `${API_BASE_URL}/api/v1/users/${userId}/pregnancy-summary`
 
-  for (const url of candidates) {
-    try {
-      const response = await fetch(url)
+  try {
+    const response = await fetch(url)
 
-      if (!response.ok) {
-        continue
-      }
-
-      const payload = await response.json()
-
-      if (payload?.data) {
-        return payload.data
-      }
-    } catch {
-      // Try the next candidate endpoint.
+    if (!response.ok) {
+      return DEFAULT_PREGNANCY_SUMMARY
     }
+
+    const payload = await response.json()
+
+    if (payload?.data) {
+      return payload.data
+    }
+  } catch {
+    return DEFAULT_PREGNANCY_SUMMARY
   }
 
   return DEFAULT_PREGNANCY_SUMMARY
@@ -449,139 +454,136 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregna
       </header>
 
       <div className="parent-mode-body">
-      <div className="parent-mode-content">
-        <section className="parent-mode-meet">
-          <h2 className="parent-mode-meet-title">{pregnancySummary.meetingTitle}</h2>
-          <p className="parent-mode-meet-meta">
-            <img src={heartIcon} alt="" className="parent-mode-heart" aria-hidden="true" />
-            {`- ${pregnancySummary.daysUntilDueDate}일 전`}
-          </p>
-        </section>
-
-        <div className="parent-mode-input-row">
-          <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
-          <span className="parent-mode-input-arrows" aria-hidden="true">
-            <img
-              src={sendLightIcon}
-              alt=""
-              className={`parent-mode-input-icon parent-mode-input-motion ${
-                inputStatusIndex === 0 ? 'is-visible' : ''
-              }`}
-              aria-hidden="true"
-            />
-            <img
-              src={sendLightIcon}
-              alt=""
-              className={`parent-mode-input-icon parent-mode-input-icon--rotate parent-mode-input-motion ${
-                inputStatusIndex === 1 ? 'is-visible' : ''
-              }`}
-              aria-hidden="true"
-            />
-          </span>
-          <img
-            src={heartIcon}
-            alt=""
-            className={`parent-mode-input-heart parent-mode-input-motion ${
-              inputStatusIndex === 2 ? 'is-visible' : ''
-            }`}
-            aria-hidden="true"
-          />
-          <p className="parent-mode-input-text">당신도 틔움이도 너무 사랑해 -틔움아빠</p>
-        </div>
-
-        <div className="parent-mode-cards-row">
-          <button
-            type="button"
-            className="parent-mode-card parent-mode-calendar parent-mode-card-button"
-            onClick={(event) => {
-              if (event.target.closest('h3')) {
-                onOpenSchedule()
-              }
-            }}
-          >
-            <h3>캘린더</h3>
-            <p className="parent-mode-date-line">
-              <span className="parent-mode-date">27</span>
-              <span className="parent-mode-day">금</span>
+        <div className="parent-mode-content">
+          <section className="parent-mode-meet">
+            <h2 className="parent-mode-meet-title">{`${getMeetingName(pregnancySummary)} 만나기`}</h2>
+            <p className="parent-mode-meet-meta">
+              <img src={heartIcon} alt="" className="parent-mode-heart" aria-hidden="true" />
+              {`- ${pregnancySummary.daysUntilDueDate}일 전`}
             </p>
-            <div className="parent-mode-events">
-              <div className="parent-mode-event-box parent-mode-event-box--red">
-                <span className="parent-mode-event-label">산부인과</span>
-                <span className="parent-mode-event-time">15:00</span>
+          </section>
+
+          <div className="parent-mode-input-row">
+            <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
+            <span className="parent-mode-input-arrows" aria-hidden="true">
+              <img
+                src={sendLightIcon}
+                alt=""
+                className={`parent-mode-input-icon parent-mode-input-motion ${inputStatusIndex === 0 ? 'is-visible' : ''
+                  }`}
+                aria-hidden="true"
+              />
+              <img
+                src={sendLightIcon}
+                alt=""
+                className={`parent-mode-input-icon parent-mode-input-icon--rotate parent-mode-input-motion ${inputStatusIndex === 1 ? 'is-visible' : ''
+                  }`}
+                aria-hidden="true"
+              />
+            </span>
+            <img
+              src={heartIcon}
+              alt=""
+              className={`parent-mode-input-heart parent-mode-input-motion ${inputStatusIndex === 2 ? 'is-visible' : ''
+                }`}
+              aria-hidden="true"
+            />
+            <p className="parent-mode-input-text">당신도 틔움이도 너무 사랑해 -틔움아빠</p>
+          </div>
+
+          <div className="parent-mode-cards-row">
+            <button
+              type="button"
+              className="parent-mode-card parent-mode-calendar parent-mode-card-button"
+              onClick={(event) => {
+                if (event.target.closest('h3')) {
+                  onOpenSchedule()
+                }
+              }}
+            >
+              <h3>캘린더</h3>
+              <p className="parent-mode-date-line">
+                <span className="parent-mode-date">27</span>
+                <span className="parent-mode-day">금</span>
+              </p>
+              <div className="parent-mode-events">
+                <div className="parent-mode-event-box parent-mode-event-box--red">
+                  <span className="parent-mode-event-label">산부인과</span>
+                  <span className="parent-mode-event-time">15:00</span>
+                </div>
+                <div className="parent-mode-event-box parent-mode-event-box--yellow">
+                  <span className="parent-mode-event-label">당근</span>
+                  <span className="parent-mode-event-time">21:30</span>
+                </div>
               </div>
-              <div className="parent-mode-event-box parent-mode-event-box--yellow">
-                <span className="parent-mode-event-label">당근</span>
-                <span className="parent-mode-event-time">21:30</span>
+            </button>
+            <section className="parent-mode-card parent-mode-todo">
+              <div className="parent-mode-todo-head">
+                <h3>TO DO</h3>
+                <span className="parent-mode-week">25주차</span>
               </div>
+              <label className="parent-mode-todo-item">
+                <input type="checkbox" className="parent-mode-todo-checkbox" defaultChecked />
+                <span className="parent-mode-todo-check" aria-hidden="true" />
+                <span>임신성 당뇨 선별검사 받기</span>
+              </label>
+              <label className="parent-mode-todo-item">
+                <input type="checkbox" className="parent-mode-todo-checkbox" />
+                <span className="parent-mode-todo-check" aria-hidden="true" />
+                <span>골반저근 운동</span>
+              </label>
+            </section>
+          </div>
+
+          <section className="parent-mode-diary">
+            <h3>임신 일기</h3>
+            <p className="parent-mode-diary-desc">소중한 매일의 순간을 기록해보세요.</p>
+            <button type="button" className="parent-mode-diary-image-wrap">
+              <img src={lookDiaryImage} alt="일기 보기" />
+            </button>
+          </section>
+
+          <section className="parent-mode-widget">
+            <h3>위젯 추가하기</h3>
+            <div className="parent-mode-widget-box">
+              <p>즐겨 찾는 기능을 한 눈에 볼 수 있도록 홈 화면에 배치해보세요.</p>
+              <button type="button" className="parent-mode-widget-btn">위젯 추가</button>
             </div>
-          </button>
-          <section className="parent-mode-card parent-mode-todo">
-            <div className="parent-mode-todo-head">
-              <h3>TO DO</h3>
-              <span className="parent-mode-week">25주차</span>
-            </div>
-            <label className="parent-mode-todo-item">
-              <input type="checkbox" className="parent-mode-todo-checkbox" defaultChecked />
-              <span className="parent-mode-todo-check" aria-hidden="true" />
-              <span>임신성 당뇨 선별검사 받기</span>
-            </label>
-            <label className="parent-mode-todo-item">
-              <input type="checkbox" className="parent-mode-todo-checkbox" />
-              <span className="parent-mode-todo-check" aria-hidden="true" />
-              <span>골반저근 운동</span>
-            </label>
           </section>
         </div>
 
-        <section className="parent-mode-diary">
-          <h3>임신 일기</h3>
-          <p className="parent-mode-diary-desc">소중한 매일의 순간을 기록해보세요.</p>
-          <button type="button" className="parent-mode-diary-image-wrap">
-            <img src={lookDiaryImage} alt="일기 보기" />
+        <div className="parent-mode-bottom-bar" />
+
+        <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
+          <button type="button" className="parent-mode-nav-item" aria-label="홈">
+            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+              <img src={parentModeHomeIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+            </span>
+            <span className="parent-mode-nav-label">홈</span>
           </button>
-        </section>
+          <button type="button" className="parent-mode-nav-item parent-mode-nav-item--active" aria-label="가전육아">
+            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+              <img src={parentModeBabyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+            </span>
+            <span className="parent-mode-nav-label">가전육아</span>
+          </button>
+          <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티">
+            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+              <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+            </span>
+            <span className="parent-mode-nav-label">커뮤니티</span>
+          </button>
+          <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMy}>
+            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+              <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+            </span>
+            <span className="parent-mode-nav-label">MY</span>
+          </button>
+        </nav>
 
-        <section className="parent-mode-widget">
-          <h3>위젯 추가하기</h3>
-          <div className="parent-mode-widget-box">
-            <p>즐겨 찾는 기능을 한 눈에 볼 수 있도록 홈 화면에 배치해보세요.</p>
-            <button type="button" className="parent-mode-widget-btn">위젯 추가</button>
-          </div>
-        </section>
-      </div>
-
-      <div className="parent-mode-bottom-bar" />
-
-      <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
-        <button type="button" className="parent-mode-nav-item" aria-label="홈">
-          <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-            <img src={parentModeHomeIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-          </span>
-          <span className="parent-mode-nav-label">홈</span>
+        <button type="button" className="parent-mode-fab" aria-label="채팅" onClick={onOpenChat}>
+          <img src={chatFloatingIcon} alt="" className="parent-mode-fab-icon" aria-hidden="true" />
         </button>
-        <button type="button" className="parent-mode-nav-item parent-mode-nav-item--active" aria-label="가전육아">
-          <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-            <img src={parentModeBabyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-          </span>
-          <span className="parent-mode-nav-label">가전육아</span>
-        </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티">
-          <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-            <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-          </span>
-          <span className="parent-mode-nav-label">커뮤니티</span>
-        </button>
-        <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMy}>
-          <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-            <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-          </span>
-          <span className="parent-mode-nav-label">MY</span>
-        </button>
-      </nav>
-
-      <button type="button" className="parent-mode-fab" aria-label="채팅" onClick={onOpenChat}>
-        <img src={chatFloatingIcon} alt="" className="parent-mode-fab-icon" aria-hidden="true" />
-      </button>
       </div>
     </>
   )
@@ -606,11 +608,12 @@ function App() {
       }
 
       setPregnancySummary({
-        meetingTitle: data.meetingTitle ?? `${data.babyNickname ?? '틔움이'} 만나기`,
+        babyNickname:
+          data.babyNickname ??
+          data.meetingTitle?.replace(/\s*만나기$/, '') ??
+          DEFAULT_PREGNANCY_SUMMARY.babyNickname,
+        meetingTitle: data.meetingTitle,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
-        daysUntilDueDateText:
-          data.daysUntilDueDateText ??
-          `${data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate}일 전`,
       })
     })
 
@@ -664,14 +667,14 @@ function App() {
     currentScreen === 'home'
       ? 'home-mode'
       : currentScreen === 'parent-mode' ||
-          currentScreen === 'parent-mode-chat' ||
-          currentScreen === 'parent-mode-schedule'
+        currentScreen === 'parent-mode-chat' ||
+        currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
-        : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
-          ? 'mombti-mode'
-        : 'settings-mode'
+          : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
+            ? 'mombti-mode'
+            : 'settings-mode'
 
   return (
     <main className="app-shell">
