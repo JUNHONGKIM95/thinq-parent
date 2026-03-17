@@ -1,6 +1,5 @@
 package com.example.thinq_parent.schedule.service;
 
-import com.example.thinq_parent.common.exception.DuplicateResourceException;
 import com.example.thinq_parent.common.exception.InvalidRequestException;
 import com.example.thinq_parent.common.exception.ResourceNotFoundException;
 import com.example.thinq_parent.familygroup.repository.FamilyGroupRepository;
@@ -48,16 +47,15 @@ public class ScheduleServiceImpl implements ScheduleService {
 	@Transactional
 	public ScheduleResponse create(ScheduleCreateRequest request) {
 		validateScheduleDates(request.startDate(), request.endDate());
-		validateScheduleId(request.scheduleId());
 		validateGroupId(request.groupId());
 		AppUser user = getUserById(request.userId());
 
 		LocalDateTime startDate = request.startDate() != null ? request.startDate() : LocalDateTime.now(clock);
 		// startDate가 비어 있으면 생성 시각을 시작 시각으로 저장해서 화면에서 바로 정렬 기준으로 쓸 수 있게 한다.
 		Schedule schedule = new Schedule(
-				request.scheduleId(),
 				request.groupId(),
 				request.userId(),
+				null,
 				request.title(),
 				startDate,
 				request.endDate()
@@ -144,12 +142,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 	private AppUser getUserById(Integer userId) {
 		return userRepository.findById(userId)
 				.orElseThrow(() -> new ResourceNotFoundException("User not found. userId=" + userId));
-	}
-
-	private void validateScheduleId(Integer scheduleId) {
-		if (scheduleRepository.existsById(scheduleId)) {
-			throw new DuplicateResourceException("Schedule already exists. scheduleId=" + scheduleId);
-		}
 	}
 
 	private void validateScheduleDates(LocalDateTime startDate, LocalDateTime endDate) {

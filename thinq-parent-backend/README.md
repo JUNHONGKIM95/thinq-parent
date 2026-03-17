@@ -24,11 +24,6 @@ Default DB connection:
 
 - `GET /api/v1/health`
 - `GET /api/v1/health/db`
-- `POST /api/v1/parents`
-- `GET /api/v1/parents`
-- `GET /api/v1/parents/{id}`
-- `PUT /api/v1/parents/{id}`
-- `DELETE /api/v1/parents/{id}`
 - `POST /api/v1/users`
 - `GET /api/v1/users`
 - `GET /api/v1/users/{userId}`
@@ -39,6 +34,8 @@ Default DB connection:
 - `GET /api/v1/family-groups`
 - `GET /api/v1/family-groups/{groupId}`
 - `POST /api/v1/family-groups/join`
+- `POST /api/v1/cheer-messages`
+- `GET /api/v1/cheer-messages/groups/{groupId}/latest`
 - `POST /api/v1/schedules`
 - `GET /api/v1/schedules`
 - `GET /api/v1/schedules/{scheduleId}`

@@ -9,5 +9,7 @@ public interface FamilyGroupRepository extends JpaRepository<FamilyGroup, Intege
 
 	boolean existsByInviteCode(String inviteCode);
 
+	boolean existsByUserId(Integer userId);
+
 	Optional<FamilyGroup> findByInviteCode(String inviteCode);
 }

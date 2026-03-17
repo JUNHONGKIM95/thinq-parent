@@ -11,13 +11,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "family_group_members")
+@Table(name = "family_members")
 public class FamilyGroupMember {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "member_id")
-	private Long memberId;
+	private Integer memberId;
 
 	@Column(name = "group_id", nullable = false)
 	private Integer groupId;
@@ -37,7 +37,7 @@ public class FamilyGroupMember {
 		this.userId = userId;
 	}
 
-	public Long getMemberId() {
+	public Integer getMemberId() {
 		return memberId;
 	}
 

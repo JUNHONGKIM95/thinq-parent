@@ -19,23 +19,13 @@ public class PregnancyInfoCalculator {
 
 	public PregnancyCountdownInfo calculate(LocalDate dueDate) {
 		if (dueDate == null) {
-			return new PregnancyCountdownInfo(null, null, null, null);
+			return new PregnancyCountdownInfo(null, null);
 		}
 
 		LocalDate today = LocalDate.now(clock);
 		long daysUntilDueDate = ChronoUnit.DAYS.between(today, dueDate);
 		int currentWeek = calculateCurrentWeek(daysUntilDueDate);
-
-		// 홈 화면에서는 "102일 전" 같은 문구가 필요해서 D-Day 표기와 별도로 화면용 텍스트를 같이 만든다.
-		if (daysUntilDueDate > 0) {
-			return new PregnancyCountdownInfo(daysUntilDueDate, daysUntilDueDate + "일 전", "D-" + daysUntilDueDate, currentWeek);
-		}
-		if (daysUntilDueDate == 0) {
-			return new PregnancyCountdownInfo(0L, "오늘", "D-Day", currentWeek);
-		}
-
-		long overdueDays = Math.abs(daysUntilDueDate);
-		return new PregnancyCountdownInfo(daysUntilDueDate, overdueDays + "일 지남", "D+" + overdueDays, currentWeek);
+		return new PregnancyCountdownInfo(daysUntilDueDate, currentWeek);
 	}
 
 	private int calculateCurrentWeek(long daysUntilDueDate) {

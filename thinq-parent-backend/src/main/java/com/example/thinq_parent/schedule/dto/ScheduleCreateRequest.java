@@ -7,9 +7,6 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 public record ScheduleCreateRequest(
-		@NotNull(message = "scheduleId is required")
-		Integer scheduleId,
-
 		@NotNull(message = "groupId is required")
 		Integer groupId,
 

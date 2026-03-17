@@ -54,7 +54,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{userId}/pregnancy-summary")
-	@Operation(summary = "Get pregnancy summary", description = "Returns baby nickname title, due date, D-Day, and current pregnancy week")
+	@Operation(summary = "Get pregnancy summary", description = "Returns due date, remaining days until due date, and current pregnancy week")
 	public ApiResponse<UserPregnancySummaryResponse> getPregnancySummary(@PathVariable Integer userId) {
 		return ApiResponse.success("Pregnancy summary fetched successfully", userService.getPregnancySummary(userId));
 	}

@@ -2,6 +2,8 @@ package com.example.thinq_parent.schedule.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,8 +15,8 @@ import java.time.LocalDateTime;
 public class Schedule {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "schedule_id")
-	// 스키마 정의에 auto_increment가 없어서 schedule_id는 요청값을 그대로 사용한다.
 	private Integer scheduleId;
 
 	@Column(name = "group_id", nullable = false)
@@ -22,6 +24,9 @@ public class Schedule {
 
 	@Column(name = "user_id", nullable = false)
 	private Integer userId;
+
+	@Column(name = "todo_id")
+	private Integer todoId;
 
 	@Column(nullable = false, length = 200)
 	private String title;
@@ -40,16 +45,16 @@ public class Schedule {
 	}
 
 	public Schedule(
-			Integer scheduleId,
 			Integer groupId,
 			Integer userId,
+			Integer todoId,
 			String title,
 			LocalDateTime startDate,
 			LocalDateTime endDate
 	) {
-		this.scheduleId = scheduleId;
 		this.groupId = groupId;
 		this.userId = userId;
+		this.todoId = todoId;
 		this.title = title;
 		this.startDate = startDate;
 		this.endDate = endDate;
@@ -73,6 +78,10 @@ public class Schedule {
 
 	public Integer getUserId() {
 		return userId;
+	}
+
+	public Integer getTodoId() {
+		return todoId;
 	}
 
 	public String getTitle() {

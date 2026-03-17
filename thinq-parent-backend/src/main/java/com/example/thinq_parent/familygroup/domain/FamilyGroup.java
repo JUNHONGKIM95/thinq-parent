@@ -2,6 +2,8 @@ package com.example.thinq_parent.familygroup.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,8 +15,8 @@ import java.time.LocalDateTime;
 public class FamilyGroup {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "group_id")
-	// 현재 전달받은 스키마에 auto_increment 정보가 없어서 group_id는 요청값을 그대로 사용한다.
 	private Integer groupId;
 
 	@Column(name = "group_name", nullable = false, length = 100)
@@ -33,8 +35,7 @@ public class FamilyGroup {
 	protected FamilyGroup() {
 	}
 
-	public FamilyGroup(Integer groupId, String groupName, String inviteCode, Integer userId) {
-		this.groupId = groupId;
+	public FamilyGroup(String groupName, String inviteCode, Integer userId) {
 		this.groupName = groupName;
 		this.inviteCode = inviteCode;
 		this.userId = userId;

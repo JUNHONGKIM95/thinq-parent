@@ -66,17 +66,13 @@ public class UserServiceImpl implements UserService {
 	public UserPregnancySummaryResponse getPregnancySummary(Integer userId) {
 		AppUser user = getUserById(userId);
 		PregnancyCountdownInfo countdown = pregnancyInfoCalculator.calculate(user.getDueDate());
-		String meetingTitle = buildMeetingTitle(user.getBabyNickname());
 
 		return new UserPregnancySummaryResponse(
 				user.getUserId(),
 				user.getUsername(),
 				user.getBabyNickname(),
-				meetingTitle,
 				user.getDueDate(),
 				countdown.daysUntilDueDate(),
-				countdown.daysUntilDueDateText(),
-				countdown.dDay(),
 				countdown.currentWeek()
 		);
 	}
@@ -120,12 +116,5 @@ public class UserServiceImpl implements UserService {
 		if (userRepository.existsByEmailAndUserIdNot(email, userId)) {
 			throw new DuplicateResourceException("Email already exists: " + email);
 		}
-	}
-
-	private String buildMeetingTitle(String babyNickname) {
-		if (babyNickname == null || babyNickname.isBlank()) {
-			return "아기 만나기";
-		}
-		return babyNickname + " 만나기";
 	}
 }

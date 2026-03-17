@@ -67,6 +67,11 @@ public class AppUser {
 		this.dueDate = dueDate;
 	}
 
+	public void updatePregnancyInfo(String babyNickname, LocalDate dueDate) {
+		this.babyNickname = babyNickname;
+		this.dueDate = dueDate;
+	}
+
 	public Integer getUserId() {
 		return userId;
 	}
