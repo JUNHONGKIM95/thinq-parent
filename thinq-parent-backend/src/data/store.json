@@ -1,0 +1,360 @@
+{
+  "children": [
+    {
+      "id": 1,
+      "name": "틔움이",
+      "dDay": 102,
+      "dueDate": "2026-07-07",
+      "calculationMethod": "due_date",
+      "selectedDate": "2026-09-19",
+      "schedule": {
+        "monthLabel": "MARCH",
+        "day": "27",
+        "dayOfWeek": "금",
+        "items": [
+          {
+            "key": "ob",
+            "title": "산부인과",
+            "time": "15:00",
+            "tone": "primary"
+          },
+          {
+            "key": "carrot",
+            "title": "당근",
+            "time": "21:30",
+            "tone": "secondary"
+          }
+        ]
+      },
+      "todo": {
+        "weekLabel": "25주차",
+        "items": [
+          {
+            "key": "exam",
+            "text": "임신성 당뇨 선별검사 받기",
+            "checked": true
+          },
+          {
+            "key": "exercise",
+            "text": "골반저근 운동",
+            "checked": false
+          }
+        ]
+      }
+    }
+  ],
+  "mombti": {
+    "options": [
+      {
+        "value": 1,
+        "shortLabel": "매우 아니다",
+        "side": "left",
+        "size": "large"
+      },
+      {
+        "value": 2,
+        "shortLabel": "",
+        "side": "left",
+        "size": "medium"
+      },
+      {
+        "value": 3,
+        "shortLabel": "보통이다",
+        "side": "neutral",
+        "size": "small"
+      },
+      {
+        "value": 4,
+        "shortLabel": "",
+        "side": "right",
+        "size": "medium"
+      },
+      {
+        "value": 5,
+        "shortLabel": "매우 그렇다",
+        "side": "right",
+        "size": "large"
+      }
+    ],
+    "questions": [
+      {
+        "id": 1,
+        "number": 1,
+        "text": "외출이나 일정을 앞두면 필요한 준비물을 미리 체크해두는 편이다.",
+        "axis": "P_R",
+        "trait": "planner"
+      },
+      {
+        "id": 2,
+        "number": 2,
+        "text": "아이 상태나 변수가 생기면 원래 계획보다 그 상황에 맞게 바로 바꾸는 편이다.",
+        "axis": "P_R",
+        "trait": "reactive"
+      },
+      {
+        "id": 3,
+        "number": 3,
+        "text": "하루 육아 루틴이 어느 정도 정해져 있어야 마음이 편하다.",
+        "axis": "P_R",
+        "trait": "planner"
+      },
+      {
+        "id": 4,
+        "number": 4,
+        "text": "미리 정해둔 방식이 있어도 실제 상황에 따라 즉흥적으로 조정하는 것이 더 자연스럽다.",
+        "axis": "P_R",
+        "trait": "reactive"
+      },
+      {
+        "id": 5,
+        "number": 5,
+        "text": "일이 닥친 뒤에 처리하기보다 미리 대비해두는 편이다.",
+        "axis": "P_R",
+        "trait": "planner"
+      },
+      {
+        "id": 6,
+        "number": 6,
+        "text": "육아에서 중요한 결정을 할 때 감정보다 기준과 이유를 먼저 따지는 편이다.",
+        "axis": "T_F",
+        "trait": "thinking"
+      },
+      {
+        "id": 7,
+        "number": 7,
+        "text": "정해둔 원칙보다 아이의 그날 기분이나 컨디션을 더 우선하는 편이다.",
+        "axis": "T_F",
+        "trait": "feeling"
+      },
+      {
+        "id": 8,
+        "number": 8,
+        "text": "한 번 세운 규칙은 가능한 일관되게 지키는 것이 중요하다고 생각한다.",
+        "axis": "T_F",
+        "trait": "thinking"
+      },
+      {
+        "id": 9,
+        "number": 9,
+        "text": "상황이 애매할 때는 논리적인 기준보다 '지금 이게 맞다'는 감각을 더 신뢰하는 편이다.",
+        "axis": "T_F",
+        "trait": "feeling"
+      },
+      {
+        "id": 10,
+        "number": 10,
+        "text": "육아 판단에서 가장 중요한 것은 흔들리지 않는 기준이라고 생각한다.",
+        "axis": "T_F",
+        "trait": "thinking"
+      },
+      {
+        "id": 11,
+        "number": 11,
+        "text": "문제가 생기면 먼저 스스로 정보를 찾고 해결책을 정리해보는 편이다.",
+        "axis": "I_C",
+        "trait": "independent"
+      },
+      {
+        "id": 12,
+        "number": 12,
+        "text": "육아 관련 고민은 혼자 판단하기보다 주변 사람들과 이야기하며 풀어가는 편이다.",
+        "axis": "I_C",
+        "trait": "connected"
+      },
+      {
+        "id": 13,
+        "number": 13,
+        "text": "후기나 조언을 보기 전에 먼저 내 방식대로 생각해보는 편이다.",
+        "axis": "I_C",
+        "trait": "independent"
+      },
+      {
+        "id": 14,
+        "number": 14,
+        "text": "가족, 친구, 커뮤니티, 전문가의 경험을 적극 참고해야 안심이 된다.",
+        "axis": "I_C",
+        "trait": "connected"
+      },
+      {
+        "id": 15,
+        "number": 15,
+        "text": "중요한 결정일수록 다른 사람 의견보다 내 판단을 더 믿는 편이다.",
+        "axis": "I_C",
+        "trait": "independent"
+      },
+      {
+        "id": 16,
+        "number": 16,
+        "text": "시간과 에너지를 아끼는 방식이라면 정서적인 아쉬움이 조금 있어도 괜찮은 편이다.",
+        "axis": "E_M",
+        "trait": "efficiency"
+      },
+      {
+        "id": 17,
+        "number": 17,
+        "text": "조금 번거롭더라도 아이와의 경험이 더 풍부해진다면 그 방법을 선택하는 편이다.",
+        "axis": "E_M",
+        "trait": "meaning"
+      },
+      {
+        "id": 18,
+        "number": 18,
+        "text": "자동화하거나 간단하게 끝낼 수 있는 일은 최대한 빠르게 처리하고 싶다.",
+        "axis": "E_M",
+        "trait": "efficiency"
+      },
+      {
+        "id": 19,
+        "number": 19,
+        "text": "효율이 떨어지더라도 아이와 함께하는 과정의 의미가 더 중요하다고 느낀다.",
+        "axis": "E_M",
+        "trait": "meaning"
+      },
+      {
+        "id": 20,
+        "number": 20,
+        "text": "육아에서는 편하고 실용적인 해법을 먼저 찾는 편이다.",
+        "axis": "E_M",
+        "trait": "efficiency"
+      }
+    ],
+    "traitCopy": {
+      "planner": {
+        "key": "P",
+        "title": "Planner, 계획형",
+        "desc": "육아와 일상을 미리 예상하고 준비하는 성향이에요.\n일정, 준비물, 루틴을 사전에 정리해두면 마음이 편해요."
+      },
+      "reactive": {
+        "key": "R",
+        "title": "Reactive, 반응형",
+        "desc": "그때그때 상황에 맞춰 유연하게 대응하는 성향이에요.\n미리 정해두기보다 아이 상태와 현실 변화에 맞게 빠르게 조정해요."
+      },
+      "thinking": {
+        "key": "T",
+        "title": "Thinking, 원칙형",
+        "desc": "감정보다 기준과 논리를 바탕으로 판단하는 성향이에요.\n세운 원칙과 일관성을 중요하게 여기며, 이유 있는 선택을 선호해요."
+      },
+      "feeling": {
+        "key": "F",
+        "title": "Feeling, 감각형",
+        "desc": "기준보다 아이의 상태와 분위기를 먼저 살피는 성향이에요.\n그날의 컨디션, 감정, 흐름에 따라 더 맞는 방향을 선택해요."
+      },
+      "independent": {
+        "key": "I",
+        "title": "Independent, 독립처리형",
+        "desc": "문제가 생기면 먼저 스스로 찾고 해결하려는 성향이에요.\n정보 탐색과 판단을 혼자 정리한 뒤 움직이는 편이에요."
+      },
+      "connected": {
+        "key": "C",
+        "title": "Connected, 의존형",
+        "desc": "주변과 의견을 나누며 함께 해결하는 성향이에요.\n가족, 친구, 커뮤니티, 전문가의 경험과 조언을 적극 참고해요."
+      },
+      "efficiency": {
+        "key": "E",
+        "title": "Efficiency, 효율중심형",
+        "desc": "시간과 에너지를 아끼는 실용적인 방식을 중시하는 성향이에요.\n자동화, 간소화, 빠른 해결처럼 덜 힘들고 더 편한 선택을 선호해요."
+      },
+      "meaning": {
+        "key": "M",
+        "title": "Meaning, 의미중심형",
+        "desc": "효율보다 경험의 가치와 정서적 만족을 더 중요하게 여기는 성향이에요.\n조금 더 손이 가더라도 아이와의 교감, 과정의 의미, 마음의 만족을 중시해요."
+      }
+    },
+    "typeOverrides": {
+      "PTIE": {
+        "title": "빈틈없는 전략맘",
+        "subtitle": "체계적으로 설계하고\n가장 효율적인 답을 찾는 엄마",
+        "summary": "미리 계획을 세우고, 원칙에 따라 판단하며,\n스스로 해결책을 찾는 편이에요.\n육아와 집안일 모두 예측 가능하고 정돈된 상태를\n선호하며, 시간과 에너지를 아끼는 방식에 강합니다."
+      }
+    },
+    "submissions": [
+      {
+        "id": 1,
+        "childId": 1,
+        "answers": [
+          {
+            "questionId": 1,
+            "value": 5
+          },
+          {
+            "questionId": 2,
+            "value": 1
+          },
+          {
+            "questionId": 3,
+            "value": 5
+          },
+          {
+            "questionId": 4,
+            "value": 1
+          },
+          {
+            "questionId": 5,
+            "value": 5
+          },
+          {
+            "questionId": 6,
+            "value": 5
+          },
+          {
+            "questionId": 7,
+            "value": 1
+          },
+          {
+            "questionId": 8,
+            "value": 5
+          },
+          {
+            "questionId": 9,
+            "value": 1
+          },
+          {
+            "questionId": 10,
+            "value": 5
+          },
+          {
+            "questionId": 11,
+            "value": 5
+          },
+          {
+            "questionId": 12,
+            "value": 1
+          },
+          {
+            "questionId": 13,
+            "value": 5
+          },
+          {
+            "questionId": 14,
+            "value": 1
+          },
+          {
+            "questionId": 15,
+            "value": 5
+          },
+          {
+            "questionId": 16,
+            "value": 5
+          },
+          {
+            "questionId": 17,
+            "value": 1
+          },
+          {
+            "questionId": 18,
+            "value": 5
+          },
+          {
+            "questionId": 19,
+            "value": 1
+          },
+          {
+            "questionId": 20,
+            "value": 5
+          }
+        ],
+        "createdAt": "2026-03-16T06:55:21.047Z"
+      }
+    ]
+  }
+}

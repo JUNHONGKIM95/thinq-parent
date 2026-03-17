@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import './App.css'
 import addHomeImage from '@shared-assets/addhome.png'
 import anomalyImage from '@shared-assets/check.png'
@@ -32,12 +32,16 @@ import menuIcon from '@shared-assets/assets/icons/menu.svg'
 import headerMenuIcon from '@shared-assets/srg/Menu.svg'
 import moreButtonIcon from '@shared-assets/icons/more_button.svg'
 import smartGoIcon from '@shared-assets/icons/smart_go.svg'
+import { API_BASE_URL } from './config/api'
 import { mockChildProfile } from './data/mockChildProfile'
+import { mockParentSchedule } from './data/mockParentSchedule'
 import { mockMyPage } from './data/mockMyPage'
 import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
 import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
+import MombtiTestScreen from './features/mombti/MombtiTestScreen'
+import ParentScheduleScreen from './features/parent/ParentScheduleScreen'
 import MyScreen from './features/my/MyScreen'
 import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
 
@@ -70,6 +74,40 @@ const settingCards = [
     className: 'wide',
   },
 ]
+
+const DEFAULT_PREGNANCY_SUMMARY = {
+  meetingTitle: '틔움이 만나기',
+  daysUntilDueDate: 102,
+  daysUntilDueDateText: '102일 전',
+}
+
+async function fetchPregnancySummary(userId = 3) {
+  const candidates = [
+    `${API_BASE_URL}/api/pregnancy/summary?userId=${userId}`,
+    `${API_BASE_URL}/pregnancy/summary?userId=${userId}`,
+    `${API_BASE_URL}/api/pregnancy-summary?userId=${userId}`,
+  ]
+
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        continue
+      }
+
+      const payload = await response.json()
+
+      if (payload?.data) {
+        return payload.data
+      }
+    } catch {
+      // Try the next candidate endpoint.
+    }
+  }
+
+  return DEFAULT_PREGNANCY_SUMMARY
+}
 
 function AssetIcon({ src, alt = '', className = '', size = 20 }) {
   return (
@@ -385,7 +423,7 @@ function ChatExpertScreen({ onBack }) {
   )
 }
 
-function ParentModeScreen({ onBack, onOpenChat, onOpenMy }) {
+function ParentModeScreen({ onBack, onOpenChat, onOpenMy, onOpenSchedule, pregnancySummary }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
 
   useEffect(() => {
@@ -413,10 +451,10 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy }) {
       <div className="parent-mode-body">
       <div className="parent-mode-content">
         <section className="parent-mode-meet">
-          <h2 className="parent-mode-meet-title">틔움이 만나기</h2>
+          <h2 className="parent-mode-meet-title">{pregnancySummary.meetingTitle}</h2>
           <p className="parent-mode-meet-meta">
             <img src={heartIcon} alt="" className="parent-mode-heart" aria-hidden="true" />
-            - 102일 전
+            {`- ${pregnancySummary.daysUntilDueDate}일 전`}
           </p>
         </section>
 
@@ -452,7 +490,15 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy }) {
         </div>
 
         <div className="parent-mode-cards-row">
-          <section className="parent-mode-card parent-mode-calendar">
+          <button
+            type="button"
+            className="parent-mode-card parent-mode-calendar parent-mode-card-button"
+            onClick={(event) => {
+              if (event.target.closest('h3')) {
+                onOpenSchedule()
+              }
+            }}
+          >
             <h3>캘린더</h3>
             <p className="parent-mode-date-line">
               <span className="parent-mode-date">27</span>
@@ -468,7 +514,7 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenMy }) {
                 <span className="parent-mode-event-time">21:30</span>
               </div>
             </div>
-          </section>
+          </button>
           <section className="parent-mode-card parent-mode-todo">
             <div className="parent-mode-todo-head">
               <h3>TO DO</h3>
@@ -545,9 +591,33 @@ function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [currentScreen, setCurrentScreen] = useState('home')
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
+  const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const myPage = mockMyPage
   const childProfile = mockChildProfile
+  const parentSchedule = mockParentSchedule
   const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
+
+  useEffect(() => {
+    let isMounted = true
+
+    fetchPregnancySummary(3).then((data) => {
+      if (!isMounted || !data) {
+        return
+      }
+
+      setPregnancySummary({
+        meetingTitle: data.meetingTitle ?? `${data.babyNickname ?? '틔움이'} 만나기`,
+        daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
+        daysUntilDueDateText:
+          data.daysUntilDueDateText ??
+          `${data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate}일 전`,
+      })
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const openSettings = () => {
     setIsHomeSheetOpen(false)
@@ -570,6 +640,10 @@ function App() {
     setCurrentScreen('my')
   }
 
+  const openParentSchedule = () => {
+    setCurrentScreen('parent-mode-schedule')
+  }
+
   const openChildProfile = () => {
     setCurrentScreen('child-profile')
   }
@@ -582,14 +656,20 @@ function App() {
     setCurrentScreen('mombti')
   }
 
+  const openMombtiTest = () => {
+    setCurrentScreen('mombti-test')
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
-      : currentScreen === 'parent-mode' || currentScreen === 'parent-mode-chat'
+      : currentScreen === 'parent-mode' ||
+          currentScreen === 'parent-mode-chat' ||
+          currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
-        : currentScreen === 'mombti' || currentScreen === 'mombti-menu'
+        : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
           ? 'mombti-mode'
         : 'settings-mode'
 
@@ -621,11 +701,27 @@ function App() {
             onBack={() => setCurrentScreen('life-agent')}
             onOpenChat={openParentModeChat}
             onOpenMy={openMyScreen}
+            onOpenSchedule={openParentSchedule}
+            pregnancySummary={pregnancySummary}
           />
         )}
 
         {currentScreen === 'parent-mode-chat' && (
           <ChatExpertScreen onBack={() => setCurrentScreen('parent-mode')} />
+        )}
+
+        {currentScreen === 'parent-mode-schedule' && (
+          <ParentScheduleScreen
+            data={parentSchedule}
+            onBack={() => setCurrentScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            navIcons={{
+              home: parentModeHomeIcon,
+              device: parentModeBabyIcon,
+              community: parentModeCommunityIcon,
+              my: parentModeMyIcon,
+            }}
+          />
         )}
 
         {currentScreen === 'my' && (
@@ -645,7 +741,14 @@ function App() {
           <MombtiMenuScreen
             onBack={() => setCurrentScreen('my')}
             onOpenResult={openMombtiResult}
-            onOpenTest={openMombtiResult}
+            onOpenTest={openMombtiTest}
+          />
+        )}
+
+        {currentScreen === 'mombti-test' && (
+          <MombtiTestScreen
+            onBack={() => setCurrentScreen('mombti-menu')}
+            onComplete={() => setCurrentScreen('mombti')}
           />
         )}
 
