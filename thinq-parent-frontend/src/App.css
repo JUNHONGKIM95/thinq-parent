@@ -1377,12 +1377,78 @@
   border: 0;
   background: transparent;
   cursor: pointer;
+  position: relative;
+  display: grid;
+  place-items: center;
+  line-height: 0;
 }
 
-.parent-device-toggle-button img {
-  width: 69px;
-  height: auto;
+.parent-device-toggle-visual {
+  position: relative;
   display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.parent-device-toggle-visual--auto {
+  width: 80px;
+  height: 46px;
+}
+
+.parent-device-toggle-visual--sound {
+  width: 92px;
+  height: 61px;
+}
+
+.parent-device-toggle-button--auto {
+  width: 80px;
+  height: 46px;
+}
+
+.parent-device-toggle-button--sound {
+  width: 92px;
+  height: 61px;
+}
+
+.parent-device-toggle-image {
+  position: absolute;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.parent-device-toggle-image.is-visible {
+  opacity: 1;
+}
+
+.parent-device-toggle-image--auto-on {
+  width: 80px;
+  height: 46px;
+  top: 0;
+  left: 0;
+}
+
+.parent-device-toggle-image--auto-off {
+  width: 79px;
+  height: 46px;
+  top: -1px;
+  left: 8px;
+}
+
+.parent-device-toggle-image--sound-on {
+  width: 92px;
+  height: 61px;
+  top: 0;
+  left: 0;
+}
+
+.parent-device-toggle-image--sound-off {
+  width: 83px;
+  height: 61px;
+  top: -1px;
+  left: 19px;
 }
 
 .parent-device-control-divider {
@@ -2892,11 +2958,36 @@
   padding: 22px 18px 18px;
 }
 
+.parent-schedule-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
 .parent-schedule-calendar-card h2 {
-  margin: 0 0 28px;
+  margin: 0;
   font-size: 1.9rem;
   font-weight: 300;
   line-height: 1;
+}
+
+.parent-schedule-month-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 236, 236, 0.9);
+  color: #5f514d;
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.parent-schedule-month-button:focus-visible {
+  outline: 2px solid rgba(95, 81, 77, 0.22);
+  outline-offset: 2px;
 }
 
 .parent-schedule-weekdays,
@@ -3663,6 +3754,34 @@
 .parent-schedule-period-button.is-selected.is-pm {
   background: #1c26be;
   color: #ffffff;
+}
+
+.parent-schedule-location-input {
+  display: block;
+}
+
+.parent-schedule-location-input input {
+  width: 100%;
+  min-height: 45px;
+  padding: 0 16px;
+  border: 1px solid #c5c5c5;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #414141;
+  outline: none;
+}
+
+.parent-schedule-location-input input::placeholder {
+  color: #8a8a8a;
+}
+
+.parent-schedule-location-input input:focus {
+  border-color: rgba(51, 55, 165, 0.45);
+  box-shadow: 0 0 0 3px rgba(51, 55, 165, 0.08);
 }
 
 .parent-schedule-memo-input {

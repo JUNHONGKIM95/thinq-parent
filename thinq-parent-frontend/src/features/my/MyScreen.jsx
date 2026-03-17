@@ -83,7 +83,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY', icon: parentModeMyIcon },
 ]
 
-function MyScreen({ data, onBack, onOpenMombti, onOpenChildProfile }) {
+function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpenChildProfile }) {
   return (
     <div className="my-screen-shell">
       <header className="my-header">
@@ -220,19 +220,24 @@ function MyScreen({ data, onBack, onOpenMombti, onOpenChildProfile }) {
       </div>
 
       <nav className="my-bottom-nav" aria-label="MY 하단 메뉴">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.map((item) => {
+          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
+
+          return (
           <button
             key={item.key}
             type="button"
             className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
             aria-current={item.key === 'my' ? 'page' : undefined}
+            onClick={handleClick}
           >
             <span className="parent-mode-nav-icon-frame" aria-hidden="true">
               <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
             </span>
             <span className="parent-mode-nav-label">{item.label}</span>
           </button>
-        ))}
+          )
+        })}
       </nav>
     </div>
   )

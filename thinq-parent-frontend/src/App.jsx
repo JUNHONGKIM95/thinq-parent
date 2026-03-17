@@ -80,6 +80,52 @@ const DEFAULT_PREGNANCY_SUMMARY = {
   babyNickname: '틔움이',
   daysUntilDueDate: 102,
 }
+const DEFAULT_CHEER_MESSAGE = ''
+const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
+
+function getDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function getDayOfWeekLabel(date) {
+  const labels = ['일', '월', '화', '수', '목', '금', '토']
+  return labels[date.getDay()]
+}
+
+function getDailyScheduleCacheKey(userId, date) {
+  return `${DAILY_SCHEDULE_CACHE_PREFIX}:${userId}:${getDateKey(date)}`
+}
+
+function readDailyScheduleCache(userId, date) {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  try {
+    const cachedValue = window.localStorage.getItem(getDailyScheduleCacheKey(userId, date))
+    const parsedValue = cachedValue ? JSON.parse(cachedValue) : []
+
+    return Array.isArray(parsedValue) ? parsedValue : []
+  } catch {
+    return []
+  }
+}
+
+function writeDailyScheduleCache(userId, date, items) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(getDailyScheduleCacheKey(userId, date), JSON.stringify(items))
+  } catch {
+    // Ignore storage failures and continue with live data.
+  }
+}
 
 function getMeetingName(summary) {
   if (summary?.babyNickname) {
@@ -94,7 +140,7 @@ function getMeetingName(summary) {
 }
 
 async function fetchPregnancySummary(userId = 3) {
-  const url = `${API_BASE_URL}/api/v1/users/${userId}/pregnancy-summary`
+  const url = `${API_BASE_URL}/api/v1/users/${userId}`
 
   try {
     const response = await fetch(url)
@@ -106,13 +152,168 @@ async function fetchPregnancySummary(userId = 3) {
     const payload = await response.json()
 
     if (payload?.data) {
-      return payload.data
+      const dueDate = payload.data.dueDate
+      const today = new Date()
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const dueDateValue = dueDate ? new Date(`${dueDate}T00:00:00`) : null
+      const daysUntilDueDate = dueDateValue
+        ? Math.max(0, Math.ceil((dueDateValue.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)))
+        : DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate
+
+      return {
+        ...payload.data,
+        daysUntilDueDate,
+      }
     }
   } catch {
     return DEFAULT_PREGNANCY_SUMMARY
   }
 
   return DEFAULT_PREGNANCY_SUMMARY
+}
+
+async function fetchLatestCheerMessage(userId = 3) {
+  try {
+    const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
+
+    if (!userResponse.ok) {
+      return ''
+    }
+
+    const userPayload = await userResponse.json()
+    const groupId = userPayload?.data?.groupId
+
+    if (!groupId) {
+      return ''
+    }
+
+    const cheerResponse = await fetch(`${API_BASE_URL}/api/v1/cheer-messages/groups/${groupId}/latest`)
+
+    if (!cheerResponse.ok) {
+      return ''
+    }
+
+    const cheerPayload = await cheerResponse.json()
+    const content = cheerPayload?.data?.content
+    const senderId = cheerPayload?.data?.senderId
+
+    if (!content?.trim()) {
+      return ''
+    }
+
+    if (!senderId) {
+      return content
+    }
+
+    const senderResponse = await fetch(`${API_BASE_URL}/api/v1/users/${senderId}`)
+
+    if (!senderResponse.ok) {
+      return content
+    }
+
+    const senderPayload = await senderResponse.json()
+    const senderUsername = senderPayload?.data?.username
+
+    if (!senderUsername?.trim()) {
+      return content
+    }
+
+    return `${content} - ${senderUsername}`
+  } catch {
+    return ''
+  }
+}
+
+function formatDailyScheduleTime(rawTime, startDate) {
+  if (rawTime?.trim()) {
+    return rawTime.slice(0, 5)
+  }
+
+  if (!startDate) {
+    return ''
+  }
+
+  const scheduleDate = new Date(startDate)
+
+  if (Number.isNaN(scheduleDate.getTime())) {
+    return ''
+  }
+
+  return scheduleDate.toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
+function getParentModeScheduleTypeStyle(scheduleType, index) {
+  const normalizedType = String(scheduleType ?? '').trim().toLowerCase()
+  const styleMap = {
+    baby: { background: '#ff3b3b', color: '#ffffff' },
+    family: { background: '#8fbc69', color: '#ffffff' },
+    work: { background: '#7478a8', color: '#ffffff' },
+    personal: { background: '#fef19f', color: '#000000' },
+    important: { background: '#2e2e2e', color: '#ffffff' },
+    etc: { background: '#b285bb', color: '#ffffff' },
+    아기: { background: '#ff3b3b', color: '#ffffff' },
+    가족: { background: '#8fbc69', color: '#ffffff' },
+    일: { background: '#7478a8', color: '#ffffff' },
+    개인: { background: '#fef19f', color: '#000000' },
+    중요: { background: '#2e2e2e', color: '#ffffff' },
+    기타: { background: '#b285bb', color: '#ffffff' },
+  }
+
+  return (
+    styleMap[normalizedType] ??
+    styleMap[String(scheduleType ?? '').trim()] ?? {
+      background: index === 0 ? '#ff0000' : '#ffef88',
+      color: index === 0 ? '#ffffff' : '#000000',
+    }
+  )
+}
+
+async function fetchDailySchedules(userId = 3, date = new Date()) {
+  const dateKey = getDateKey(date)
+
+  try {
+    const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
+
+    if (!userResponse.ok) {
+      return []
+    }
+
+    const userPayload = await userResponse.json()
+    const groupId = userPayload?.data?.groupId
+
+    if (!groupId) {
+      return []
+    }
+
+    const query = new URLSearchParams({
+      groupId: String(groupId),
+      date: dateKey,
+    })
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/daily?${query.toString()}`)
+
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = await response.json()
+    const schedules = Array.isArray(payload?.data) ? payload.data : []
+
+    const items = schedules.slice(0, 2).map((schedule, index) => ({
+      key: schedule.scheduleId ?? `${schedule.title}-${schedule.scheduleDate}-${schedule.time}-${index}`,
+      title: schedule.title ?? '',
+      time: formatDailyScheduleTime(schedule.time, schedule.startDate),
+      boxStyle: getParentModeScheduleTypeStyle(schedule.scheduleType, index),
+    }))
+
+    writeDailyScheduleCache(userId, date, items)
+    return items
+  } catch {
+    return []
+  }
 }
 
 function AssetIcon({ src, alt = '', className = '', size = 20 }) {
@@ -429,8 +630,27 @@ function ChatExpertScreen({ onBack }) {
   )
 }
 
-function ParentModeScreen({ onBack, onOpenChat, onOpenDevice, onOpenMy, onOpenSchedule, pregnancySummary }) {
+function ParentModeScreen({
+  onBack,
+  onOpenChat,
+  onOpenHome,
+  onOpenDevice,
+  onOpenMy,
+  onOpenSchedule,
+  pregnancySummary,
+  cheerMessageText,
+  dailyScheduleItems,
+}) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
+  const today = new Date()
+  const todayKey = getDateKey(today)
+  const todayTodoGroup =
+    mockParentSchedule.todo?.byDate?.[todayKey] ??
+    mockParentSchedule.todo?.default ?? {
+      recommended: [],
+      myList: [],
+    }
+  const todayTodoItems = [...(todayTodoGroup.recommended ?? []), ...(todayTodoGroup.myList ?? [])].slice(0, 2)
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -489,7 +709,7 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenDevice, onOpenMy, onOpenSc
                 }`}
               aria-hidden="true"
             />
-            <p className="parent-mode-input-text">당신도 틔움이도 너무 사랑해 -틔움아빠</p>
+            <p className="parent-mode-input-text">{cheerMessageText}</p>
           </div>
 
           <div className="parent-mode-cards-row">
@@ -497,48 +717,56 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenDevice, onOpenMy, onOpenSc
               type="button"
               className="parent-mode-card parent-mode-calendar parent-mode-card-button"
             >
-              <h3 onClick={onOpenSchedule}>캘린더</h3>
-              <p className="parent-mode-date-line">
-                <span className="parent-mode-date">27</span>
-                <span className="parent-mode-day">금</span>
+              <h3 onClick={() => onOpenSchedule(false)}>캘린더</h3>
+              <p className="parent-mode-date-line" onClick={() => onOpenSchedule(true)}>
+                <span className="parent-mode-date">{today.getDate()}</span>
+                <span className="parent-mode-day">{getDayOfWeekLabel(today)}</span>
               </p>
-              <div className="parent-mode-events">
-                <div className="parent-mode-event-box parent-mode-event-box--red">
-                  <span className="parent-mode-event-label">산부인과</span>
-                  <span className="parent-mode-event-time">15:00</span>
-                </div>
-                <div className="parent-mode-event-box parent-mode-event-box--yellow">
-                  <span className="parent-mode-event-label">당근</span>
-                  <span className="parent-mode-event-time">21:30</span>
-                </div>
+              <div className="parent-mode-events" onClick={() => onOpenSchedule(true)}>
+                {dailyScheduleItems.map((item) => (
+                  <div
+                    key={item.key}
+                    className="parent-mode-event-box"
+                    style={{
+                      background: item.boxStyle.background,
+                      color: item.boxStyle.color,
+                      opacity: 0.8,
+                    }}
+                  >
+                    <span className="parent-mode-event-label">{item.title}</span>
+                    <span className="parent-mode-event-time" style={{ color: item.boxStyle.color }}>
+                      {item.time}
+                    </span>
+                  </div>
+                ))}
               </div>
             </button>
             <section className="parent-mode-card parent-mode-todo">
               <div
                 className="parent-mode-todo-head"
-                onClick={onOpenSchedule}
+                onClick={() => onOpenSchedule(false)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
-                    onOpenSchedule()
+                    onOpenSchedule(false)
                   }
                 }}
               >
                 <h3>TO DO</h3>
-                <span className="parent-mode-week">25주차</span>
               </div>
-              <label className="parent-mode-todo-item">
-                <input type="checkbox" className="parent-mode-todo-checkbox" defaultChecked />
-                <span className="parent-mode-todo-check" aria-hidden="true" />
-                <span>임신성 당뇨 선별검사 받기</span>
-              </label>
-              <label className="parent-mode-todo-item">
-                <input type="checkbox" className="parent-mode-todo-checkbox" />
-                <span className="parent-mode-todo-check" aria-hidden="true" />
-                <span>골반저근 운동</span>
-              </label>
+              {todayTodoItems.map((item) => (
+                <label key={item.key} className="parent-mode-todo-item">
+                  <input
+                    type="checkbox"
+                    className="parent-mode-todo-checkbox"
+                    defaultChecked={Boolean(item.checked)}
+                  />
+                  <span className="parent-mode-todo-check" aria-hidden="true" />
+                  <span>{item.text}</span>
+                </label>
+              ))}
             </section>
           </div>
 
@@ -562,7 +790,7 @@ function ParentModeScreen({ onBack, onOpenChat, onOpenDevice, onOpenMy, onOpenSc
         <div className="parent-mode-bottom-bar" />
 
         <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
-          <button type="button" className="parent-mode-nav-item" aria-label="홈">
+          <button type="button" className="parent-mode-nav-item" aria-label="홈" onClick={onOpenHome}>
             <span className="parent-mode-nav-icon-frame" aria-hidden="true">
               <img src={parentModeHomeIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
             </span>
@@ -605,7 +833,10 @@ function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [currentScreen, setCurrentScreen] = useState('home')
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
+  const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(true)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
+  const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
+  const [dailyScheduleItems, setDailyScheduleItems] = useState(() => readDailyScheduleCache(3, new Date()))
   const myPage = mockMyPage
   const childProfile = mockChildProfile
   const parentSchedule = mockParentSchedule
@@ -627,6 +858,24 @@ function App() {
         meetingTitle: data.meetingTitle,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
       })
+    })
+
+    fetchLatestCheerMessage(3).then((content) => {
+      if (!isMounted || !content) {
+        return
+      }
+
+      setCheerMessageText(content)
+    })
+
+    setDailyScheduleItems(readDailyScheduleCache(3, new Date()))
+
+    fetchDailySchedules(3, new Date()).then((items) => {
+      if (!isMounted) {
+        return
+      }
+
+      setDailyScheduleItems(items)
     })
 
     return () => {
@@ -659,7 +908,8 @@ function App() {
     setCurrentScreen('my')
   }
 
-  const openParentSchedule = () => {
+  const openParentSchedule = (shouldOpenDetail = true) => {
+    setIsScheduleDetailInitiallyOpen(shouldOpenDetail)
     setCurrentScreen('parent-mode-schedule')
   }
 
@@ -720,10 +970,13 @@ function App() {
           <ParentModeScreen
             onBack={() => setCurrentScreen('life-agent')}
             onOpenChat={openParentModeChat}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             onOpenSchedule={openParentSchedule}
             pregnancySummary={pregnancySummary}
+            cheerMessageText={cheerMessageText}
+            dailyScheduleItems={dailyScheduleItems}
           />
         )}
 
@@ -749,7 +1002,10 @@ function App() {
           <ParentScheduleScreen
             data={parentSchedule}
             onBack={() => setCurrentScreen('parent-mode')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
+            initialDetailOpen={isScheduleDetailInitiallyOpen}
             navIcons={{
               home: parentModeHomeIcon,
               device: parentModeBabyIcon,
@@ -763,18 +1019,27 @@ function App() {
           <MyScreen
             data={myPage}
             onBack={() => setCurrentScreen('parent-mode')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
             onOpenChildProfile={openChildProfile}
             onOpenMombti={openMombti}
           />
         )}
 
         {currentScreen === 'child-profile' && (
-          <ChildProfileScreen data={childProfile} onBack={() => setCurrentScreen('my')} />
+          <ChildProfileScreen
+            data={childProfile}
+            onBack={() => setCurrentScreen('my')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+          />
         )}
 
         {currentScreen === 'mombti-menu' && (
           <MombtiMenuScreen
             onBack={() => setCurrentScreen('my')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
             onOpenResult={openMombtiResult}
             onOpenTest={openMombtiTest}
           />
@@ -788,7 +1053,12 @@ function App() {
         )}
 
         {currentScreen === 'mombti' && (
-          <MombtiDetailScreen data={mombti} onBack={() => setCurrentScreen('mombti-menu')} />
+          <MombtiDetailScreen
+            data={mombti}
+            onBack={() => setCurrentScreen('mombti-menu')}
+            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+          />
         )}
 
         {currentScreen === 'home' && isHomeSheetOpen ? (

@@ -89,7 +89,7 @@ function buildCalendarDays(viewDate) {
   })
 }
 
-function ChildProfileScreen({ data, onBack }) {
+function ChildProfileScreen({ data, onBack, onOpenHome, onOpenDevice }) {
   const initialSelectedDate = useMemo(() => parseIsoDate(data.selectedDate), [data.selectedDate])
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate)
   const [viewDate, setViewDate] = useState(new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), 1))
@@ -182,19 +182,24 @@ function ChildProfileScreen({ data, onBack }) {
       </div>
 
       <nav className="my-bottom-nav" aria-label="우리 아이 하단 메뉴">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.map((item) => {
+          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
+
+          return (
           <button
             key={item.key}
             type="button"
             className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
             aria-current={item.key === 'my' ? 'page' : undefined}
+            onClick={handleClick}
           >
             <span className="parent-mode-nav-icon-frame" aria-hidden="true">
               <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
             </span>
             <span className="parent-mode-nav-label">{item.label}</span>
           </button>
-        ))}
+          )
+        })}
       </nav>
     </div>
   )

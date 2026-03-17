@@ -88,6 +88,23 @@ public class ScheduleServiceImpl implements ScheduleService {
 	}
 
 	@Override
+	public List<ScheduleResponse> findDailyByUserId(Integer userId, LocalDate date) {
+		getUserById(userId);
+		LocalDateTime startOfDay = date.atStartOfDay();
+		LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+		return scheduleRepository
+				.findByUserIdAndStartDateGreaterThanEqualAndStartDateLessThanOrderByStartDateAsc(
+						userId,
+						startOfDay,
+						startOfNextDay
+				)
+				.stream()
+				.map(this::toResponse)
+				.toList();
+	}
+
+	@Override
 	public List<ScheduleResponse> findByGroupId(Integer groupId) {
 		return scheduleRepository.findByGroupIdOrderByCreatedAtDesc(groupId)
 				.stream()

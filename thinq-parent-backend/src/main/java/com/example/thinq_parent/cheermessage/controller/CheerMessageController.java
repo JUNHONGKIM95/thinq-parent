@@ -40,4 +40,10 @@ public class CheerMessageController {
 	public ApiResponse<CheerMessageResponse> findLatestByGroupId(@PathVariable Integer groupId) {
 		return ApiResponse.success("Latest cheer message fetched successfully", cheerMessageService.findLatestByGroupId(groupId));
 	}
+
+	@GetMapping("/users/{userId}/latest")
+	@Operation(summary = "Get latest cheer message by user", description = "Finds the family group for a user and returns the latest cheer message content by createdAt.")
+	public ApiResponse<CheerMessageResponse> findLatestByUserId(@PathVariable Integer userId) {
+		return ApiResponse.success("Latest cheer message fetched successfully", cheerMessageService.findLatestByUserId(userId));
+	}
 }

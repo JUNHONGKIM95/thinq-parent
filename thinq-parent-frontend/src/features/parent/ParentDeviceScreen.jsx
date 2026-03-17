@@ -48,12 +48,23 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, navIcons }) {
             </div>
             <button
               type="button"
-              className="parent-device-toggle-button"
+              className="parent-device-toggle-button parent-device-toggle-button--auto"
               aria-label="가전제품 자동제어 토글"
               aria-pressed={isAutoControlEnabled}
               onClick={() => setIsAutoControlEnabled((prev) => !prev)}
             >
-              <img src={isAutoControlEnabled ? autoOnIcon : autoOffIcon} alt="" aria-hidden="true" />
+              <span className="parent-device-toggle-visual parent-device-toggle-visual--auto" aria-hidden="true">
+                <img
+                  src={autoOffIcon}
+                  alt=""
+                  className={`parent-device-toggle-image parent-device-toggle-image--auto-off ${!isAutoControlEnabled ? 'is-visible' : ''}`}
+                />
+                <img
+                  src={autoOnIcon}
+                  alt=""
+                  className={`parent-device-toggle-image parent-device-toggle-image--auto-on ${isAutoControlEnabled ? 'is-visible' : ''}`}
+                />
+              </span>
             </button>
           </div>
 
@@ -66,12 +77,23 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, navIcons }) {
             </div>
             <button
               type="button"
-              className="parent-device-toggle-button"
+              className="parent-device-toggle-button parent-device-toggle-button--sound"
               aria-label="가전 알림음 제어 토글"
               aria-pressed={isSoundControlEnabled}
               onClick={() => setIsSoundControlEnabled((prev) => !prev)}
             >
-              <img src={isSoundControlEnabled ? soundOnIcon : soundOffIcon} alt="" aria-hidden="true" />
+              <span className="parent-device-toggle-visual parent-device-toggle-visual--sound" aria-hidden="true">
+                <img
+                  src={soundOffIcon}
+                  alt=""
+                  className={`parent-device-toggle-image parent-device-toggle-image--sound-off ${!isSoundControlEnabled ? 'is-visible' : ''}`}
+                />
+                <img
+                  src={soundOnIcon}
+                  alt=""
+                  className={`parent-device-toggle-image parent-device-toggle-image--sound-on ${isSoundControlEnabled ? 'is-visible' : ''}`}
+                />
+              </span>
             </button>
           </div>
         </section>

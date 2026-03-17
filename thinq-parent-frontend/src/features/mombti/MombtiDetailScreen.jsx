@@ -42,7 +42,7 @@ function highlightText(text, target) {
   )
 }
 
-function MombtiDetailScreen({ data, onBack }) {
+function MombtiDetailScreen({ data, onBack, onOpenHome, onOpenDevice }) {
   return (
     <div className="mombti-screen-shell">
       <header className="mombti-header">
@@ -110,6 +110,7 @@ function MombtiDetailScreen({ data, onBack }) {
         {data.navigation.map((item) => {
           const iconSrc = NAV_ICONS[item.key] ?? parentModeHomeIcon
           const isActive = item.key === 'my'
+          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
 
           return (
             <button
@@ -117,6 +118,7 @@ function MombtiDetailScreen({ data, onBack }) {
               type="button"
               className={`parent-mode-nav-item ${isActive ? 'parent-mode-nav-item--active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
+              onClick={handleClick}
             >
               <span className="parent-mode-nav-icon-frame" aria-hidden="true">
                 <img src={iconSrc} alt="" className="parent-mode-nav-icon" aria-hidden="true" />

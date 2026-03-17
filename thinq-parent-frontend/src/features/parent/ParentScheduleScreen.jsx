@@ -1,5 +1,7 @@
 ﻿import { useMemo, useState } from 'react'
 import menuIcon from '@shared-assets/srg/Menu.svg'
+import { useEffect } from 'react'
+import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
   return (
@@ -55,8 +57,61 @@ const NAV_ITEMS = [
   { key: 'community', label: '커뮤니티' },
   { key: 'my', label: 'MY' },
 ]
+const SCHEDULE_USER_ID = 3
+const MONTHLY_SCHEDULE_CACHE_PREFIX = 'parent-monthly-schedules'
 
-const DEFAULT_ACTIVE_DATE_KEY = '2026-03-27'
+function getDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function parseDateKey(dateKey) {
+  return new Date(`${dateKey}T00:00:00`)
+}
+
+function getMonthStart(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function getMonthLabel(date) {
+  return date.toLocaleString('en-US', { month: 'long' }).toUpperCase()
+}
+
+function getMonthlyScheduleCacheKey(monthDate, userId = SCHEDULE_USER_ID) {
+  return `${MONTHLY_SCHEDULE_CACHE_PREFIX}:${userId}:${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`
+}
+
+function readMonthlyScheduleCache(monthDate, userId = SCHEDULE_USER_ID) {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  try {
+    const cachedValue = window.localStorage.getItem(getMonthlyScheduleCacheKey(monthDate, userId))
+    const parsedValue = cachedValue ? JSON.parse(cachedValue) : []
+
+    return Array.isArray(parsedValue) ? parsedValue : []
+  } catch {
+    return []
+  }
+}
+
+function writeMonthlyScheduleCache(monthDate, schedules, userId = SCHEDULE_USER_ID) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(getMonthlyScheduleCacheKey(monthDate, userId), JSON.stringify(schedules))
+  } catch {
+    // Ignore storage failures and continue with live data.
+  }
+}
+
+const DEFAULT_ACTIVE_DATE_KEY = getDateKey(new Date())
 const TODO_PRIORITY_OPTIONS = [
   { key: 'low', label: '낮음', toneClass: 'is-low' },
   { key: 'medium', label: '보통', toneClass: 'is-medium' },
@@ -74,9 +129,10 @@ const SCHEDULE_TYPE_OPTIONS = [
 const DEFAULT_SCHEDULE_FORM = {
   title: '',
   typeKey: 'baby',
-  hour: '00',
-  minute: '00',
+  hour: '',
+  minute: '',
   period: 'am',
+  location: '',
   memo: '',
 }
 
@@ -101,13 +157,54 @@ function cloneTodoGroup(todoGroup) {
   }
 }
 
-function cloneWeeks(weeks) {
-  return weeks.map((week) =>
-    week.map((day) => ({
-      ...day,
-      markers: day.markers ? day.markers.map((marker) => ({ ...marker })) : undefined,
-    }))
-  )
+function buildMarkerState(weeks) {
+  const markersByDate = {}
+
+  weeks.forEach((week) => {
+    week.forEach((day) => {
+      if (!day.markers?.length) {
+        return
+      }
+
+      markersByDate[day.key] = day.markers.map((marker) => ({ ...marker }))
+    })
+  })
+
+  return markersByDate
+}
+
+function buildCalendarWeeks(monthDate, markersByDate) {
+  const monthStart = getMonthStart(monthDate)
+  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0)
+  const gridStart = new Date(monthStart)
+  const gridEnd = new Date(monthEnd)
+
+  gridStart.setDate(monthStart.getDate() - monthStart.getDay())
+  gridEnd.setDate(monthEnd.getDate() + (6 - monthEnd.getDay()))
+
+  const weeks = []
+  const currentDate = new Date(gridStart)
+
+  while (currentDate <= gridEnd) {
+    const week = []
+
+    for (let index = 0; index < 7; index += 1) {
+      const dateKey = getDateKey(currentDate)
+
+      week.push({
+        key: dateKey,
+        label: String(currentDate.getDate()),
+        inMonth: currentDate.getMonth() === monthStart.getMonth(),
+        markers: markersByDate[dateKey]?.map((marker) => ({ ...marker })),
+      })
+
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    weeks.push(week)
+  }
+
+  return weeks
 }
 
 function cloneDetails(details) {
@@ -146,6 +243,31 @@ function getTypeOption(typeKey) {
   return SCHEDULE_TYPE_OPTIONS.find((option) => option.key === typeKey) ?? SCHEDULE_TYPE_OPTIONS[0]
 }
 
+function getTypeOptionFromScheduleType(scheduleType) {
+  if (!scheduleType) {
+    return SCHEDULE_TYPE_OPTIONS[0]
+  }
+
+  const normalizedType = String(scheduleType).trim().toLowerCase()
+  const aliasMap = {
+    baby: 'baby',
+    family: 'family',
+    work: 'work',
+    personal: 'personal',
+    important: 'important',
+    etc: 'etc',
+    아기: 'baby',
+    가족: 'family',
+    일: 'work',
+    개인: 'personal',
+    중요: 'important',
+    기타: 'etc',
+  }
+  const matchedKey = aliasMap[normalizedType] ?? aliasMap[String(scheduleType).trim()]
+
+  return getTypeOption(matchedKey ?? normalizedType)
+}
+
 function normalizeTimePart(rawValue, maxValue) {
   const digits = rawValue.replace(/\D/g, '').slice(0, 2)
 
@@ -153,7 +275,112 @@ function normalizeTimePart(rawValue, maxValue) {
     return ''
   }
 
-  return String(Math.min(Number(digits), maxValue)).padStart(2, '0')
+  return String(Math.min(Number(digits), maxValue))
+}
+
+function formatTimePart(value) {
+  return value?.trim() ? value.padStart(2, '0') : '00'
+}
+
+function formatScheduleTime(time) {
+  return time?.trim() ? time.slice(0, 5) : ''
+}
+
+function isSameMonthKey(dateKey, monthDate) {
+  const date = parseDateKey(dateKey)
+  return date.getFullYear() === monthDate.getFullYear() && date.getMonth() === monthDate.getMonth()
+}
+
+async function fetchMonthlySchedules(monthDate, userId = SCHEDULE_USER_ID) {
+  try {
+    const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
+
+    if (!userResponse.ok) {
+      return []
+    }
+
+    const userPayload = await userResponse.json()
+    const groupId = userPayload?.data?.groupId
+
+    if (!groupId) {
+      return []
+    }
+
+    const query = new URLSearchParams({
+      groupId: String(groupId),
+      year: String(monthDate.getFullYear()),
+      month: String(monthDate.getMonth() + 1),
+    })
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/monthly?${query.toString()}`)
+
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = await response.json()
+    return Array.isArray(payload?.data) ? payload.data : []
+  } catch {
+    return []
+  }
+}
+
+function buildMonthlyScheduleState(schedules) {
+  const markersByDate = {}
+  const detailsByDate = {}
+
+  schedules.forEach((schedule, index) => {
+    const dateKey = schedule.scheduleDate
+
+    if (!dateKey) {
+      return
+    }
+
+    const typeOption = getTypeOptionFromScheduleType(schedule.scheduleType)
+    const time = formatScheduleTime(schedule.time)
+
+    if (!markersByDate[dateKey]) {
+      markersByDate[dateKey] = []
+    }
+
+    markersByDate[dateKey].push({
+      key: schedule.scheduleId ?? `${dateKey}-${index}`,
+      label: schedule.title ?? '',
+      color: typeOption.color,
+      textColor: typeOption.textColor,
+      typeKey: typeOption.key,
+    })
+
+    if (!detailsByDate[dateKey]) {
+      detailsByDate[dateKey] = {
+        day: String(parseDateKey(dateKey).getDate()),
+        dayOfWeek: getDayOfWeekLabel(dateKey),
+        items: [],
+      }
+    }
+
+    detailsByDate[dateKey].items.push({
+      key: schedule.scheduleId ?? `${dateKey}-${index}`,
+      title: schedule.title ?? '',
+      time,
+      note: schedule.memo ?? '',
+      typeKey: typeOption.key,
+      color: typeOption.color,
+      textColor: typeOption.textColor,
+    })
+  })
+
+  return { markersByDate, detailsByDate }
+}
+
+function replaceMonthEntries(prevState, monthDate, nextEntries) {
+  const filteredState = Object.fromEntries(
+    Object.entries(prevState).filter(([dateKey]) => !isSameMonthKey(dateKey, monthDate))
+  )
+
+  return {
+    ...filteredState,
+    ...nextEntries,
+  }
 }
 
 function getScheduleVisual(item) {
@@ -176,9 +403,21 @@ function getScheduleVisual(item) {
   return getLegacyColor(item.tone)
 }
 
-function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
+function ParentScheduleScreen({
+  data,
+  onBack,
+  onOpenHome,
+  onOpenDevice,
+  onOpenMy,
+  navIcons,
+  initialDetailOpen = true,
+}) {
+  const initialMonth = getMonthStart(new Date())
+  const initialMonthlySchedules = readMonthlyScheduleCache(initialMonth)
+  const initialMonthlyState = buildMonthlyScheduleState(initialMonthlySchedules)
   const [activeDateKey, setActiveDateKey] = useState(DEFAULT_ACTIVE_DATE_KEY)
-  const [isDetailOpen, setIsDetailOpen] = useState(true)
+  const [visibleMonth, setVisibleMonth] = useState(initialMonth)
+  const [isDetailOpen, setIsDetailOpen] = useState(initialDetailOpen)
   const [isTodoActionSheetOpen, setIsTodoActionSheetOpen] = useState(false)
   const [isTodoInputSheetOpen, setIsTodoInputSheetOpen] = useState(false)
   const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(false)
@@ -187,12 +426,17 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
   const [selectedPriority, setSelectedPriority] = useState(null)
   const [scheduleForm, setScheduleForm] = useState(DEFAULT_SCHEDULE_FORM)
   const [deleteTargetKeys, setDeleteTargetKeys] = useState([])
-  const [calendarWeeks, setCalendarWeeks] = useState(() => cloneWeeks(data.weeks))
-  const [scheduleDetails, setScheduleDetails] = useState(() => cloneDetails(data.details))
+  const [isMonthlyScheduleLoaded, setIsMonthlyScheduleLoaded] = useState(initialMonthlySchedules.length > 0)
+  const [calendarMarkersByDate, setCalendarMarkersByDate] = useState(initialMonthlyState.markersByDate)
+  const [scheduleDetails, setScheduleDetails] = useState(initialMonthlyState.detailsByDate)
   const [todosByDate, setTodosByDate] = useState(() => buildTodoState(data.todo))
+  const calendarWeeks = useMemo(
+    () => buildCalendarWeeks(visibleMonth, calendarMarkersByDate),
+    [visibleMonth, calendarMarkersByDate]
+  )
 
   const selectedDetail = useMemo(() => {
-    if (!activeDateKey) {
+    if (!activeDateKey || !isMonthlyScheduleLoaded) {
       return null
     }
 
@@ -211,9 +455,56 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
     }
   }, [activeDateKey, calendarWeeks, scheduleDetails])
 
+  useEffect(() => {
+    let isMounted = true
+    const cachedSchedules = readMonthlyScheduleCache(visibleMonth)
+
+    if (cachedSchedules.length) {
+      const cachedState = buildMonthlyScheduleState(cachedSchedules)
+      setCalendarMarkersByDate((prev) => replaceMonthEntries(prev, visibleMonth, cachedState.markersByDate))
+      setScheduleDetails((prev) => replaceMonthEntries(prev, visibleMonth, cachedState.detailsByDate))
+      setIsMonthlyScheduleLoaded(true)
+    } else {
+      setIsMonthlyScheduleLoaded(false)
+    }
+
+    fetchMonthlySchedules(visibleMonth).then((schedules) => {
+      if (!isMounted) {
+        return
+      }
+
+      const { markersByDate, detailsByDate } = buildMonthlyScheduleState(schedules)
+      writeMonthlyScheduleCache(visibleMonth, schedules)
+
+      setCalendarMarkersByDate((prev) => replaceMonthEntries(prev, visibleMonth, markersByDate))
+      setScheduleDetails((prev) => replaceMonthEntries(prev, visibleMonth, detailsByDate))
+
+      setIsMonthlyScheduleLoaded(true)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [visibleMonth])
+
   const handleDayClick = (dayKey) => {
     setActiveDateKey(dayKey)
+    setVisibleMonth(getMonthStart(parseDateKey(dayKey)))
     setIsDetailOpen(true)
+  }
+
+  const handleMonthChange = (offset) => {
+    const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1)
+    const activeDate = parseDateKey(activeDateKey)
+    const maxDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate()
+    const nextSelectedDate = new Date(
+      nextMonth.getFullYear(),
+      nextMonth.getMonth(),
+      Math.min(activeDate.getDate(), maxDay)
+    )
+
+    setVisibleMonth(nextMonth)
+    setActiveDateKey(getDateKey(nextSelectedDate))
   }
 
   const activeTodoKey = activeDateKey && todosByDate[activeDateKey] ? activeDateKey : 'default'
@@ -250,11 +541,14 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
     const targetDateLabel = activeDateKey
       ? `${selectedDetail?.day ?? new Date(activeDateKey).getDate()}일 ${selectedDetail?.dayOfWeek ?? getDayOfWeekLabel(activeDateKey)}`
       : '날짜 선택'
-    const timeLabel = `${scheduleForm.period === 'am' ? '오전' : '오후'} ${scheduleForm.hour}:${scheduleForm.minute}`
+    const formattedHour = formatTimePart(scheduleForm.hour)
+    const formattedMinute = formatTimePart(scheduleForm.minute)
+    const timeLabel = `${scheduleForm.period === 'am' ? '오전' : '오후'} ${formattedHour}:${formattedMinute}`
     const newItem = {
       key: `schedule-${Date.now()}`,
       title: trimmedValue,
       time: timeLabel,
+      location: scheduleForm.location.trim(),
       note: scheduleForm.memo.trim(),
       color: typeOption.color,
       textColor: typeOption.textColor,
@@ -277,28 +571,18 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
       }
     })
 
-    setCalendarWeeks((prev) =>
-      prev.map((week) =>
-        week.map((day) => {
-          if (day.key !== targetKey) {
-            return day
-          }
-
-          return {
-            ...day,
-            markers: [
-              ...(day.markers ?? []),
-              {
-                key: newItem.key,
-                label: newItem.title,
-                color: newItem.color,
-                textColor: newItem.textColor,
-              },
-            ],
-          }
-        })
-      )
-    )
+    setCalendarMarkersByDate((prev) => ({
+      ...prev,
+      [targetKey]: [
+        ...(prev[targetKey] ?? []),
+        {
+          key: newItem.key,
+          label: newItem.title,
+          color: newItem.color,
+          textColor: newItem.textColor,
+        },
+      ],
+    }))
 
     setScheduleForm(DEFAULT_SCHEDULE_FORM)
     setIsDetailOpen(true)
@@ -385,7 +669,25 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
 
       <div className="parent-schedule-content">
         <section className="parent-schedule-calendar-card">
-          <h2>{data.monthLabel}</h2>
+          <div className="parent-schedule-calendar-header">
+            <button
+              type="button"
+              className="parent-schedule-month-button"
+              aria-label="이전 달"
+              onClick={() => handleMonthChange(-1)}
+            >
+              ‹
+            </button>
+            <h2>{getMonthLabel(visibleMonth)}</h2>
+            <button
+              type="button"
+              className="parent-schedule-month-button"
+              aria-label="다음 달"
+              onClick={() => handleMonthChange(1)}
+            >
+              ›
+            </button>
+          </div>
 
           <div className="parent-schedule-weekdays">
             {data.weekdays.map((weekday) => (
@@ -569,20 +871,25 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
       <div className="parent-mode-bottom-bar" />
 
       <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            className={`parent-mode-nav-item ${item.key === 'device' ? 'parent-mode-nav-item--active' : ''}`}
-            aria-current={item.key === 'device' ? 'page' : undefined}
-            onClick={item.key === 'my' ? onOpenMy : undefined}
-          >
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={navIcons[item.key]} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">{item.label}</span>
-          </button>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const handleClick =
+            item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : item.key === 'my' ? onOpenMy : undefined
+
+          return (
+            <button
+              key={item.key}
+              type="button"
+              className={`parent-mode-nav-item ${item.key === 'device' ? 'parent-mode-nav-item--active' : ''}`}
+              aria-current={item.key === 'device' ? 'page' : undefined}
+              onClick={handleClick}
+            >
+              <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+                <img src={navIcons[item.key]} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+              </span>
+              <span className="parent-mode-nav-label">{item.label}</span>
+            </button>
+          )
+        })}
       </nav>
 
       {isTodoActionSheetOpen ? (
@@ -750,6 +1057,7 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
                     inputMode="numeric"
                     maxLength={2}
                     value={scheduleForm.hour}
+                    placeholder="00"
                     onChange={(event) => {
                       const normalizedHour = normalizeTimePart(event.target.value, 23)
 
@@ -759,6 +1067,13 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
                         period: normalizedHour && Number(normalizedHour) >= 12 ? 'pm' : 'am',
                       }))
                     }}
+                    onBlur={() =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        hour: prev.hour ? prev.hour.padStart(2, '0') : '',
+                      }))
+                    }
+                    onFocus={(event) => event.target.select()}
                     aria-label="시"
                   />
                   <span className="parent-schedule-time-divider" aria-hidden="true" />
@@ -767,12 +1082,20 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
                     inputMode="numeric"
                     maxLength={2}
                     value={scheduleForm.minute}
+                    placeholder="00"
                     onChange={(event) =>
                       setScheduleForm((prev) => ({
                         ...prev,
                         minute: normalizeTimePart(event.target.value, 59),
                       }))
                     }
+                    onBlur={() =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        minute: prev.minute ? prev.minute.padStart(2, '0') : '',
+                      }))
+                    }
+                    onFocus={(event) => event.target.select()}
                     aria-label="분"
                   />
                 </div>
@@ -797,6 +1120,21 @@ function ParentScheduleScreen({ data, onBack, onOpenMy, navIcons }) {
                   </button>
                 </div>
               </div>
+            </div>
+
+            <div className="parent-schedule-form-section">
+              <span className="parent-schedule-form-label">장소</span>
+              <label className="parent-schedule-location-input">
+                <span className="sr-only">장소 입력</span>
+                <input
+                  type="text"
+                  value={scheduleForm.location}
+                  onChange={(event) =>
+                    setScheduleForm((prev) => ({ ...prev, location: event.target.value }))
+                  }
+                  placeholder="장소입력"
+                />
+              </label>
             </div>
 
             <div className="parent-schedule-form-section is-memo">
