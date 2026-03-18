@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import plusScheduleIcon from '@shared-assets/srg/plus_schedule.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
@@ -6,6 +6,7 @@ import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_�
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM } from '../parent/ScheduleInputSheet'
+import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
   return (
@@ -86,10 +87,37 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY', icon: parentModeMyIcon },
 ]
 
-function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpenChildProfile, onOpenSchedule }) {
+function MyScreen({
+  data,
+  userId,
+  onBack,
+  onOpenHome,
+  onOpenDevice,
+  onOpenMombti,
+  onOpenChildProfile,
+  onOpenSchedule,
+  onSaveBabyNickname,
+}) {
   const hasScheduleItems = data.schedule.items.length > 0
   const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(false)
   const [scheduleForm, setScheduleForm] = useState(DEFAULT_SCHEDULE_FORM)
+  const [isEditingChildName, setIsEditingChildName] = useState(false)
+  const [childNameInput, setChildNameInput] = useState(data.childName)
+  const [isSavingChildName, setIsSavingChildName] = useState(false)
+  const childNameInputRef = useRef(null)
+
+  useEffect(() => {
+    setChildNameInput(data.childName)
+  }, [data.childName])
+
+  useEffect(() => {
+    if (!isEditingChildName) {
+      return
+    }
+
+    childNameInputRef.current?.focus()
+    childNameInputRef.current?.select()
+  }, [isEditingChildName])
 
   const handleOpenScheduleInput = () => {
     setScheduleForm(DEFAULT_SCHEDULE_FORM)
@@ -103,6 +131,44 @@ function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpen
 
     setScheduleForm(DEFAULT_SCHEDULE_FORM)
     setIsScheduleInputSheetOpen(false)
+  }
+
+  const handleToggleChildNameEdit = async () => {
+    if (!isEditingChildName) {
+      setIsEditingChildName(true)
+      return
+    }
+
+    const trimmedNickname = childNameInput.trim()
+
+    if (!trimmedNickname || isSavingChildName) {
+      return
+    }
+
+    try {
+      setIsSavingChildName(true)
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/baby-nickname`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          babyNickname: trimmedNickname,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to save baby nickname: ${response.status}`)
+      }
+
+      onSaveBabyNickname?.(trimmedNickname)
+      setIsEditingChildName(false)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSavingChildName(false)
+    }
   }
 
   return (
@@ -126,8 +192,25 @@ function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpen
           </button>
 
           <div className="my-name-row">
-            <h2>{data.childName}</h2>
-            <button type="button" className="my-name-edit" aria-label="아이 이름 수정">
+            {isEditingChildName ? (
+              <input
+                ref={childNameInputRef}
+                type="text"
+                value={childNameInput}
+                onChange={(event) => setChildNameInput(event.target.value)}
+                className="my-name-input"
+                aria-label="아이 이름 입력"
+              />
+            ) : (
+              <h2>{data.childName}</h2>
+            )}
+            <button
+              type="button"
+              className="my-name-edit"
+              aria-label="아이 이름 수정"
+              onClick={handleToggleChildNameEdit}
+              disabled={isSavingChildName}
+            >
               <PencilIcon />
             </button>
           </div>

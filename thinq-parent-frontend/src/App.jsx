@@ -186,6 +186,18 @@ function getMeetingName(summary) {
   return DEFAULT_PREGNANCY_SUMMARY.babyNickname
 }
 
+function getUserPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+
+  if (payload?.user && typeof payload.user === 'object') {
+    return payload.user
+  }
+
+  return null
+}
+
 async function fetchPregnancySummary(userId = 3) {
   const url = `${API_BASE_URL}/api/v1/users/${userId}`
 
@@ -197,13 +209,14 @@ async function fetchPregnancySummary(userId = 3) {
     }
 
     const payload = await response.json()
+    const userData = getUserPayload(payload)
 
-    if (payload?.data) {
-      const dueDate = payload.data.dueDate
+    if (userData) {
+      const dueDate = userData.dueDate
       const daysUntilDueDate = calculateDaysUntilDueDate(dueDate)
 
       return {
-        ...payload.data,
+        ...userData,
         daysUntilDueDate,
       }
     }
@@ -223,7 +236,7 @@ async function fetchLatestCheerMessage(userId = 3) {
     }
 
     const userPayload = await userResponse.json()
-    const groupId = userPayload?.data?.groupId
+    const groupId = getUserPayload(userPayload)?.groupId
 
     if (!groupId) {
       return ''
@@ -254,7 +267,7 @@ async function fetchLatestCheerMessage(userId = 3) {
     }
 
     const senderPayload = await senderResponse.json()
-    const senderUsername = senderPayload?.data?.username
+    const senderUsername = getUserPayload(senderPayload)?.username
 
     if (!senderUsername?.trim()) {
       return content
@@ -325,7 +338,7 @@ async function fetchDailySchedules(userId = 3, date = new Date()) {
     }
 
     const userPayload = await userResponse.json()
-    const groupId = userPayload?.data?.groupId
+    const groupId = getUserPayload(userPayload)?.groupId
 
     if (!groupId) {
       return []
@@ -874,15 +887,18 @@ function ParentModeScreen({
 function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [currentScreen, setCurrentScreen] = useState('home')
+  const [screenHistory, setScreenHistory] = useState([])
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
   const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(true)
   const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
   const [dailyScheduleItems, setDailyScheduleItems] = useState(() => readDailyScheduleCache(CURRENT_USER_ID, new Date()))
+  const [childProfile, setChildProfile] = useState(mockChildProfile)
   const today = new Date()
   const myPage = {
     ...mockMyPage,
+    childName: pregnancySummary.babyNickname ?? mockMyPage.childName,
     dDay: formatDaysUntilDueDateLabel(pregnancySummary.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate),
     dueDate: formatDueDateLabel(pregnancySummary.dueDate),
     schedule: {
@@ -893,7 +909,6 @@ function App() {
       items: dailyScheduleItems,
     },
   }
-  const childProfile = mockChildProfile
   const parentSchedule = mockParentSchedule
   const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
 
@@ -914,6 +929,20 @@ function App() {
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
         dueDate: data.dueDate ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
       })
+
+      if (data.dueDate) {
+        setChildProfile((prev) => ({
+          ...prev,
+          selectedDate: data.dueDate,
+        }))
+      }
+
+      if (data.babyNickname) {
+        setChildProfile((prev) => ({
+          ...prev,
+          childName: data.babyNickname,
+        }))
+      }
     })
 
     fetchLatestCheerMessage(CURRENT_USER_ID).then((content) => {
@@ -939,51 +968,101 @@ function App() {
     }
   }, [])
 
+  const navigateToScreen = (nextScreen) => {
+    setCurrentScreen((prevScreen) => {
+      if (prevScreen === nextScreen) {
+        return prevScreen
+      }
+
+      setScreenHistory((prevHistory) => [...prevHistory, prevScreen])
+      return nextScreen
+    })
+  }
+
+  const goBack = () => {
+    setScreenHistory((prevHistory) => {
+      if (!prevHistory.length) {
+        return prevHistory
+      }
+
+      const nextHistory = prevHistory.slice(0, -1)
+      const previousScreen = prevHistory[prevHistory.length - 1]
+
+      setCurrentScreen(previousScreen)
+      return nextHistory
+    })
+  }
+
   const openSettings = () => {
     setIsHomeSheetOpen(false)
-    setCurrentScreen('settings')
+    navigateToScreen('settings')
   }
 
   const openLifeAgent = () => {
-    setCurrentScreen('life-agent')
+    navigateToScreen('life-agent')
   }
 
   const openParentMode = () => {
-    setCurrentScreen('parent-mode')
+    navigateToScreen('parent-mode')
   }
 
   const openParentModeChat = () => {
-    setCurrentScreen('parent-mode-chat')
+    navigateToScreen('parent-mode-chat')
   }
 
   const openParentDevice = () => {
-    setCurrentScreen('parent-mode-device')
+    navigateToScreen('parent-mode-device')
   }
 
   const openMyScreen = () => {
-    setCurrentScreen('my')
+    navigateToScreen('my')
   }
 
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
     setIsScheduleDetailInitiallyOpen(shouldOpenDetail)
     setIsScheduleInputInitiallyOpen(shouldOpenScheduleInput)
-    setCurrentScreen('parent-mode-schedule')
+    navigateToScreen('parent-mode-schedule')
   }
 
   const openChildProfile = () => {
-    setCurrentScreen('child-profile')
+    navigateToScreen('child-profile')
   }
 
   const openMombti = () => {
-    setCurrentScreen('mombti-menu')
+    navigateToScreen('mombti-menu')
   }
 
   const openMombtiResult = () => {
-    setCurrentScreen('mombti')
+    navigateToScreen('mombti')
   }
 
   const openMombtiTest = () => {
-    setCurrentScreen('mombti-test')
+    navigateToScreen('mombti-test')
+  }
+
+  const handleSaveChildDueDate = (dueDate) => {
+    setChildProfile((prev) => ({
+      ...prev,
+      selectedDate: dueDate,
+    }))
+
+    setPregnancySummary((prev) => ({
+      ...prev,
+      dueDate,
+      daysUntilDueDate: calculateDaysUntilDueDate(dueDate),
+    }))
+  }
+
+  const handleSaveBabyNickname = (babyNickname) => {
+    setPregnancySummary((prev) => ({
+      ...prev,
+      babyNickname,
+    }))
+
+    setChildProfile((prev) => ({
+      ...prev,
+      childName: babyNickname,
+    }))
   }
 
   const phoneShellClass =
@@ -1013,21 +1092,21 @@ function App() {
         )}
 
         {currentScreen === 'settings' && (
-          <HomeSettingsScreen onBack={() => setCurrentScreen('home')} onOpenLifeAgent={openLifeAgent} />
+          <HomeSettingsScreen onBack={goBack} onOpenLifeAgent={openLifeAgent} />
         )}
 
         {currentScreen === 'life-agent' && (
           <LifeAgentScreen
-            onBack={() => setCurrentScreen('settings')}
+            onBack={goBack}
             onOpenParentMode={openParentMode}
           />
         )}
 
         {currentScreen === 'parent-mode' && (
           <ParentModeScreen
-            onBack={() => setCurrentScreen('life-agent')}
+            onBack={goBack}
             onOpenChat={openParentModeChat}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             onOpenSchedule={openParentSchedule}
@@ -1039,8 +1118,8 @@ function App() {
 
         {currentScreen === 'parent-mode-device' && (
           <ParentDeviceScreen
-            onBack={() => setCurrentScreen('parent-mode')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenMy={openMyScreen}
             navIcons={{
               home: parentModeHomeIcon,
@@ -1052,14 +1131,14 @@ function App() {
         )}
 
         {currentScreen === 'parent-mode-chat' && (
-          <ChatExpertScreen onBack={() => setCurrentScreen('parent-mode')} />
+          <ChatExpertScreen onBack={goBack} />
         )}
 
         {currentScreen === 'parent-mode-schedule' && (
           <ParentScheduleScreen
             data={parentSchedule}
-            onBack={() => setCurrentScreen('parent-mode')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             initialDetailOpen={isScheduleDetailInitiallyOpen}
@@ -1076,28 +1155,32 @@ function App() {
         {currentScreen === 'my' && (
           <MyScreen
             data={myPage}
-            onBack={() => setCurrentScreen('parent-mode')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            userId={CURRENT_USER_ID}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenChildProfile={openChildProfile}
             onOpenMombti={openMombti}
             onOpenSchedule={openParentSchedule}
+            onSaveBabyNickname={handleSaveBabyNickname}
           />
         )}
 
         {currentScreen === 'child-profile' && (
           <ChildProfileScreen
             data={childProfile}
-            onBack={() => setCurrentScreen('my')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            userId={CURRENT_USER_ID}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onSaveDueDate={handleSaveChildDueDate}
           />
         )}
 
         {currentScreen === 'mombti-menu' && (
           <MombtiMenuScreen
-            onBack={() => setCurrentScreen('my')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenResult={openMombtiResult}
             onOpenTest={openMombtiTest}
@@ -1106,16 +1189,16 @@ function App() {
 
         {currentScreen === 'mombti-test' && (
           <MombtiTestScreen
-            onBack={() => setCurrentScreen('mombti-menu')}
-            onComplete={() => setCurrentScreen('mombti')}
+            onBack={goBack}
+            onComplete={() => navigateToScreen('mombti')}
           />
         )}
 
         {currentScreen === 'mombti' && (
           <MombtiDetailScreen
             data={mombti}
-            onBack={() => setCurrentScreen('mombti-menu')}
-            onOpenHome={() => setCurrentScreen('parent-mode')}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
           />
         )}

@@ -61,6 +61,18 @@ const NAV_ITEMS = [
 const SCHEDULE_USER_ID = 3
 const MONTHLY_SCHEDULE_CACHE_PREFIX = 'parent-monthly-schedules'
 
+function getUserPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+
+  if (payload?.user && typeof payload.user === 'object') {
+    return payload.user
+  }
+
+  return null
+}
+
 function getDateKey(date) {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -273,7 +285,7 @@ async function fetchMonthlySchedules(monthDate, userId = SCHEDULE_USER_ID) {
     }
 
     const userPayload = await userResponse.json()
-    const groupId = userPayload?.data?.groupId
+    const groupId = getUserPayload(userPayload)?.groupId
 
     if (!groupId) {
       return []

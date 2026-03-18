@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
+import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
   return (
@@ -37,7 +38,11 @@ function ChevronDownIcon() {
 
 function CalendarArrowIcon({ direction = 'left' }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={direction === 'right' ? 'calendar-arrow-icon--right' : ''}>
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={direction === 'right' ? 'calendar-arrow-icon--right' : ''}
+    >
       <path
         d="m14 6-6 6 6 6"
         fill="none"
@@ -62,6 +67,10 @@ const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 function parseIsoDate(isoDate) {
   const [year, month, day] = isoDate.split('-').map(Number)
   return new Date(year, month - 1, day)
+}
+
+function formatIsoDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 function formatMonthLabel(date) {
@@ -89,12 +98,20 @@ function buildCalendarDays(viewDate) {
   })
 }
 
-function ChildProfileScreen({ data, onBack, onOpenHome, onOpenDevice }) {
+function ChildProfileScreen({ data, userId, onBack, onOpenHome, onOpenDevice, onSaveDueDate }) {
   const initialSelectedDate = useMemo(() => parseIsoDate(data.selectedDate), [data.selectedDate])
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate)
-  const [viewDate, setViewDate] = useState(new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), 1))
+  const [viewDate, setViewDate] = useState(
+    new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), 1)
+  )
+  const [isSaving, setIsSaving] = useState(false)
 
   const calendarDays = useMemo(() => buildCalendarDays(viewDate), [viewDate])
+
+  useEffect(() => {
+    setSelectedDate(initialSelectedDate)
+    setViewDate(new Date(initialSelectedDate.getFullYear(), initialSelectedDate.getMonth(), 1))
+  }, [initialSelectedDate])
 
   const handlePreviousMonth = () => {
     setViewDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))
@@ -106,6 +123,36 @@ function ChildProfileScreen({ data, onBack, onOpenHome, onOpenDevice }) {
 
   const handleSelectDate = (isoDate) => {
     setSelectedDate(parseIsoDate(isoDate))
+  }
+
+  const handleSave = async () => {
+    if (isSaving) {
+      return
+    }
+
+    const dueDate = formatIsoDate(selectedDate)
+
+    try {
+      setIsSaving(true)
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/due-date`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ dueDate }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to save due date: ${response.status}`)
+      }
+
+      onSaveDueDate?.(dueDate)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -175,8 +222,8 @@ function ChildProfileScreen({ data, onBack, onOpenHome, onOpenDevice }) {
             </div>
           </div>
 
-          <button type="button" className="child-save-button">
-            저장하기
+          <button type="button" className="child-save-button" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? '저장 중...' : '저장하기'}
           </button>
         </section>
       </div>
@@ -186,18 +233,18 @@ function ChildProfileScreen({ data, onBack, onOpenHome, onOpenDevice }) {
           const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
 
           return (
-          <button
-            key={item.key}
-            type="button"
-            className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
-            aria-current={item.key === 'my' ? 'page' : undefined}
-            onClick={handleClick}
-          >
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">{item.label}</span>
-          </button>
+            <button
+              key={item.key}
+              type="button"
+              className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
+              aria-current={item.key === 'my' ? 'page' : undefined}
+              onClick={handleClick}
+            >
+              <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+                <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+              </span>
+              <span className="parent-mode-nav-label">{item.label}</span>
+            </button>
           )
         })}
       </nav>
