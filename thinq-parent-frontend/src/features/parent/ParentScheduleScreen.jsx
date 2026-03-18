@@ -4,6 +4,7 @@ import menuIcon from '@shared-assets/srg/Menu.svg'
 import { useEffect } from 'react'
 import { useRef } from 'react'
 import { API_BASE_URL } from '../../config/api'
+import { RECOMMENDED_TODOS_BY_WEEK } from '../../data/recommendedTodos'
 import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM, SCHEDULE_TYPE_OPTIONS } from './ScheduleInputSheet'
 
 function BackIcon() {
@@ -65,6 +66,16 @@ function getUserPayload(payload) {
   return null
 }
 
+function getUserField(user, ...keys) {
+  for (const key of keys) {
+    if (user?.[key] !== undefined && user?.[key] !== null && user?.[key] !== '') {
+      return user[key]
+    }
+  }
+
+  return null
+}
+
 async function fetchScheduleUserContext(userId = DEFAULT_SCHEDULE_USER_ID) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
@@ -75,18 +86,59 @@ async function fetchScheduleUserContext(userId = DEFAULT_SCHEDULE_USER_ID) {
 
     const payload = await response.json()
     const user = getUserPayload(payload)
+    const groupId = getUserField(user, 'groupId', 'group_id')
 
-    if (!user?.groupId) {
+    if (!groupId) {
       return null
     }
 
     return {
-      userId: user.userId ?? userId,
-      groupId: user.groupId,
+      userId: getUserField(user, 'userId', 'user_id') ?? userId,
+      groupId,
+      dueDate: getUserField(user, 'dueDate', 'due_date'),
     }
   } catch {
     return null
   }
+}
+
+function parseDueDateValue(dueDate) {
+  if (!dueDate) {
+    return null
+  }
+
+  const parsedDate = new Date(`${dueDate}T00:00:00`)
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
+function calculatePregnancyWeek(targetDateKey, dueDate) {
+  const targetDate = parseDateKey(targetDateKey)
+  const dueDateValue = parseDueDateValue(dueDate)
+
+  if (Number.isNaN(targetDate.getTime()) || !dueDateValue) {
+    return null
+  }
+
+  const millisecondsPerDay = 1000 * 60 * 60 * 24
+  const daysRemaining = Math.ceil((dueDateValue.getTime() - targetDate.getTime()) / millisecondsPerDay)
+  const elapsedDays = 280 - daysRemaining
+  const currentWeek = Math.floor(elapsedDays / 7)
+
+  if (currentWeek < 0 || currentWeek > 40) {
+    return null
+  }
+
+  return currentWeek
+}
+
+function getRecommendedTodosByWeek(currentWeek) {
+  const weekItems = RECOMMENDED_TODOS_BY_WEEK[currentWeek] ?? []
+
+  return weekItems.map((text, index) => ({
+    key: `recommended-${currentWeek}-${index}`,
+    text,
+    checked: false,
+  }))
 }
 
 function getDateKey(date) {
@@ -567,6 +619,38 @@ function ParentScheduleScreen({
       isMounted = false
     }
   }, [userId, visibleMonth])
+
+  useEffect(() => {
+    let isMounted = true
+    const targetKey = activeDateKey ?? DEFAULT_ACTIVE_DATE_KEY
+
+    fetchScheduleUserContext(userId).then((userContext) => {
+      if (!isMounted) {
+        return
+      }
+
+      const currentWeek = calculatePregnancyWeek(targetKey, userContext?.dueDate)
+      const items = currentWeek ? getRecommendedTodosByWeek(currentWeek) : []
+
+      setTodosByDate((prev) => {
+        const fallbackGroup = prev.default
+        const existingGroup = prev[targetKey] ?? createEmptyTodoGroup(fallbackGroup, fallbackGroup.weekLabel)
+
+        return {
+          ...prev,
+          [targetKey]: {
+            ...existingGroup,
+            weekLabel: currentWeek ? `${currentWeek}주차` : existingGroup.weekLabel,
+            recommended: items,
+          },
+        }
+      })
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [activeDateKey, userId])
 
   const handleDayClick = (dayKey) => {
     setActiveDateKey(dayKey)

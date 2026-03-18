@@ -699,7 +699,11 @@ function ParentModeScreen({
   onOpenMy,
   onOpenDiary,
   onOpenSchedule,
-  onToggleAccountSwitch,
+  onOpenAccountSwitch,
+  onCloseAccountSwitch,
+  onSelectMomAccount,
+  onSelectDadAccount,
+  isAccountSwitchPopupOpen,
   pregnancySummary,
   cheerMessageText,
   dailyScheduleItems,
@@ -735,7 +739,7 @@ function ParentModeScreen({
             type="button"
             className="parent-mode-account-switch-button"
             aria-label="계정 전환"
-            onClick={onToggleAccountSwitch}
+            onClick={onOpenAccountSwitch}
           >
             <img src={userHomeIcon} alt="" className="parent-mode-account-switch-icon" aria-hidden="true" />
           </button>
@@ -901,6 +905,25 @@ function ParentModeScreen({
         <button type="button" className="parent-mode-fab" aria-label="채팅" onClick={onOpenChat}>
           <img src={chatFloatingIcon} alt="" className="parent-mode-fab-icon" aria-hidden="true" />
         </button>
+
+        {isAccountSwitchPopupOpen ? (
+          <div className="parent-mode-account-switch-overlay" onClick={onCloseAccountSwitch} role="presentation">
+            <section
+              className="parent-mode-account-switch-popup"
+              role="dialog"
+              aria-modal="true"
+              aria-label="계정 전환"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button type="button" className="parent-mode-account-switch-option is-mom" onClick={onSelectMomAccount}>
+                엄마
+              </button>
+              <button type="button" className="parent-mode-account-switch-option is-dad" onClick={onSelectDadAccount}>
+                아빠
+              </button>
+            </section>
+          </div>
+        ) : null}
       </div>
     </>
   )
@@ -914,6 +937,7 @@ function App() {
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
   const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(true)
   const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(false)
+  const [isAccountSwitchPopupOpen, setIsAccountSwitchPopupOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
   const [dailyScheduleItems, setDailyScheduleItems] = useState(() =>
@@ -1067,8 +1091,17 @@ function App() {
     navigateToScreen('pregnancy-diary-write')
   }
 
-  const handleToggleAccountSwitch = () => {
-    setCurrentUserId((prevUserId) => (prevUserId === 3 ? 4 : 3))
+  const handleOpenAccountSwitch = () => {
+    setIsAccountSwitchPopupOpen(true)
+  }
+
+  const handleCloseAccountSwitch = () => {
+    setIsAccountSwitchPopupOpen(false)
+  }
+
+  const handleSelectAccount = (nextUserId) => {
+    setCurrentUserId(nextUserId)
+    setIsAccountSwitchPopupOpen(false)
   }
 
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
@@ -1171,7 +1204,11 @@ function App() {
             onOpenMy={openMyScreen}
             onOpenDiary={openPregnancyDiary}
             onOpenSchedule={openParentSchedule}
-            onToggleAccountSwitch={handleToggleAccountSwitch}
+            onOpenAccountSwitch={handleOpenAccountSwitch}
+            onCloseAccountSwitch={handleCloseAccountSwitch}
+            onSelectMomAccount={() => handleSelectAccount(3)}
+            onSelectDadAccount={() => handleSelectAccount(4)}
+            isAccountSwitchPopupOpen={isAccountSwitchPopupOpen}
             pregnancySummary={pregnancySummary}
             cheerMessageText={cheerMessageText}
             dailyScheduleItems={dailyScheduleItems}
