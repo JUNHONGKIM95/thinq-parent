@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import menuIcon from '@shared-assets/srg/Menu.svg'
+import plusScheduleIcon from '@shared-assets/srg/plus_schedule.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
+import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM } from '../parent/ScheduleInputSheet'
 
 function BackIcon() {
   return (
@@ -83,7 +86,25 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY', icon: parentModeMyIcon },
 ]
 
-function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpenChildProfile }) {
+function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpenChildProfile, onOpenSchedule }) {
+  const hasScheduleItems = data.schedule.items.length > 0
+  const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(false)
+  const [scheduleForm, setScheduleForm] = useState(DEFAULT_SCHEDULE_FORM)
+
+  const handleOpenScheduleInput = () => {
+    setScheduleForm(DEFAULT_SCHEDULE_FORM)
+    setIsScheduleInputSheetOpen(true)
+  }
+
+  const handleSaveSchedule = () => {
+    if (!scheduleForm.title.trim()) {
+      return
+    }
+
+    setScheduleForm(DEFAULT_SCHEDULE_FORM)
+    setIsScheduleInputSheetOpen(false)
+  }
+
   return (
     <div className="my-screen-shell">
       <header className="my-header">
@@ -180,23 +201,61 @@ function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpen
           </div>
 
           <div className="my-schedule-card">
-            <div className="my-schedule-month">{data.schedule.monthLabel}</div>
-            <div className="my-schedule-date">
-              <span className="my-schedule-day">{data.schedule.day}</span>
-              <span className="my-schedule-weekday">{data.schedule.dayOfWeek}</span>
+            <div className="my-schedule-top-row">
+              <button
+                type="button"
+                className="my-schedule-date-button"
+                onClick={() => onOpenSchedule(false)}
+                aria-label="캘린더 열기"
+              >
+                <div className="my-schedule-month">{data.schedule.monthLabel}</div>
+                <div className="my-schedule-date">
+                  <span className="my-schedule-day">{data.schedule.day}</span>
+                  <span className="my-schedule-weekday">{data.schedule.dayOfWeek}</span>
+                </div>
+              </button>
+
+              {!hasScheduleItems ? (
+                <button
+                  type="button"
+                  className="my-schedule-add-button"
+                  onClick={handleOpenScheduleInput}
+                  aria-label="일정 추가"
+                >
+                  <img src={plusScheduleIcon} alt="" className="my-schedule-add-icon" aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
 
-            <div className="my-schedule-list">
-              {data.schedule.items.map((item) => (
-                <div
-                  key={item.key}
-                  className={`my-schedule-item ${item.tone === 'primary' ? 'is-primary' : 'is-secondary'}`}
-                >
-                  <span>{item.title}</span>
-                  <strong>{item.time}</strong>
+            {hasScheduleItems ? (
+              <button
+                type="button"
+                className="my-schedule-detail-button"
+                onClick={() => onOpenSchedule(true)}
+                aria-label="일정 상세 열기"
+              >
+                <div className="my-schedule-list">
+                  {data.schedule.items.map((item) => (
+                    <div
+                      key={item.key}
+                      className={`my-schedule-item ${item.tone === 'primary' ? 'is-primary' : item.tone === 'secondary' ? 'is-secondary' : ''}`}
+                      style={
+                        item.boxStyle
+                          ? {
+                              background: item.boxStyle.background,
+                              color: item.boxStyle.color,
+                              opacity: 0.8,
+                            }
+                          : undefined
+                      }
+                    >
+                      <span>{item.title}</span>
+                      <strong>{item.time}</strong>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </button>
+            ) : null}
           </div>
         </section>
 
@@ -219,23 +278,31 @@ function MyScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenMombti, onOpen
         </section>
       </div>
 
+      <ScheduleInputSheet
+        open={isScheduleInputSheetOpen}
+        form={scheduleForm}
+        onFormChange={setScheduleForm}
+        onClose={() => setIsScheduleInputSheetOpen(false)}
+        onSave={handleSaveSchedule}
+      />
+
       <nav className="my-bottom-nav" aria-label="MY 하단 메뉴">
         {NAV_ITEMS.map((item) => {
           const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
 
           return (
-          <button
-            key={item.key}
-            type="button"
-            className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
-            aria-current={item.key === 'my' ? 'page' : undefined}
-            onClick={handleClick}
-          >
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">{item.label}</span>
-          </button>
+            <button
+              key={item.key}
+              type="button"
+              className={`parent-mode-nav-item ${item.key === 'my' ? 'parent-mode-nav-item--active' : ''}`}
+              aria-current={item.key === 'my' ? 'page' : undefined}
+              onClick={handleClick}
+            >
+              <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+                <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+              </span>
+              <span className="parent-mode-nav-label">{item.label}</span>
+            </button>
           )
         })}
       </nav>

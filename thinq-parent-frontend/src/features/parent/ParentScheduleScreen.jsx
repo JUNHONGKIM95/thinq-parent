@@ -2,6 +2,7 @@
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import { useEffect } from 'react'
 import { API_BASE_URL } from '../../config/api'
+import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM, SCHEDULE_TYPE_OPTIONS } from './ScheduleInputSheet'
 
 function BackIcon() {
   return (
@@ -118,24 +119,6 @@ const TODO_PRIORITY_OPTIONS = [
   { key: 'high', label: '높음', toneClass: 'is-high' },
   { key: 'urgent', label: '우선', toneClass: 'is-urgent' },
 ]
-const SCHEDULE_TYPE_OPTIONS = [
-  { key: 'baby', label: '아기', color: '#ff3b3b', textColor: '#ffffff' },
-  { key: 'family', label: '가족', color: '#8fbc69', textColor: '#ffffff' },
-  { key: 'work', label: '일', color: '#7478a8', textColor: '#ffffff' },
-  { key: 'personal', label: '개인', color: '#fef19f', textColor: '#000000' },
-  { key: 'important', label: '중요', color: '#2e2e2e', textColor: '#ffffff' },
-  { key: 'etc', label: '기타', color: '#b285bb', textColor: '#ffffff' },
-]
-const DEFAULT_SCHEDULE_FORM = {
-  title: '',
-  typeKey: 'baby',
-  hour: '',
-  minute: '',
-  period: 'am',
-  location: '',
-  memo: '',
-}
-
 function getDayOfWeekLabel(dateKey) {
   const labels = ['일', '월', '화', '수', '목', '금', '토']
   return labels[new Date(dateKey).getDay()]
@@ -266,16 +249,6 @@ function getTypeOptionFromScheduleType(scheduleType) {
   const matchedKey = aliasMap[normalizedType] ?? aliasMap[String(scheduleType).trim()]
 
   return getTypeOption(matchedKey ?? normalizedType)
-}
-
-function normalizeTimePart(rawValue, maxValue) {
-  const digits = rawValue.replace(/\D/g, '').slice(0, 2)
-
-  if (!digits) {
-    return ''
-  }
-
-  return String(Math.min(Number(digits), maxValue))
 }
 
 function formatTimePart(value) {
@@ -411,6 +384,7 @@ function ParentScheduleScreen({
   onOpenMy,
   navIcons,
   initialDetailOpen = true,
+  initialScheduleInputOpen = false,
 }) {
   const initialMonth = getMonthStart(new Date())
   const initialMonthlySchedules = readMonthlyScheduleCache(initialMonth)
@@ -420,7 +394,7 @@ function ParentScheduleScreen({
   const [isDetailOpen, setIsDetailOpen] = useState(initialDetailOpen)
   const [isTodoActionSheetOpen, setIsTodoActionSheetOpen] = useState(false)
   const [isTodoInputSheetOpen, setIsTodoInputSheetOpen] = useState(false)
-  const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(false)
+  const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(initialScheduleInputOpen)
   const [isTodoDeleteSheetOpen, setIsTodoDeleteSheetOpen] = useState(false)
   const [todoInputValue, setTodoInputValue] = useState('')
   const [selectedPriority, setSelectedPriority] = useState(null)
@@ -986,168 +960,13 @@ function ParentScheduleScreen({
         </div>
       ) : null}
 
-      {isScheduleInputSheetOpen ? (
-        <div
-          className="parent-schedule-action-overlay"
-          role="presentation"
-          onClick={() => setIsScheduleInputSheetOpen(false)}
-        >
-          <section
-            className="parent-schedule-schedule-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="일정 입력"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <span className="parent-schedule-sheet-handle" aria-hidden="true" />
-
-            <div className="parent-schedule-schedule-header">
-              <label className="parent-schedule-schedule-title-input">
-                <span className="sr-only">일정 제목 입력</span>
-                <input
-                  type="text"
-                  value={scheduleForm.title}
-                  onChange={(event) =>
-                    setScheduleForm((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                  placeholder="일정제목입력"
-                  autoFocus
-                />
-              </label>
-              <button
-                type="button"
-                className="parent-schedule-schedule-save"
-                onClick={handleSaveSchedule}
-              >
-                저장
-              </button>
-            </div>
-
-            <div className="parent-schedule-form-section">
-              <span className="parent-schedule-form-label">일정 유형</span>
-              <div className="parent-schedule-type-grid">
-                {SCHEDULE_TYPE_OPTIONS.map((option) => {
-                  const isSelected = scheduleForm.typeKey === option.key
-
-                  return (
-                    <button
-                      key={option.key}
-                      type="button"
-                      className="parent-schedule-type-button"
-                      style={{
-                        background: option.color,
-                        color: option.textColor,
-                        opacity: scheduleForm.typeKey && !isSelected ? 0.6 : 1,
-                      }}
-                      onClick={() => setScheduleForm((prev) => ({ ...prev, typeKey: option.key }))}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="parent-schedule-form-section">
-              <span className="parent-schedule-form-label">일정 시간</span>
-              <div className="parent-schedule-time-row">
-                <div className="parent-schedule-time-box">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={2}
-                    value={scheduleForm.hour}
-                    placeholder="00"
-                    onChange={(event) => {
-                      const normalizedHour = normalizeTimePart(event.target.value, 23)
-
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        hour: normalizedHour,
-                        period: normalizedHour && Number(normalizedHour) >= 12 ? 'pm' : 'am',
-                      }))
-                    }}
-                    onBlur={() =>
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        hour: prev.hour ? prev.hour.padStart(2, '0') : '',
-                      }))
-                    }
-                    onFocus={(event) => event.target.select()}
-                    aria-label="시"
-                  />
-                  <span className="parent-schedule-time-divider" aria-hidden="true" />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={2}
-                    value={scheduleForm.minute}
-                    placeholder="00"
-                    onChange={(event) =>
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        minute: normalizeTimePart(event.target.value, 59),
-                      }))
-                    }
-                    onBlur={() =>
-                      setScheduleForm((prev) => ({
-                        ...prev,
-                        minute: prev.minute ? prev.minute.padStart(2, '0') : '',
-                      }))
-                    }
-                    onFocus={(event) => event.target.select()}
-                    aria-label="분"
-                  />
-                </div>
-                <div className="parent-schedule-period-buttons">
-                  <button
-                    type="button"
-                    className={`parent-schedule-period-button ${
-                      scheduleForm.period === 'am' ? 'is-selected is-am' : ''
-                    }`}
-                    onClick={() => setScheduleForm((prev) => ({ ...prev, period: 'am' }))}
-                  >
-                    오전
-                  </button>
-                  <button
-                    type="button"
-                    className={`parent-schedule-period-button ${
-                      scheduleForm.period === 'pm' ? 'is-selected is-pm' : ''
-                    }`}
-                    onClick={() => setScheduleForm((prev) => ({ ...prev, period: 'pm' }))}
-                  >
-                    오후
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="parent-schedule-form-section">
-              <span className="parent-schedule-form-label">장소</span>
-              <label className="parent-schedule-location-input">
-                <span className="sr-only">장소 입력</span>
-                <input
-                  type="text"
-                  value={scheduleForm.location}
-                  onChange={(event) =>
-                    setScheduleForm((prev) => ({ ...prev, location: event.target.value }))
-                  }
-                  placeholder="장소입력"
-                />
-              </label>
-            </div>
-
-            <div className="parent-schedule-form-section is-memo">
-              <span className="parent-schedule-form-label">메모</span>
-              <textarea
-                className="parent-schedule-memo-input"
-                value={scheduleForm.memo}
-                onChange={(event) => setScheduleForm((prev) => ({ ...prev, memo: event.target.value }))}
-              />
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <ScheduleInputSheet
+        open={isScheduleInputSheetOpen}
+        form={scheduleForm}
+        onFormChange={setScheduleForm}
+        onClose={() => setIsScheduleInputSheetOpen(false)}
+        onSave={handleSaveSchedule}
+      />
 
       {isTodoDeleteSheetOpen ? (
         <div

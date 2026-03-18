@@ -79,9 +79,11 @@ const settingCards = [
 const DEFAULT_PREGNANCY_SUMMARY = {
   babyNickname: '틔움이',
   daysUntilDueDate: 102,
+  dueDate: mockMyPage.dueDate,
 }
 const DEFAULT_CHEER_MESSAGE = ''
 const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
+const CURRENT_USER_ID = 3
 
 function getDateKey(date) {
   const year = date.getFullYear()
@@ -94,6 +96,51 @@ function getDateKey(date) {
 function getDayOfWeekLabel(date) {
   const labels = ['일', '월', '화', '수', '목', '금', '토']
   return labels[date.getDay()]
+}
+
+function getMonthLabel(date) {
+  return date.toLocaleString('en-US', { month: 'long' }).toUpperCase()
+}
+
+function calculateDaysUntilDueDate(dueDate) {
+  if (!dueDate) {
+    return DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate
+  }
+
+  const today = new Date()
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const dueDateValue = new Date(`${dueDate}T00:00:00`)
+
+  if (Number.isNaN(dueDateValue.getTime())) {
+    return DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate
+  }
+
+  return Math.max(0, Math.ceil((dueDateValue.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)))
+}
+
+function formatDueDateLabel(dueDate) {
+  if (!dueDate) {
+    return DEFAULT_PREGNANCY_SUMMARY.dueDate
+  }
+
+  const matchedDate = dueDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+
+  if (matchedDate) {
+    const [, year, month, day] = matchedDate
+    return `${year.slice(-2)}.${month}.${day}`
+  }
+
+  const parsedDate = new Date(`${dueDate}T00:00:00`)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return dueDate
+  }
+
+  return `${String(parsedDate.getFullYear()).slice(-2)}.${String(parsedDate.getMonth() + 1).padStart(2, '0')}.${String(parsedDate.getDate()).padStart(2, '0')}`
+}
+
+function formatDaysUntilDueDateLabel(daysUntilDueDate) {
+  return `- ${daysUntilDueDate}일 전`
 }
 
 function getDailyScheduleCacheKey(userId, date) {
@@ -153,12 +200,7 @@ async function fetchPregnancySummary(userId = 3) {
 
     if (payload?.data) {
       const dueDate = payload.data.dueDate
-      const today = new Date()
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      const dueDateValue = dueDate ? new Date(`${dueDate}T00:00:00`) : null
-      const daysUntilDueDate = dueDateValue
-        ? Math.max(0, Math.ceil((dueDateValue.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)))
-        : DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate
+      const daysUntilDueDate = calculateDaysUntilDueDate(dueDate)
 
       return {
         ...payload.data,
@@ -834,10 +876,23 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('home')
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
   const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(true)
+  const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
-  const [dailyScheduleItems, setDailyScheduleItems] = useState(() => readDailyScheduleCache(3, new Date()))
-  const myPage = mockMyPage
+  const [dailyScheduleItems, setDailyScheduleItems] = useState(() => readDailyScheduleCache(CURRENT_USER_ID, new Date()))
+  const today = new Date()
+  const myPage = {
+    ...mockMyPage,
+    dDay: formatDaysUntilDueDateLabel(pregnancySummary.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate),
+    dueDate: formatDueDateLabel(pregnancySummary.dueDate),
+    schedule: {
+      ...mockMyPage.schedule,
+      monthLabel: getMonthLabel(today),
+      day: String(today.getDate()),
+      dayOfWeek: getDayOfWeekLabel(today),
+      items: dailyScheduleItems,
+    },
+  }
   const childProfile = mockChildProfile
   const parentSchedule = mockParentSchedule
   const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
@@ -845,7 +900,7 @@ function App() {
   useEffect(() => {
     let isMounted = true
 
-    fetchPregnancySummary(3).then((data) => {
+    fetchPregnancySummary(CURRENT_USER_ID).then((data) => {
       if (!isMounted || !data) {
         return
       }
@@ -857,10 +912,11 @@ function App() {
           DEFAULT_PREGNANCY_SUMMARY.babyNickname,
         meetingTitle: data.meetingTitle,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
+        dueDate: data.dueDate ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
       })
     })
 
-    fetchLatestCheerMessage(3).then((content) => {
+    fetchLatestCheerMessage(CURRENT_USER_ID).then((content) => {
       if (!isMounted || !content) {
         return
       }
@@ -868,9 +924,9 @@ function App() {
       setCheerMessageText(content)
     })
 
-    setDailyScheduleItems(readDailyScheduleCache(3, new Date()))
+    setDailyScheduleItems(readDailyScheduleCache(CURRENT_USER_ID, new Date()))
 
-    fetchDailySchedules(3, new Date()).then((items) => {
+    fetchDailySchedules(CURRENT_USER_ID, new Date()).then((items) => {
       if (!isMounted) {
         return
       }
@@ -908,8 +964,9 @@ function App() {
     setCurrentScreen('my')
   }
 
-  const openParentSchedule = (shouldOpenDetail = true) => {
+  const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
     setIsScheduleDetailInitiallyOpen(shouldOpenDetail)
+    setIsScheduleInputInitiallyOpen(shouldOpenScheduleInput)
     setCurrentScreen('parent-mode-schedule')
   }
 
@@ -1006,6 +1063,7 @@ function App() {
             onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             initialDetailOpen={isScheduleDetailInitiallyOpen}
+            initialScheduleInputOpen={isScheduleInputInitiallyOpen}
             navIcons={{
               home: parentModeHomeIcon,
               device: parentModeBabyIcon,
@@ -1023,6 +1081,7 @@ function App() {
             onOpenDevice={openParentDevice}
             onOpenChildProfile={openChildProfile}
             onOpenMombti={openMombti}
+            onOpenSchedule={openParentSchedule}
           />
         )}
 
