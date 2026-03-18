@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY' },
 ]
 
-function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, navIcons }) {
+function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
   const [isAutoControlEnabled, setIsAutoControlEnabled] = useState(true)
   const [isSoundControlEnabled, setIsSoundControlEnabled] = useState(false)
 
@@ -115,7 +115,13 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, navIcons }) {
         {NAV_ITEMS.map((item) => {
           const isActive = item.key === 'device'
           const handleClick =
-            item.key === 'home' ? onOpenHome : item.key === 'my' ? onOpenMy : undefined
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'community'
+                ? onOpenCommunity
+                : item.key === 'my'
+                  ? onOpenMy
+                  : undefined
 
           return (
             <button

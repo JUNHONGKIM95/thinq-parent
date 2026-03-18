@@ -1,3 +1,4 @@
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
@@ -5,18 +6,7 @@ import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 const NAV_ITEMS = [
@@ -26,7 +16,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY', icon: parentModeMyIcon },
 ]
 
-function MombtiMenuScreen({ onBack, onOpenHome, onOpenDevice, onOpenResult, onOpenTest }) {
+function MombtiMenuScreen({ onBack, onOpenHome, onOpenDevice, onOpenCommunity, onOpenResult, onOpenTest }) {
   return (
     <div className="mombti-menu-shell">
       <header className="mombti-menu-header">
@@ -53,7 +43,14 @@ function MombtiMenuScreen({ onBack, onOpenHome, onOpenDevice, onOpenResult, onOp
 
       <nav className="my-bottom-nav" aria-label="MomBTI 하단 메뉴">
         {NAV_ITEMS.map((item) => {
-          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
+          const handleClick =
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'community'
+                  ? onOpenCommunity
+                  : undefined
 
           return (
           <button

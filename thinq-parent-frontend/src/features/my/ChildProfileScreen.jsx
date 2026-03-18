@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
@@ -7,33 +8,7 @@ import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="m5 8 7 7 7-7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 function CalendarArrowIcon({ direction = 'left' }) {
@@ -98,7 +73,7 @@ function buildCalendarDays(viewDate) {
   })
 }
 
-function ChildProfileScreen({ data, userId, onBack, onOpenHome, onOpenDevice, onSaveDueDate }) {
+function ChildProfileScreen({ data, userId, onBack, onOpenHome, onOpenDevice, onOpenCommunity, onSaveDueDate }) {
   const initialSelectedDate = useMemo(() => parseIsoDate(data.selectedDate), [data.selectedDate])
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate)
   const [viewDate, setViewDate] = useState(
@@ -172,9 +147,6 @@ function ChildProfileScreen({ data, userId, onBack, onOpenHome, onOpenDevice, on
           <span className="child-method-label">계산 방법</span>
           <span className="child-method-divider" aria-hidden="true" />
           <span className="child-method-value">{data.calculationMethod}</span>
-          <span className="child-method-icon" aria-hidden="true">
-            <ChevronDownIcon />
-          </span>
         </button>
 
         <section className="child-calendar-section">
@@ -230,7 +202,14 @@ function ChildProfileScreen({ data, userId, onBack, onOpenHome, onOpenDevice, on
 
       <nav className="my-bottom-nav" aria-label="우리 아이 하단 메뉴">
         {NAV_ITEMS.map((item) => {
-          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
+          const handleClick =
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'community'
+                  ? onOpenCommunity
+                  : undefined
 
           return (
             <button

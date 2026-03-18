@@ -11,6 +11,8 @@ import floatingInnerImage from '@shared-assets/image5.png'
 import lifeAgentImage from '@shared-assets/lifeagent.png'
 import lookDiaryImage from '@shared-assets/lookdiary.png'
 import plusImage from '@shared-assets/plus.png'
+import userHomeIcon from '@shared-assets/userhome.png'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import messageOpenIcon from '@shared-assets/srg/Message_open_light.svg'
 import sendLightIcon from '@shared-assets/srg/Send_light.svg'
 import heartIcon from '@shared-assets/srg/heart.svg'
@@ -37,6 +39,10 @@ import { mockChildProfile } from './data/mockChildProfile'
 import { mockParentSchedule } from './data/mockParentSchedule'
 import { mockMyPage } from './data/mockMyPage'
 import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
+import CommunityScreen from './features/community/CommunityScreen'
+import CommunityWriteScreen from './features/community/CommunityWriteScreen'
+import PregnancyDiaryScreen from './features/diary/PregnancyDiaryScreen'
+import PregnancyDiaryWriteScreen from './features/diary/PregnancyDiaryWriteScreen'
 import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
@@ -80,10 +86,11 @@ const DEFAULT_PREGNANCY_SUMMARY = {
   babyNickname: '틔움이',
   daysUntilDueDate: 102,
   dueDate: mockMyPage.dueDate,
+  role: '',
 }
 const DEFAULT_CHEER_MESSAGE = ''
 const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
-const CURRENT_USER_ID = 3
+const DEFAULT_CURRENT_USER_ID = 3
 
 function getDateKey(date) {
   const year = date.getFullYear()
@@ -537,7 +544,7 @@ function HomeSettingsScreen({ onBack, onOpenLifeAgent }) {
     <>
       <header className="settings-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
-          <span />
+          <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
         </button>
         <h1>홈 설정</h1>
         <button type="button" className="settings-plus-button" aria-label="홈 추가">
@@ -584,13 +591,11 @@ function LifeAgentScreen({ onBack, onOpenParentMode }) {
     <>
       <header className="settings-header life-agent-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
-          <span />
+          <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
         </button>
         <h1>라이프 에이전트</h1>
         <button type="button" className="life-agent-more-button" aria-label="더보기">
-          <span />
-          <span />
-          <span />
+          <img src={headerMenuIcon} alt="" className="header-menu-icon" aria-hidden="true" />
         </button>
       </header>
 
@@ -690,8 +695,11 @@ function ParentModeScreen({
   onOpenChat,
   onOpenHome,
   onOpenDevice,
+  onOpenCommunity,
   onOpenMy,
+  onOpenDiary,
   onOpenSchedule,
+  onToggleAccountSwitch,
   pregnancySummary,
   cheerMessageText,
   dailyScheduleItems,
@@ -719,14 +727,22 @@ function ParentModeScreen({
     <>
       <header className="parent-mode-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
-          <span />
+          <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
         </button>
         <h1>부모 모드</h1>
-        <button type="button" className="life-agent-more-button" aria-label="더보기">
-          <span />
-          <span />
-          <span />
-        </button>
+        <div className="parent-mode-header-actions">
+          <button
+            type="button"
+            className="parent-mode-account-switch-button"
+            aria-label="계정 전환"
+            onClick={onToggleAccountSwitch}
+          >
+            <img src={userHomeIcon} alt="" className="parent-mode-account-switch-icon" aria-hidden="true" />
+          </button>
+          <button type="button" className="life-agent-more-button" aria-label="더보기">
+            <img src={headerMenuIcon} alt="" className="header-menu-icon" aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       <div className="parent-mode-body">
@@ -740,7 +756,13 @@ function ParentModeScreen({
           </section>
 
           <div className="parent-mode-input-row">
-            <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
+            {pregnancySummary.role === 'FAMILY' ? (
+              <button type="button" className="parent-mode-input-icon-button" aria-label="응원 글쓰기">
+                <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
+              </button>
+            ) : (
+              <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
+            )}
             <span className="parent-mode-input-arrows" aria-hidden="true">
               <img
                 src={sendLightIcon}
@@ -825,13 +847,13 @@ function ParentModeScreen({
             </section>
           </div>
 
-          <section className="parent-mode-diary">
+          <button type="button" className="parent-mode-diary parent-mode-diary-button" onClick={onOpenDiary}>
             <h3>임신 일기</h3>
             <p className="parent-mode-diary-desc">소중한 매일의 순간을 기록해보세요.</p>
-            <button type="button" className="parent-mode-diary-image-wrap">
+            <span className="parent-mode-diary-image-wrap">
               <img src={lookDiaryImage} alt="일기 보기" />
-            </button>
-          </section>
+            </span>
+          </button>
 
           <section className="parent-mode-widget">
             <h3>위젯 추가하기</h3>
@@ -862,7 +884,7 @@ function ParentModeScreen({
             </span>
             <span className="parent-mode-nav-label">가전육아</span>
           </button>
-          <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티">
+          <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티" onClick={onOpenCommunity}>
             <span className="parent-mode-nav-icon-frame" aria-hidden="true">
               <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
             </span>
@@ -886,6 +908,7 @@ function ParentModeScreen({
 
 function App() {
   const [activeTab, setActiveTab] = useState(0)
+  const [currentUserId, setCurrentUserId] = useState(DEFAULT_CURRENT_USER_ID)
   const [currentScreen, setCurrentScreen] = useState('home')
   const [screenHistory, setScreenHistory] = useState([])
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
@@ -893,7 +916,9 @@ function App() {
   const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
-  const [dailyScheduleItems, setDailyScheduleItems] = useState(() => readDailyScheduleCache(CURRENT_USER_ID, new Date()))
+  const [dailyScheduleItems, setDailyScheduleItems] = useState(() =>
+    readDailyScheduleCache(DEFAULT_CURRENT_USER_ID, new Date())
+  )
   const [childProfile, setChildProfile] = useState(mockChildProfile)
   const today = new Date()
   const myPage = {
@@ -915,7 +940,12 @@ function App() {
   useEffect(() => {
     let isMounted = true
 
-    fetchPregnancySummary(CURRENT_USER_ID).then((data) => {
+    setPregnancySummary(DEFAULT_PREGNANCY_SUMMARY)
+    setChildProfile(mockChildProfile)
+    setCheerMessageText(DEFAULT_CHEER_MESSAGE)
+    setDailyScheduleItems(readDailyScheduleCache(currentUserId, new Date()))
+
+    fetchPregnancySummary(currentUserId).then((data) => {
       if (!isMounted || !data) {
         return
       }
@@ -928,6 +958,7 @@ function App() {
         meetingTitle: data.meetingTitle,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
         dueDate: data.dueDate ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
+        role: data.role ?? DEFAULT_PREGNANCY_SUMMARY.role,
       })
 
       if (data.dueDate) {
@@ -945,7 +976,7 @@ function App() {
       }
     })
 
-    fetchLatestCheerMessage(CURRENT_USER_ID).then((content) => {
+    fetchLatestCheerMessage(currentUserId).then((content) => {
       if (!isMounted || !content) {
         return
       }
@@ -953,9 +984,7 @@ function App() {
       setCheerMessageText(content)
     })
 
-    setDailyScheduleItems(readDailyScheduleCache(CURRENT_USER_ID, new Date()))
-
-    fetchDailySchedules(CURRENT_USER_ID, new Date()).then((items) => {
+    fetchDailySchedules(currentUserId, new Date()).then((items) => {
       if (!isMounted) {
         return
       }
@@ -966,7 +995,7 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [currentUserId])
 
   const navigateToScreen = (nextScreen) => {
     setCurrentScreen((prevScreen) => {
@@ -1016,6 +1045,30 @@ function App() {
 
   const openMyScreen = () => {
     navigateToScreen('my')
+  }
+
+  const openCommunity = () => {
+    navigateToScreen('community')
+  }
+
+  const openCommunityWrite = () => {
+    if (pregnancySummary.role !== 'USER') {
+      return
+    }
+
+    navigateToScreen('community-write')
+  }
+
+  const openPregnancyDiary = () => {
+    navigateToScreen('pregnancy-diary')
+  }
+
+  const openPregnancyDiaryWrite = () => {
+    navigateToScreen('pregnancy-diary-write')
+  }
+
+  const handleToggleAccountSwitch = () => {
+    setCurrentUserId((prevUserId) => (prevUserId === 3 ? 4 : 3))
   }
 
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
@@ -1073,6 +1126,12 @@ function App() {
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
+        : currentScreen === 'community'
+          ? 'community-mode'
+        : currentScreen === 'community-write'
+          ? 'community-write-mode'
+        : currentScreen === 'pregnancy-diary' || currentScreen === 'pregnancy-diary-write'
+          ? 'diary-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
           : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
@@ -1108,8 +1167,11 @@ function App() {
             onOpenChat={openParentModeChat}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
             onOpenMy={openMyScreen}
+            onOpenDiary={openPregnancyDiary}
             onOpenSchedule={openParentSchedule}
+            onToggleAccountSwitch={handleToggleAccountSwitch}
             pregnancySummary={pregnancySummary}
             cheerMessageText={cheerMessageText}
             dailyScheduleItems={dailyScheduleItems}
@@ -1121,6 +1183,7 @@ function App() {
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenMy={openMyScreen}
+            onOpenCommunity={openCommunity}
             navIcons={{
               home: parentModeHomeIcon,
               device: parentModeBabyIcon,
@@ -1140,9 +1203,11 @@ function App() {
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
             onOpenMy={openMyScreen}
             initialDetailOpen={isScheduleDetailInitiallyOpen}
             initialScheduleInputOpen={isScheduleInputInitiallyOpen}
+            userId={currentUserId}
             navIcons={{
               home: parentModeHomeIcon,
               device: parentModeBabyIcon,
@@ -1155,12 +1220,15 @@ function App() {
         {currentScreen === 'my' && (
           <MyScreen
             data={myPage}
-            userId={CURRENT_USER_ID}
+            userId={currentUserId}
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
             onOpenChildProfile={openChildProfile}
             onOpenMombti={openMombti}
+            onOpenDiary={openPregnancyDiary}
+            onOpenDiaryWrite={openPregnancyDiaryWrite}
             onOpenSchedule={openParentSchedule}
             onSaveBabyNickname={handleSaveBabyNickname}
           />
@@ -1169,12 +1237,36 @@ function App() {
         {currentScreen === 'child-profile' && (
           <ChildProfileScreen
             data={childProfile}
-            userId={CURRENT_USER_ID}
+            userId={currentUserId}
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
             onSaveDueDate={handleSaveChildDueDate}
           />
+        )}
+
+        {currentScreen === 'community' && (
+          <CommunityScreen
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+            onOpenMy={openMyScreen}
+            onOpenWrite={openCommunityWrite}
+            canWrite={pregnancySummary.role === 'USER'}
+          />
+        )}
+
+        {currentScreen === 'community-write' && (
+          <CommunityWriteScreen onBack={goBack} />
+        )}
+
+        {currentScreen === 'pregnancy-diary' && (
+          <PregnancyDiaryScreen onBack={goBack} onOpenWrite={openPregnancyDiaryWrite} />
+        )}
+
+        {currentScreen === 'pregnancy-diary-write' && (
+          <PregnancyDiaryWriteScreen onBack={goBack} babyNickname={pregnancySummary.babyNickname} />
         )}
 
         {currentScreen === 'mombti-menu' && (
@@ -1182,6 +1274,7 @@ function App() {
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
             onOpenResult={openMombtiResult}
             onOpenTest={openMombtiTest}
           />
@@ -1200,6 +1293,7 @@ function App() {
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
           />
         )}
 

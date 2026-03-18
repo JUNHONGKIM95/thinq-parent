@@ -1,22 +1,12 @@
 import { useState } from 'react'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import { MOMB_TI_OPTIONS, mockMombtiQuestions } from '../../data/mockMombtiQuestions'
 
 const QUESTIONS_PER_PAGE = 5
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 function NextPageIcon() {

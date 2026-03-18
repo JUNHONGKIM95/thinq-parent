@@ -13,7 +13,6 @@ export const DEFAULT_SCHEDULE_FORM = {
   hour: '',
   minute: '',
   period: 'am',
-  location: '',
   memo: '',
 }
 
@@ -153,19 +152,6 @@ function ScheduleInputSheet({ open, form, onFormChange, onClose, onSave }) {
               </button>
             </div>
           </div>
-        </div>
-
-        <div className="parent-schedule-form-section">
-          <span className="parent-schedule-form-label">장소</span>
-          <label className="parent-schedule-location-input">
-            <span className="sr-only">장소 입력</span>
-            <input
-              type="text"
-              value={form.location}
-              onChange={(event) => onFormChange((prev) => ({ ...prev, location: event.target.value }))}
-              placeholder="장소입력"
-            />
-          </label>
         </div>
 
         <div className="parent-schedule-form-section is-memo">

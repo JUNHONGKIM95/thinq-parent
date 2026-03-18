@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import plusScheduleIcon from '@shared-assets/srg/plus_schedule.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
@@ -9,18 +10,7 @@ import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM } from '../parent/ScheduleInp
 import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 function PencilIcon() {
@@ -93,8 +83,11 @@ function MyScreen({
   onBack,
   onOpenHome,
   onOpenDevice,
+  onOpenCommunity,
   onOpenMombti,
   onOpenChildProfile,
+  onOpenDiary,
+  onOpenDiaryWrite,
   onOpenSchedule,
   onSaveBabyNickname,
 }) {
@@ -269,7 +262,12 @@ function MyScreen({
 
           <div className="my-diary-grid">
             {data.diaryCards.map((card) => (
-              <button type="button" className={`my-diary-card my-diary-card--${card.key}`} key={card.key}>
+              <button
+                type="button"
+                className={`my-diary-card my-diary-card--${card.key}`}
+                key={card.key}
+                onClick={card.key === 'write' ? onOpenDiaryWrite : card.key === 'read' ? onOpenDiary : undefined}
+              >
                 <img src={card.image} alt="" className="my-diary-image" />
                 <span className="my-diary-label">{card.label}</span>
               </button>
@@ -371,7 +369,14 @@ function MyScreen({
 
       <nav className="my-bottom-nav" aria-label="MY 하단 메뉴">
         {NAV_ITEMS.map((item) => {
-          const handleClick = item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : undefined
+          const handleClick =
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'community'
+                  ? onOpenCommunity
+                  : undefined
 
           return (
             <button

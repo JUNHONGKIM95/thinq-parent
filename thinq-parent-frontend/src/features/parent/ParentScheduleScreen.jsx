@@ -1,22 +1,13 @@
 ﻿import { useMemo, useState } from 'react'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import { useEffect } from 'react'
+import { useRef } from 'react'
 import { API_BASE_URL } from '../../config/api'
 import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM, SCHEDULE_TYPE_OPTIONS } from './ScheduleInputSheet'
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 function PlusIcon() {
@@ -58,8 +49,9 @@ const NAV_ITEMS = [
   { key: 'community', label: '커뮤니티' },
   { key: 'my', label: 'MY' },
 ]
-const SCHEDULE_USER_ID = 3
+const DEFAULT_SCHEDULE_USER_ID = 3
 const MONTHLY_SCHEDULE_CACHE_PREFIX = 'parent-monthly-schedules'
+const SCHEDULE_ITEM_LONG_PRESS_MS = 550
 
 function getUserPayload(payload) {
   if (payload?.data && typeof payload.data === 'object') {
@@ -71,6 +63,30 @@ function getUserPayload(payload) {
   }
 
   return null
+}
+
+async function fetchScheduleUserContext(userId = DEFAULT_SCHEDULE_USER_ID) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    const user = getUserPayload(payload)
+
+    if (!user?.groupId) {
+      return null
+    }
+
+    return {
+      userId: user.userId ?? userId,
+      groupId: user.groupId,
+    }
+  } catch {
+    return null
+  }
 }
 
 function getDateKey(date) {
@@ -93,11 +109,11 @@ function getMonthLabel(date) {
   return date.toLocaleString('en-US', { month: 'long' }).toUpperCase()
 }
 
-function getMonthlyScheduleCacheKey(monthDate, userId = SCHEDULE_USER_ID) {
+function getMonthlyScheduleCacheKey(monthDate, userId = DEFAULT_SCHEDULE_USER_ID) {
   return `${MONTHLY_SCHEDULE_CACHE_PREFIX}:${userId}:${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`
 }
 
-function readMonthlyScheduleCache(monthDate, userId = SCHEDULE_USER_ID) {
+function readMonthlyScheduleCache(monthDate, userId = DEFAULT_SCHEDULE_USER_ID) {
   if (typeof window === 'undefined') {
     return []
   }
@@ -112,7 +128,7 @@ function readMonthlyScheduleCache(monthDate, userId = SCHEDULE_USER_ID) {
   }
 }
 
-function writeMonthlyScheduleCache(monthDate, schedules, userId = SCHEDULE_USER_ID) {
+function writeMonthlyScheduleCache(monthDate, schedules, userId = DEFAULT_SCHEDULE_USER_ID) {
   if (typeof window === 'undefined') {
     return
   }
@@ -271,21 +287,74 @@ function formatScheduleTime(time) {
   return time?.trim() ? time.slice(0, 5) : ''
 }
 
+function parseScheduleTimeToForm(timeLabel) {
+  const trimmedValue = String(timeLabel ?? '').trim()
+  const koreanMatch = trimmedValue.match(/^(오전|오후)\s*(\d{1,2}):(\d{2})$/)
+
+  if (koreanMatch) {
+    return {
+      hour: koreanMatch[2].padStart(2, '0'),
+      minute: koreanMatch[3],
+      period: koreanMatch[1] === '오후' ? 'pm' : 'am',
+    }
+  }
+
+  const timeMatch = trimmedValue.match(/^(\d{1,2}):(\d{2})/)
+
+  if (!timeMatch) {
+    return {
+      hour: '',
+      minute: '',
+      period: 'am',
+    }
+  }
+
+  const hour24 = Number(timeMatch[1])
+  const minute = timeMatch[2]
+  const period = hour24 >= 12 ? 'pm' : 'am'
+  const hour12 = hour24 % 12 || 12
+
+  return {
+    hour: String(hour12).padStart(2, '0'),
+    minute,
+    period,
+  }
+}
+
+function createScheduleFormFromItem(item) {
+  const parsedTime = parseScheduleTimeToForm(item.time)
+
+  return {
+    title: item.title ?? '',
+    typeKey: item.typeKey ?? DEFAULT_SCHEDULE_FORM.typeKey,
+    hour: parsedTime.hour,
+    minute: parsedTime.minute,
+    period: parsedTime.period,
+    memo: item.note ?? '',
+  }
+}
+
+function formatScheduleUpdateTime(form) {
+  const rawHour = Number(form.hour || 0)
+  const minute = formatTimePart(form.minute)
+  let hour24 = rawHour % 12
+
+  if (form.period === 'pm') {
+    hour24 += 12
+  }
+
+  return `${String(hour24).padStart(2, '0')}:${minute}:00`
+}
+
 function isSameMonthKey(dateKey, monthDate) {
   const date = parseDateKey(dateKey)
   return date.getFullYear() === monthDate.getFullYear() && date.getMonth() === monthDate.getMonth()
 }
 
-async function fetchMonthlySchedules(monthDate, userId = SCHEDULE_USER_ID) {
+async function fetchMonthlySchedules(monthDate, userId = DEFAULT_SCHEDULE_USER_ID) {
   try {
-    const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
-
-    if (!userResponse.ok) {
-      return []
-    }
-
-    const userPayload = await userResponse.json()
-    const groupId = getUserPayload(userPayload)?.groupId
+    const userContext = await fetchScheduleUserContext(userId)
+    const groupId = userContext?.groupId
 
     if (!groupId) {
       return []
@@ -345,6 +414,8 @@ function buildMonthlyScheduleState(schedules) {
 
     detailsByDate[dateKey].items.push({
       key: schedule.scheduleId ?? `${dateKey}-${index}`,
+      scheduleId: schedule.scheduleId ?? null,
+      scheduleDateKey: dateKey,
       title: schedule.title ?? '',
       time,
       note: schedule.memo ?? '',
@@ -393,13 +464,15 @@ function ParentScheduleScreen({
   onBack,
   onOpenHome,
   onOpenDevice,
+  onOpenCommunity,
   onOpenMy,
   navIcons,
   initialDetailOpen = true,
   initialScheduleInputOpen = false,
+  userId = DEFAULT_SCHEDULE_USER_ID,
 }) {
   const initialMonth = getMonthStart(new Date())
-  const initialMonthlySchedules = readMonthlyScheduleCache(initialMonth)
+  const initialMonthlySchedules = readMonthlyScheduleCache(initialMonth, userId)
   const initialMonthlyState = buildMonthlyScheduleState(initialMonthlySchedules)
   const [activeDateKey, setActiveDateKey] = useState(DEFAULT_ACTIVE_DATE_KEY)
   const [visibleMonth, setVisibleMonth] = useState(initialMonth)
@@ -407,15 +480,18 @@ function ParentScheduleScreen({
   const [isTodoActionSheetOpen, setIsTodoActionSheetOpen] = useState(false)
   const [isTodoInputSheetOpen, setIsTodoInputSheetOpen] = useState(false)
   const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(initialScheduleInputOpen)
+  const [isScheduleEditSheetOpen, setIsScheduleEditSheetOpen] = useState(false)
   const [isTodoDeleteSheetOpen, setIsTodoDeleteSheetOpen] = useState(false)
   const [todoInputValue, setTodoInputValue] = useState('')
   const [selectedPriority, setSelectedPriority] = useState(null)
   const [scheduleForm, setScheduleForm] = useState(DEFAULT_SCHEDULE_FORM)
+  const [editingScheduleMeta, setEditingScheduleMeta] = useState(null)
   const [deleteTargetKeys, setDeleteTargetKeys] = useState([])
   const [isMonthlyScheduleLoaded, setIsMonthlyScheduleLoaded] = useState(initialMonthlySchedules.length > 0)
   const [calendarMarkersByDate, setCalendarMarkersByDate] = useState(initialMonthlyState.markersByDate)
   const [scheduleDetails, setScheduleDetails] = useState(initialMonthlyState.detailsByDate)
   const [todosByDate, setTodosByDate] = useState(() => buildTodoState(data.todo))
+  const scheduleItemLongPressRef = useRef(null)
   const calendarWeeks = useMemo(
     () => buildCalendarWeeks(visibleMonth, calendarMarkersByDate),
     [visibleMonth, calendarMarkersByDate]
@@ -441,9 +517,28 @@ function ParentScheduleScreen({
     }
   }, [activeDateKey, calendarWeeks, scheduleDetails])
 
+  const refreshMonthlySchedules = async (monthDate = visibleMonth) => {
+    const schedules = await fetchMonthlySchedules(monthDate, userId)
+    const { markersByDate, detailsByDate } = buildMonthlyScheduleState(schedules)
+
+    writeMonthlyScheduleCache(monthDate, schedules, userId)
+    setCalendarMarkersByDate((prev) => replaceMonthEntries(prev, monthDate, markersByDate))
+    setScheduleDetails((prev) => replaceMonthEntries(prev, monthDate, detailsByDate))
+    setIsMonthlyScheduleLoaded(true)
+  }
+
+  const clearScheduleItemLongPress = () => {
+    if (scheduleItemLongPressRef.current) {
+      window.clearTimeout(scheduleItemLongPressRef.current)
+      scheduleItemLongPressRef.current = null
+    }
+  }
+
+  useEffect(() => () => clearScheduleItemLongPress(), [])
+
   useEffect(() => {
     let isMounted = true
-    const cachedSchedules = readMonthlyScheduleCache(visibleMonth)
+    const cachedSchedules = readMonthlyScheduleCache(visibleMonth, userId)
 
     if (cachedSchedules.length) {
       const cachedState = buildMonthlyScheduleState(cachedSchedules)
@@ -454,13 +549,13 @@ function ParentScheduleScreen({
       setIsMonthlyScheduleLoaded(false)
     }
 
-    fetchMonthlySchedules(visibleMonth).then((schedules) => {
+    fetchMonthlySchedules(visibleMonth, userId).then((schedules) => {
       if (!isMounted) {
         return
       }
 
       const { markersByDate, detailsByDate } = buildMonthlyScheduleState(schedules)
-      writeMonthlyScheduleCache(visibleMonth, schedules)
+      writeMonthlyScheduleCache(visibleMonth, schedules, userId)
 
       setCalendarMarkersByDate((prev) => replaceMonthEntries(prev, visibleMonth, markersByDate))
       setScheduleDetails((prev) => replaceMonthEntries(prev, visibleMonth, detailsByDate))
@@ -471,7 +566,7 @@ function ParentScheduleScreen({
     return () => {
       isMounted = false
     }
-  }, [visibleMonth])
+  }, [userId, visibleMonth])
 
   const handleDayClick = (dayKey) => {
     setActiveDateKey(dayKey)
@@ -532,9 +627,10 @@ function ParentScheduleScreen({
     const timeLabel = `${scheduleForm.period === 'am' ? '오전' : '오후'} ${formattedHour}:${formattedMinute}`
     const newItem = {
       key: `schedule-${Date.now()}`,
+      scheduleId: null,
+      scheduleDateKey: targetKey,
       title: trimmedValue,
       time: timeLabel,
-      location: scheduleForm.location.trim(),
       note: scheduleForm.memo.trim(),
       color: typeOption.color,
       textColor: typeOption.textColor,
@@ -573,6 +669,82 @@ function ParentScheduleScreen({
     setScheduleForm(DEFAULT_SCHEDULE_FORM)
     setIsDetailOpen(true)
     setIsScheduleInputSheetOpen(false)
+  }
+
+  const openScheduleEditSheet = (item) => {
+    if (!item.scheduleId) {
+      return
+    }
+
+    setEditingScheduleMeta({
+      scheduleId: item.scheduleId,
+      dateKey: item.scheduleDateKey ?? activeDateKey,
+    })
+    setScheduleForm(createScheduleFormFromItem(item))
+    setIsScheduleEditSheetOpen(true)
+  }
+
+  const handleScheduleItemPressStart = (item) => {
+    if (!item.scheduleId) {
+      return
+    }
+
+    clearScheduleItemLongPress()
+    scheduleItemLongPressRef.current = window.setTimeout(() => {
+      openScheduleEditSheet(item)
+      scheduleItemLongPressRef.current = null
+    }, SCHEDULE_ITEM_LONG_PRESS_MS)
+  }
+
+  const closeScheduleEditSheet = () => {
+    setIsScheduleEditSheetOpen(false)
+    setEditingScheduleMeta(null)
+    setScheduleForm(DEFAULT_SCHEDULE_FORM)
+  }
+
+  const handleUpdateSchedule = async () => {
+    const trimmedValue = scheduleForm.title.trim()
+
+    if (!trimmedValue || !editingScheduleMeta?.scheduleId) {
+      return
+    }
+
+    try {
+      const userContext = await fetchScheduleUserContext(userId)
+
+      if (!userContext?.groupId || !userContext?.userId) {
+        throw new Error('Missing user context for schedule update')
+      }
+
+      const selectedType = getTypeOption(scheduleForm.typeKey)
+      const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${editingScheduleMeta.scheduleId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          groupId: userContext.groupId,
+          userId: userContext.userId,
+          title: trimmedValue,
+          memo: scheduleForm.memo.trim(),
+          todoYn: 'N',
+          scheduleType: selectedType.label,
+          scheduleDate: editingScheduleMeta.dateKey ?? activeDateKey,
+          time: formatScheduleUpdateTime(scheduleForm),
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to update schedule: ${response.status} ${errorText}`)
+      }
+
+      await refreshMonthlySchedules(getMonthStart(parseDateKey(editingScheduleMeta.dateKey ?? activeDateKey)))
+      closeScheduleEditSheet()
+      setIsDetailOpen(false)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const handleSaveTodo = () => {
@@ -767,7 +939,17 @@ function ParentScheduleScreen({
                 {selectedDetail.items.length ? (
                   <div className="parent-schedule-detail-list">
                     {selectedDetail.items.map((item) => (
-                      <article className="parent-schedule-detail-item" key={item.key}>
+                      <article
+                        className="parent-schedule-detail-item"
+                        key={item.key}
+                        onMouseDown={() => handleScheduleItemPressStart(item)}
+                        onMouseUp={clearScheduleItemLongPress}
+                        onMouseLeave={clearScheduleItemLongPress}
+                        onTouchStart={() => handleScheduleItemPressStart(item)}
+                        onTouchEnd={clearScheduleItemLongPress}
+                        onTouchCancel={clearScheduleItemLongPress}
+                        onContextMenu={(event) => event.preventDefault()}
+                      >
                         <span
                           className="parent-schedule-detail-badge"
                           style={{ background: getScheduleVisual(item).color }}
@@ -776,7 +958,6 @@ function ParentScheduleScreen({
                           <p className="parent-schedule-detail-title">{item.title}</p>
                           <p className="parent-schedule-detail-line">
                             <strong>{item.time}</strong>
-                            {item.location ? <span>{item.location}</span> : null}
                           </p>
                           {item.note ? <p className="parent-schedule-detail-note">{item.note}</p> : null}
                         </div>
@@ -859,7 +1040,15 @@ function ParentScheduleScreen({
       <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
         {NAV_ITEMS.map((item) => {
           const handleClick =
-            item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : item.key === 'my' ? onOpenMy : undefined
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'community'
+                  ? onOpenCommunity
+                  : item.key === 'my'
+                    ? onOpenMy
+                    : undefined
 
           return (
             <button
@@ -978,6 +1167,14 @@ function ParentScheduleScreen({
         onFormChange={setScheduleForm}
         onClose={() => setIsScheduleInputSheetOpen(false)}
         onSave={handleSaveSchedule}
+      />
+
+      <ScheduleInputSheet
+        open={isScheduleEditSheetOpen}
+        form={scheduleForm}
+        onFormChange={setScheduleForm}
+        onClose={closeScheduleEditSheet}
+        onSave={handleUpdateSchedule}
       />
 
       {isTodoDeleteSheetOpen ? (
