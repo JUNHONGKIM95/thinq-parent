@@ -19,6 +19,21 @@ function PlusIcon() {
   )
 }
 
+function SmallDownIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="m4 6 4 4 4-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -653,6 +668,11 @@ function ParentScheduleScreen({
   }, [activeDateKey, userId])
 
   const handleDayClick = (dayKey) => {
+    if (dayKey === activeDateKey) {
+      setIsDetailOpen((prev) => !prev)
+      return
+    }
+
     setActiveDateKey(dayKey)
     setVisibleMonth(getMonthStart(parseDateKey(dayKey)))
     setIsDetailOpen(true)
@@ -674,10 +694,6 @@ function ParentScheduleScreen({
 
   const activeTodoKey = activeDateKey && todosByDate[activeDateKey] ? activeDateKey : 'default'
   const activeTodoGroup = todosByDate[activeTodoKey]
-  const todoDateLabel = activeDateKey
-    ? `${selectedDetail?.day ?? new Date(activeDateKey).getDate()}일 ${selectedDetail?.dayOfWeek ?? getDayOfWeekLabel(activeDateKey)}`
-    : '날짜 선택'
-
   const toggleTodo = (listType, todoKey) => {
     setTodosByDate((prev) => {
       const currentGroup = prev[activeTodoKey]
@@ -987,89 +1003,75 @@ function ParentScheduleScreen({
             ))}
           </div>
 
-          {selectedDetail && isDetailOpen ? (
-            <div
-              className="parent-schedule-popup-backdrop"
-              role="presentation"
-              onClick={() => setIsDetailOpen(false)}
+        </section>
+
+        {selectedDetail && isDetailOpen ? (
+          <div className="parent-schedule-popup-backdrop">
+            <section
+              className="parent-schedule-detail-card parent-schedule-detail-popup"
+              aria-label={`${selectedDetail.day}일 일정`}
             >
-              <section
-                className="parent-schedule-detail-card parent-schedule-detail-popup"
-                role="dialog"
-                aria-modal="true"
-                aria-label={`${selectedDetail.day}일 일정`}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div
-                  className="parent-schedule-detail-date"
+              <div className="parent-schedule-detail-date">
+                <div className="parent-schedule-detail-date-copy">
+                  <strong>{selectedDetail.day}</strong>
+                  <span>{selectedDetail.dayOfWeek}</span>
+                </div>
+                <button
+                  type="button"
+                  className="parent-schedule-todo-add parent-schedule-detail-add"
+                  aria-label="일정 추가"
                   onClick={() => {
                     setScheduleForm(DEFAULT_SCHEDULE_FORM)
                     setIsScheduleInputSheetOpen(true)
                   }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setScheduleForm(DEFAULT_SCHEDULE_FORM)
-                      setIsScheduleInputSheetOpen(true)
-                    }
-                  }}
                 >
-                  <strong>{selectedDetail.day}</strong>
-                  <span>{selectedDetail.dayOfWeek}</span>
+                  <PlusIcon />
+                </button>
+              </div>
+
+              {selectedDetail.items.length ? (
+                <div className="parent-schedule-detail-list">
+                  {selectedDetail.items.map((item) => (
+                    <article
+                      className="parent-schedule-detail-item"
+                      key={item.key}
+                      onMouseDown={() => handleScheduleItemPressStart(item)}
+                      onMouseUp={clearScheduleItemLongPress}
+                      onMouseLeave={clearScheduleItemLongPress}
+                      onTouchStart={() => handleScheduleItemPressStart(item)}
+                      onTouchEnd={clearScheduleItemLongPress}
+                      onTouchCancel={clearScheduleItemLongPress}
+                      onContextMenu={(event) => event.preventDefault()}
+                    >
+                      <span
+                        className="parent-schedule-detail-badge"
+                        style={{ background: getScheduleVisual(item).color }}
+                      />
+                      <div className="parent-schedule-detail-copy">
+                        <p className="parent-schedule-detail-title">{item.title}</p>
+                        <p className="parent-schedule-detail-line">
+                          <strong>{item.time}</strong>
+                          {item.note ? <span>{item.note}</span> : null}
+                        </p>
+                      </div>
+                    </article>
+                  ))}
                 </div>
+              ) : (
+                <p className="parent-schedule-empty">선택한 날짜에는 등록된 일정이 없어요.</p>
+              )}
+            </section>
+          </div>
+        ) : null}
 
-                {selectedDetail.items.length ? (
-                  <div className="parent-schedule-detail-list">
-                    {selectedDetail.items.map((item) => (
-                      <article
-                        className="parent-schedule-detail-item"
-                        key={item.key}
-                        onMouseDown={() => handleScheduleItemPressStart(item)}
-                        onMouseUp={clearScheduleItemLongPress}
-                        onMouseLeave={clearScheduleItemLongPress}
-                        onTouchStart={() => handleScheduleItemPressStart(item)}
-                        onTouchEnd={clearScheduleItemLongPress}
-                        onTouchCancel={clearScheduleItemLongPress}
-                        onContextMenu={(event) => event.preventDefault()}
-                      >
-                        <span
-                          className="parent-schedule-detail-badge"
-                          style={{ background: getScheduleVisual(item).color }}
-                        />
-                        <div className="parent-schedule-detail-copy">
-                          <p className="parent-schedule-detail-title">{item.title}</p>
-                          <p className="parent-schedule-detail-line">
-                            <strong>{item.time}</strong>
-                          </p>
-                          {item.note ? <p className="parent-schedule-detail-note">{item.note}</p> : null}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="parent-schedule-empty">선택한 날짜에는 등록된 일정이 없어요.</p>
-                )}
-              </section>
+        <section className="parent-schedule-recommend-card">
+          <div className="parent-schedule-recommend-head">
+            <div className="parent-schedule-recommend-title">
+              <strong>주간 추천</strong>
+              <span>{activeTodoGroup.weekLabel}</span>
             </div>
-          ) : null}
-        </section>
-
-        <section className="parent-schedule-todo-card">
-          <div className="parent-schedule-todo-head">
-            <div className="parent-schedule-todo-title">
-              <strong>TO DO</strong>
-              <span>{todoDateLabel}</span>
-            </div>
-
-            <button
-              type="button"
-              className="parent-schedule-todo-add"
-              aria-label="할 일 추가"
-              onClick={() => setIsTodoActionSheetOpen(true)}
-            >
-              <PlusIcon />
+            <button type="button" className="parent-schedule-recommend-week-button" aria-label="추천 주차">
+              <SmallDownIcon />
             </button>
           </div>
 
@@ -1094,7 +1096,26 @@ function ParentScheduleScreen({
                 ))}
               </div>
             </div>
+          </div>
+        </section>
 
+        <section className="parent-schedule-todo-card">
+          <div className="parent-schedule-todo-head">
+            <div className="parent-schedule-todo-title">
+              <strong>TO DO</strong>
+            </div>
+
+            <button
+              type="button"
+              className="parent-schedule-todo-add"
+              aria-label="할 일 추가"
+              onClick={() => setIsTodoActionSheetOpen(true)}
+            >
+              <PlusIcon />
+            </button>
+          </div>
+
+          <div className="parent-schedule-todo-body">
             <div className="parent-schedule-todo-section">
               <p className="parent-schedule-todo-section-title with-icon is-my-list">
                 <PinIcon />
