@@ -383,6 +383,122 @@ async function fetchDailySchedules(userId = 3, date = new Date()) {
   }
 }
 
+function getMyListPayloadItems(payload) {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items
+  }
+
+  if (Array.isArray(payload?.myLists)) {
+    return payload.myLists
+  }
+
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items
+  }
+
+  if (Array.isArray(payload?.data?.myLists)) {
+    return payload.data.myLists
+  }
+
+  return []
+}
+
+function getMyListDateKey(item) {
+  const rawValue = String(
+    item?.myListDate ??
+      item?.my_list_date ??
+      item?.date ??
+      item?.scheduleDate ??
+      item?.schedule_date ??
+      ''
+  ).trim()
+
+  return rawValue.length >= 10 ? rawValue.slice(0, 10) : rawValue
+}
+
+function getMyListTitle(item) {
+  return String(item?.title ?? item?.todo_name ?? item?.todoName ?? item?.name ?? item?.text ?? '').trim()
+}
+
+function isMyListChecked(item) {
+  return String(item?.checkYn ?? item?.check_yn ?? 'N').trim().toUpperCase() === 'Y'
+}
+
+async function fetchTodayMyListItems(userId = 3, date = new Date()) {
+  const dateKey = getDateKey(date)
+
+  try {
+    const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
+
+    if (!userResponse.ok) {
+      return []
+    }
+
+    const userPayload = await userResponse.json()
+    const groupId = getUserPayload(userPayload)?.groupId
+
+    if (!groupId) {
+      return []
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/my-list/groups/${groupId}`)
+
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = await response.json()
+
+    return getMyListPayloadItems(payload)
+      .map((item, index) => {
+        const myListId = item?.myListId ?? item?.my_list_id ?? item?.id ?? null
+
+        return {
+          key: myListId ? `my-list-${myListId}` : `my-list-${dateKey}-${index}`,
+          myListId,
+          dateKey: getMyListDateKey(item),
+          text: getMyListTitle(item),
+          checked: isMyListChecked(item),
+        }
+      })
+      .filter((item) => item.dateKey === dateKey && item.text)
+      .slice(0, 2)
+  } catch {
+    return []
+  }
+}
+
+async function updateMyListCheckYn(myListId, checked) {
+  if (!myListId) {
+    return false
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/my-list/${myListId}/check-yn`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        checkYn: checked ? 'Y' : 'N',
+        check_yn: checked ? 'Y' : 'N',
+      }),
+    })
+
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 function AssetIcon({ src, alt = '', className = '', size = 20 }) {
   return (
     <img
@@ -801,17 +917,11 @@ function ParentModeScreen({
   pregnancySummary,
   cheerMessageText,
   dailyScheduleItems,
+  todayTodoItems,
+  onToggleTodayTodo,
 }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
   const today = new Date()
-  const todayKey = getDateKey(today)
-  const todayTodoGroup =
-    mockParentSchedule.todo?.byDate?.[todayKey] ??
-    mockParentSchedule.todo?.default ?? {
-      recommended: [],
-      myList: [],
-    }
-  const todayTodoItems = [...(todayTodoGroup.recommended ?? []), ...(todayTodoGroup.myList ?? [])].slice(0, 2)
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -936,7 +1046,8 @@ function ParentModeScreen({
                   <input
                     type="checkbox"
                     className="parent-mode-todo-checkbox"
-                    defaultChecked={Boolean(item.checked)}
+                    checked={Boolean(item.checked)}
+                    onChange={() => onToggleTodayTodo(item)}
                   />
                   <span className="parent-mode-todo-check" aria-hidden="true" />
                   <span>{item.text}</span>
@@ -1039,6 +1150,7 @@ function App() {
   const [dailyScheduleItems, setDailyScheduleItems] = useState(() =>
     readDailyScheduleCache(DEFAULT_CURRENT_USER_ID, new Date())
   )
+  const [todayTodoItems, setTodayTodoItems] = useState([])
   const [childProfile, setChildProfile] = useState(mockChildProfile)
   const today = new Date()
   const myPage = {
@@ -1064,6 +1176,7 @@ function App() {
     setChildProfile(mockChildProfile)
     setCheerMessageText(DEFAULT_CHEER_MESSAGE)
     setDailyScheduleItems(readDailyScheduleCache(currentUserId, new Date()))
+    setTodayTodoItems([])
 
     fetchPregnancySummary(currentUserId).then((data) => {
       if (!isMounted || !data) {
@@ -1110,6 +1223,14 @@ function App() {
       }
 
       setDailyScheduleItems(items)
+    })
+
+    fetchTodayMyListItems(currentUserId, new Date()).then((items) => {
+      if (!isMounted) {
+        return
+      }
+
+      setTodayTodoItems(items)
     })
 
     return () => {
@@ -1251,6 +1372,26 @@ function App() {
     }))
   }
 
+  const handleToggleTodayTodo = async (targetItem) => {
+    if (!targetItem?.key) {
+      return
+    }
+
+    const nextChecked = !targetItem.checked
+
+    setTodayTodoItems((prev) =>
+      prev.map((item) => (item.key === targetItem.key ? { ...item, checked: nextChecked } : item))
+    )
+
+    const isUpdated = await updateMyListCheckYn(targetItem.myListId, nextChecked)
+
+    if (!isUpdated) {
+      setTodayTodoItems((prev) =>
+        prev.map((item) => (item.key === targetItem.key ? { ...item, checked: targetItem.checked } : item))
+      )
+    }
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
@@ -1313,6 +1454,8 @@ function App() {
             pregnancySummary={pregnancySummary}
             cheerMessageText={cheerMessageText}
             dailyScheduleItems={dailyScheduleItems}
+            todayTodoItems={todayTodoItems}
+            onToggleTodayTodo={handleToggleTodayTodo}
           />
         )}
 

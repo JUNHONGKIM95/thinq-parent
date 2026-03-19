@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
+import myListIcon from '@shared-assets/srg/MYLISTICON.svg'
 import { useEffect } from 'react'
 import { useRef } from 'react'
 import { API_BASE_URL } from '../../config/api'
@@ -19,6 +20,16 @@ function PlusIcon() {
   )
 }
 
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="6" cy="12" r="1.6" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+      <circle cx="18" cy="12" r="1.6" fill="currentColor" />
+    </svg>
+  )
+}
+
 function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -28,6 +39,10 @@ function PinIcon() {
       />
     </svg>
   )
+}
+
+function MyListIcon() {
+  return <img src={myListIcon} alt="" aria-hidden="true" />
 }
 
 function StarIcon() {
@@ -52,8 +67,6 @@ const NAV_ITEMS = [
 ]
 const DEFAULT_SCHEDULE_USER_ID = 3
 const MONTHLY_SCHEDULE_CACHE_PREFIX = 'parent-monthly-schedules'
-const SCHEDULE_ITEM_LONG_PRESS_MS = 550
-
 function getUserPayload(payload) {
   if (payload?.data && typeof payload.data === 'object') {
     return payload.data
@@ -616,6 +629,103 @@ function replaceMonthEntries(prevState, monthDate, nextEntries) {
   }
 }
 
+function getMyListPayloadItems(payload) {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items
+  }
+
+  if (Array.isArray(payload?.myLists)) {
+    return payload.myLists
+  }
+
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items
+  }
+
+  if (Array.isArray(payload?.data?.myLists)) {
+    return payload.data.myLists
+  }
+
+  return []
+}
+
+function getMyListDateKey(item) {
+  const rawValue = String(
+    item?.myListDate ??
+      item?.my_list_date ??
+      item?.date ??
+      item?.scheduleDate ??
+      item?.schedule_date ??
+      ''
+  ).trim()
+
+  return rawValue.length >= 10 ? rawValue.slice(0, 10) : rawValue
+}
+
+function getMyListTitle(item) {
+  return String(item?.title ?? item?.todo_name ?? item?.todoName ?? item?.name ?? item?.text ?? '').trim()
+}
+
+function isMyListChecked(item) {
+  return String(item?.checkYn ?? item?.check_yn ?? 'N').trim().toUpperCase() === 'Y'
+}
+
+function normalizeMyListItems(payload) {
+  return getMyListPayloadItems(payload)
+    .map((item, index) => {
+      const dateKey = getMyListDateKey(item)
+      const title = getMyListTitle(item)
+      const myListId = item?.myListId ?? item?.my_list_id ?? item?.id ?? null
+
+      return {
+        key: myListId ? `my-list-${myListId}` : `my-list-${dateKey}-${index}`,
+        myListId,
+        dateKey,
+        text: title,
+        checked: isMyListChecked(item),
+      }
+    })
+    .filter((item) => item.dateKey && item.text)
+}
+
+function buildMyListState(items) {
+  return items.reduce((accumulator, item) => {
+    if (!accumulator[item.dateKey]) {
+      accumulator[item.dateKey] = []
+    }
+
+    accumulator[item.dateKey].push(item)
+    return accumulator
+  }, {})
+}
+
+async function fetchMyListByGroup(groupId) {
+  if (!groupId) {
+    return []
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/my-list/groups/${groupId}`)
+
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = await response.json()
+    return normalizeMyListItems(payload)
+  } catch {
+    return []
+  }
+}
+
 function getScheduleVisual(item) {
   if (item.typeKey) {
     const option = getTypeOption(item.typeKey)
@@ -658,23 +768,27 @@ function ParentScheduleScreen({
   const [isTodoInputSheetOpen, setIsTodoInputSheetOpen] = useState(false)
   const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(initialScheduleInputOpen)
   const [isScheduleEditSheetOpen, setIsScheduleEditSheetOpen] = useState(false)
+  const [isScheduleActionSheetOpen, setIsScheduleActionSheetOpen] = useState(false)
   const [isTodoDeleteSheetOpen, setIsTodoDeleteSheetOpen] = useState(false)
   const [todoInputValue, setTodoInputValue] = useState('')
   const [selectedPriority, setSelectedPriority] = useState(null)
   const [scheduleForm, setScheduleForm] = useState(DEFAULT_SCHEDULE_FORM)
   const [editingScheduleMeta, setEditingScheduleMeta] = useState(null)
+  const [editingMyListMeta, setEditingMyListMeta] = useState(null)
+  const [selectedScheduleItem, setSelectedScheduleItem] = useState(null)
   const [deleteTargetKeys, setDeleteTargetKeys] = useState([])
   const [isMonthlyScheduleLoaded, setIsMonthlyScheduleLoaded] = useState(initialMonthlySchedules.length > 0)
   const [calendarMarkersByDate, setCalendarMarkersByDate] = useState(initialMonthlyState.markersByDate)
   const [scheduleDetails, setScheduleDetails] = useState(initialMonthlyState.detailsByDate)
-  const [todosByDate, setTodosByDate] = useState(() => buildTodoState(data.todo))
+  const [scheduleUserContext, setScheduleUserContext] = useState(null)
+  const [myListByDate, setMyListByDate] = useState({})
   const [currentWeekNumber, setCurrentWeekNumber] = useState(null)
   const [recommendedWeekNumber, setRecommendedWeekNumber] = useState(null)
   const [recommendedTodos, setRecommendedTodos] = useState([])
   const [isWeekEditing, setIsWeekEditing] = useState(false)
   const [weekInputValue, setWeekInputValue] = useState('')
-  const scheduleItemLongPressRef = useRef(null)
   const lastWeekNumberTapRef = useRef(0)
+  const lastScheduleItemTapRef = useRef({ key: null, time: 0 })
   const calendarWeeks = useMemo(
     () => buildCalendarWeeks(visibleMonth, calendarMarkersByDate),
     [visibleMonth, calendarMarkersByDate]
@@ -709,15 +823,6 @@ function ParentScheduleScreen({
     setScheduleDetails((prev) => replaceMonthEntries(prev, monthDate, detailsByDate))
     setIsMonthlyScheduleLoaded(true)
   }
-
-  const clearScheduleItemLongPress = () => {
-    if (scheduleItemLongPressRef.current) {
-      window.clearTimeout(scheduleItemLongPressRef.current)
-      scheduleItemLongPressRef.current = null
-    }
-  }
-
-  useEffect(() => () => clearScheduleItemLongPress(), [])
 
   useEffect(() => {
     let isMounted = true
@@ -759,6 +864,7 @@ function ParentScheduleScreen({
         return
       }
 
+      setScheduleUserContext(userContext)
       const resolvedCurrentWeek =
         userContext?.currentWeek ?? calculatePregnancyWeek(DEFAULT_ACTIVE_DATE_KEY, userContext?.dueDate)
 
@@ -771,6 +877,39 @@ function ParentScheduleScreen({
       isMounted = false
     }
   }, [userId])
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!scheduleUserContext?.groupId) {
+      setMyListByDate({})
+      return () => {
+        isMounted = false
+      }
+    }
+
+    fetchMyListByGroup(scheduleUserContext.groupId).then((items) => {
+      if (!isMounted) {
+        return
+      }
+
+      setMyListByDate(buildMyListState(items))
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [scheduleUserContext?.groupId])
+
+  const refreshMyListByUserContext = async (groupId = scheduleUserContext?.groupId) => {
+    if (!groupId) {
+      setMyListByDate({})
+      return
+    }
+
+    const items = await fetchMyListByGroup(groupId)
+    setMyListByDate(buildMyListState(items))
+  }
 
   const handleDayClick = (dayKey) => {
     if (dayKey === activeDateKey) {
@@ -797,14 +936,13 @@ function ParentScheduleScreen({
     setActiveDateKey(getDateKey(nextSelectedDate))
   }
 
-  const activeTodoKey = activeDateKey && todosByDate[activeDateKey] ? activeDateKey : 'default'
-  const activeTodoGroup = todosByDate[activeTodoKey]
+  const activeMyListItems = activeDateKey ? myListByDate[activeDateKey] ?? [] : []
   const displayWeekNumber = recommendedWeekNumber ?? currentWeekNumber
 
   useEffect(() => {
     setIsWeekEditing(false)
     setWeekInputValue(displayWeekNumber ? String(displayWeekNumber) : '')
-  }, [displayWeekNumber, activeTodoKey])
+  }, [displayWeekNumber, activeDateKey])
 
   useEffect(() => {
     let isMounted = true
@@ -855,88 +993,97 @@ function ParentScheduleScreen({
     lastWeekNumberTapRef.current = now
   }
 
-  const toggleTodo = (listType, todoKey) => {
-    if (listType === 'recommended') {
-      setRecommendedTodos((prev) =>
-        prev.map((item) => (item.key === todoKey ? { ...item, checked: !item.checked } : item))
-      )
-      return
-    }
-
-    setTodosByDate((prev) => {
-      const currentGroup = prev[activeTodoKey]
-
-      return {
-        ...prev,
-        [activeTodoKey]: {
-          ...currentGroup,
-          [listType]: currentGroup[listType].map((item) =>
-            item.key === todoKey ? { ...item, checked: !item.checked } : item
-          ),
-        },
-      }
-    })
+  const toggleRecommendedTodo = (todoKey) => {
+    setRecommendedTodos((prev) =>
+      prev.map((item) => (item.key === todoKey ? { ...item, checked: !item.checked } : item))
+    )
   }
 
-  const handleSaveSchedule = () => {
-    const trimmedValue = scheduleForm.title.trim()
-
-    if (!trimmedValue) {
+  const handleMyListToggle = async (item) => {
+    if (!item?.myListId || !item.dateKey) {
       return
     }
 
-    const targetKey = activeDateKey ?? 'default'
-    const typeOption = getTypeOption(scheduleForm.typeKey)
-    const targetDateLabel = activeDateKey
-      ? `${selectedDetail?.day ?? new Date(activeDateKey).getDate()}일 ${selectedDetail?.dayOfWeek ?? getDayOfWeekLabel(activeDateKey)}`
-      : '날짜 선택'
-    const formattedHour = formatTimePart(scheduleForm.hour)
-    const formattedMinute = formatTimePart(scheduleForm.minute)
-    const timeLabel = `${scheduleForm.period === 'am' ? '오전' : '오후'} ${formattedHour}:${formattedMinute}`
-    const newItem = {
-      key: `schedule-${Date.now()}`,
-      scheduleId: null,
-      scheduleDateKey: targetKey,
-      title: trimmedValue,
-      time: timeLabel,
-      note: scheduleForm.memo.trim(),
-      color: typeOption.color,
-      textColor: typeOption.textColor,
-      typeKey: typeOption.key,
-    }
+    const nextChecked = !item.checked
 
-    setScheduleDetails((prev) => {
-      const currentDetail = prev[targetKey] ?? {
-        day: selectedDetail?.day ?? new Date(targetKey).getDate().toString(),
-        dayOfWeek: selectedDetail?.dayOfWeek ?? getDayOfWeekLabel(targetKey),
-        items: [],
-      }
-
-      return {
-        ...prev,
-        [targetKey]: {
-          ...currentDetail,
-          items: [...currentDetail.items, newItem],
-        },
-      }
-    })
-
-    setCalendarMarkersByDate((prev) => ({
+    setMyListByDate((prev) => ({
       ...prev,
-      [targetKey]: [
-        ...(prev[targetKey] ?? []),
-        {
-          key: newItem.key,
-          label: newItem.title,
-          color: newItem.color,
-          textColor: newItem.textColor,
-        },
-      ],
+      [item.dateKey]: (prev[item.dateKey] ?? []).map((target) =>
+        target.key === item.key ? { ...target, checked: nextChecked } : target
+      ),
     }))
 
-    setScheduleForm(DEFAULT_SCHEDULE_FORM)
-    setIsDetailOpen(true)
-    setIsScheduleInputSheetOpen(false)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/my-list/${item.myListId}/check-yn`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          checkYn: nextChecked ? 'Y' : 'N',
+          check_yn: nextChecked ? 'Y' : 'N',
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to update my list check state: ${response.status} ${errorText}`)
+      }
+    } catch (error) {
+      console.error(error)
+      setMyListByDate((prev) => ({
+        ...prev,
+        [item.dateKey]: (prev[item.dateKey] ?? []).map((target) =>
+          target.key === item.key ? { ...target, checked: item.checked } : target
+        ),
+      }))
+    }
+  }
+
+  const handleSaveSchedule = async () => {
+    const trimmedValue = scheduleForm.title.trim()
+
+    if (!trimmedValue || !activeDateKey) {
+      return
+    }
+
+    try {
+      const userContext = await fetchScheduleUserContext(userId)
+
+      if (!userContext?.groupId || !userContext?.userId) {
+        throw new Error('Missing user context for schedule create')
+      }
+
+      const selectedType = getTypeOption(scheduleForm.typeKey)
+      const response = await fetch(`${API_BASE_URL}/api/v1/schedules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          groupId: userContext.groupId,
+          userId: userContext.userId,
+          title: trimmedValue,
+          memo: scheduleForm.memo.trim(),
+          todoYn: 'N',
+          scheduleType: selectedType.label,
+          time: formatScheduleUpdateTime(scheduleForm),
+          scheduleDate: activeDateKey,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to create schedule: ${response.status} ${errorText}`)
+      }
+
+      await refreshMonthlySchedules(getMonthStart(parseDateKey(activeDateKey)))
+      setScheduleForm(DEFAULT_SCHEDULE_FORM)
+      setIsDetailOpen(true)
+      setIsScheduleInputSheetOpen(false)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const openScheduleEditSheet = (item) => {
@@ -952,22 +1099,37 @@ function ParentScheduleScreen({
     setIsScheduleEditSheetOpen(true)
   }
 
-  const handleScheduleItemPressStart = (item) => {
+  const openScheduleActionSheet = (item) => {
+    setSelectedScheduleItem(item)
+    setIsScheduleActionSheetOpen(true)
+  }
+
+  const handleScheduleItemDoubleTap = (item) => {
     if (!item.scheduleId) {
       return
     }
 
-    clearScheduleItemLongPress()
-    scheduleItemLongPressRef.current = window.setTimeout(() => {
-      openScheduleEditSheet(item)
-      scheduleItemLongPressRef.current = null
-    }, SCHEDULE_ITEM_LONG_PRESS_MS)
+    const now = Date.now()
+    const lastTap = lastScheduleItemTapRef.current
+
+    if (lastTap.key === item.key && now - lastTap.time < 320) {
+      openScheduleActionSheet(item)
+      lastScheduleItemTapRef.current = { key: null, time: 0 }
+      return
+    }
+
+    lastScheduleItemTapRef.current = { key: item.key, time: now }
   }
 
   const closeScheduleEditSheet = () => {
     setIsScheduleEditSheetOpen(false)
     setEditingScheduleMeta(null)
     setScheduleForm(DEFAULT_SCHEDULE_FORM)
+  }
+
+  const closeScheduleActionSheet = () => {
+    setIsScheduleActionSheetOpen(false)
+    setSelectedScheduleItem(null)
   }
 
   const handleUpdateSchedule = async () => {
@@ -1009,76 +1171,166 @@ function ParentScheduleScreen({
 
       await refreshMonthlySchedules(getMonthStart(parseDateKey(editingScheduleMeta.dateKey ?? activeDateKey)))
       closeScheduleEditSheet()
-      setIsDetailOpen(false)
+      setIsDetailOpen(true)
     } catch (error) {
       console.error(error)
     }
   }
 
-  const handleSaveTodo = () => {
-    const trimmedValue = todoInputValue.trim()
-
-    if (!trimmedValue) {
+  const handleOpenScheduleEditFromAction = () => {
+    if (!selectedScheduleItem) {
       return
     }
 
-    const targetKey = activeDateKey ?? 'default'
-    const targetDateLabel = activeDateKey
-      ? `${selectedDetail?.day ?? new Date(activeDateKey).getDate()}일 ${selectedDetail?.dayOfWeek ?? getDayOfWeekLabel(activeDateKey)}`
-      : '날짜 선택'
+    setIsScheduleActionSheetOpen(false)
+    openScheduleEditSheet(selectedScheduleItem)
+  }
 
-    setTodosByDate((prev) => {
-      const fallbackGroup = prev.default
-      const currentGroup = prev[targetKey] ?? createEmptyTodoGroup(fallbackGroup, targetDateLabel)
+  const handleDeleteSchedule = async () => {
+    if (!selectedScheduleItem?.scheduleId) {
+      return
+    }
 
-      return {
-        ...prev,
-        [targetKey]: {
-          ...currentGroup,
-          weekLabel: targetDateLabel,
-          myList: [
-            ...currentGroup.myList,
-            {
-              key: `custom-${Date.now()}`,
-              text: trimmedValue,
-              checked: false,
-              priority: selectedPriority,
-            },
-          ],
-        },
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${selectedScheduleItem.scheduleId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to delete schedule: ${response.status} ${errorText}`)
       }
-    })
 
-    setTodoInputValue('')
-    setSelectedPriority(null)
-    setIsTodoInputSheetOpen(false)
+      await refreshMonthlySchedules(
+        getMonthStart(parseDateKey(selectedScheduleItem.scheduleDateKey ?? activeDateKey ?? DEFAULT_ACTIVE_DATE_KEY))
+      )
+      closeScheduleActionSheet()
+      setIsDetailOpen(true)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleSaveTodo = async () => {
+    const trimmedValue = todoInputValue.trim()
+
+    if (!trimmedValue || !activeDateKey) {
+      return
+    }
+
+    if (editingMyListMeta?.key && editingMyListMeta?.myListId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/my-list/${editingMyListMeta.myListId}/title`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: trimmedValue,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Failed to update my list title: ${response.status} ${errorText}`)
+        }
+
+        setMyListByDate((prev) => ({
+          ...prev,
+          [editingMyListMeta.dateKey]: (prev[editingMyListMeta.dateKey] ?? []).map((item) =>
+            item.key === editingMyListMeta.key ? { ...item, text: trimmedValue } : item
+          ),
+        }))
+
+        setTodoInputValue('')
+        setSelectedPriority(null)
+        setEditingMyListMeta(null)
+        setIsTodoInputSheetOpen(false)
+      } catch (error) {
+        console.error(error)
+      }
+
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/my-list/users/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: trimmedValue,
+          myListDate: activeDateKey,
+          my_list_date: activeDateKey,
+          checkYn: 'N',
+          check_yn: 'N',
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to create my list item: ${response.status} ${errorText}`)
+      }
+
+      await refreshMyListByUserContext()
+      setTodoInputValue('')
+      setSelectedPriority(null)
+      setIsTodoInputSheetOpen(false)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const openMyListEditSheet = (item) => {
+    setEditingMyListMeta({
+      key: item.key,
+      dateKey: item.dateKey,
+      myListId: item.myListId,
+    })
+    setTodoInputValue(item.text)
+    setIsTodoInputSheetOpen(true)
   }
 
   const toggleDeleteTarget = (todoKey) => {
-    setDeleteTargetKeys((prev) =>
-      prev.includes(todoKey) ? prev.filter((key) => key !== todoKey) : [...prev, todoKey]
-    )
+    setDeleteTargetKeys((prev) => (prev.includes(todoKey) ? [] : [todoKey]))
   }
 
-  const handleDeleteTodos = () => {
+  const handleDeleteTodos = async () => {
     if (!deleteTargetKeys.length) {
       return
     }
 
-    setTodosByDate((prev) => {
-      const currentGroup = prev[activeTodoKey]
+    if (!activeDateKey) {
+      return
+    }
 
-      return {
-        ...prev,
-        [activeTodoKey]: {
-          ...currentGroup,
-          myList: currentGroup.myList.filter((item) => !deleteTargetKeys.includes(item.key)),
-        },
+    const targetItem = activeMyListItems.find((item) => deleteTargetKeys.includes(item.key))
+
+    if (!targetItem?.myListId) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/my-list/${targetItem.myListId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to delete my list item: ${response.status} ${errorText}`)
       }
-    })
 
-    setDeleteTargetKeys([])
-    setIsTodoDeleteSheetOpen(false)
+      setMyListByDate((prev) => ({
+        ...prev,
+        [activeDateKey]: (prev[activeDateKey] ?? []).filter((item) => item.key !== targetItem.key),
+      }))
+
+      setDeleteTargetKeys([])
+      setIsTodoDeleteSheetOpen(false)
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
@@ -1203,12 +1455,8 @@ function ParentScheduleScreen({
                     <article
                       className="parent-schedule-detail-item"
                       key={item.key}
-                      onMouseDown={() => handleScheduleItemPressStart(item)}
-                      onMouseUp={clearScheduleItemLongPress}
-                      onMouseLeave={clearScheduleItemLongPress}
-                      onTouchStart={() => handleScheduleItemPressStart(item)}
-                      onTouchEnd={clearScheduleItemLongPress}
-                      onTouchCancel={clearScheduleItemLongPress}
+                      onClick={() => handleScheduleItemDoubleTap(item)}
+                      onDoubleClick={() => openScheduleActionSheet(item)}
                       onContextMenu={(event) => event.preventDefault()}
                     >
                       <span
@@ -1294,7 +1542,7 @@ function ParentScheduleScreen({
                       type="checkbox"
                       className="parent-schedule-checkbox-input"
                       checked={item.checked}
-                      onChange={() => toggleTodo('recommended', item.key)}
+                      onChange={() => toggleRecommendedTodo(item.key)}
                     />
                     <span className="parent-schedule-check" aria-hidden="true" />
                     <span>{item.text}</span>
@@ -1305,45 +1553,63 @@ function ParentScheduleScreen({
           </div>
         </section>
 
-        <section className="parent-schedule-todo-card">
-          <div className="parent-schedule-todo-head">
-            <div className="parent-schedule-todo-title">
-              <strong>TO DO</strong>
+        {selectedDetail && isDetailOpen ? (
+          <section className="parent-schedule-todo-card" aria-label={`${selectedDetail.day}일 TO DO`}>
+            <div className="parent-schedule-todo-head">
+              <div className="parent-schedule-todo-title">
+                <strong>TO DO</strong>
+              </div>
+
+              <button
+                type="button"
+                className="parent-schedule-todo-add"
+                aria-label="할 일 추가"
+                onClick={() => setIsTodoActionSheetOpen(true)}
+              >
+                <PlusIcon />
+              </button>
             </div>
 
-            <button
-              type="button"
-              className="parent-schedule-todo-add"
-              aria-label="할 일 추가"
-              onClick={() => setIsTodoActionSheetOpen(true)}
-            >
-              <PlusIcon />
-            </button>
-          </div>
-
-          <div className="parent-schedule-todo-body">
-            <div className="parent-schedule-todo-section">
-              <p className="parent-schedule-todo-section-title with-icon is-my-list">
-                <PinIcon />
-                <span>MY LIST</span>
-              </p>
-              <div className="parent-schedule-todo-list">
-                {activeTodoGroup.myList.map((item) => (
-                  <label className="parent-schedule-todo-item" key={item.key}>
-                    <input
-                      type="checkbox"
-                      className="parent-schedule-checkbox-input"
-                      checked={item.checked}
-                      onChange={() => toggleTodo('myList', item.key)}
-                    />
-                    <span className="parent-schedule-check" aria-hidden="true" />
-                    <span>{item.text}</span>
-                  </label>
-                ))}
+            <div className="parent-schedule-todo-body">
+              <div className="parent-schedule-todo-section">
+                <p className="parent-schedule-todo-section-title with-icon is-my-list">
+                  <MyListIcon />
+                  <span>MY LIST</span>
+                </p>
+                <div className="parent-schedule-todo-list">
+                {activeMyListItems.length ? (
+                  activeMyListItems.map((item) => (
+                    <label className="parent-schedule-todo-item" key={item.key}>
+                      <input
+                        type="checkbox"
+                          className="parent-schedule-checkbox-input"
+                          checked={item.checked}
+                          onChange={() => handleMyListToggle(item)}
+                      />
+                      <span className="parent-schedule-check" aria-hidden="true" />
+                      <span className="parent-schedule-todo-item-text">{item.text}</span>
+                      <button
+                        type="button"
+                        className="parent-schedule-todo-more"
+                        aria-label="할 일 수정"
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          openMyListEditSheet(item)
+                        }}
+                      >
+                        <MoreIcon />
+                      </button>
+                    </label>
+                  ))
+                ) : (
+                    <p className="parent-schedule-empty">선택한 날짜에는 등록된 MY LIST가 없어요.</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </div>
 
       <div className="parent-mode-bottom-bar" />
@@ -1398,6 +1664,7 @@ function ParentScheduleScreen({
                 setIsTodoActionSheetOpen(false)
                 setTodoInputValue('')
                 setSelectedPriority(null)
+                setEditingMyListMeta(null)
                 setIsTodoInputSheetOpen(true)
               }}
             >
@@ -1418,11 +1685,45 @@ function ParentScheduleScreen({
         </div>
       ) : null}
 
+      {isScheduleActionSheetOpen ? (
+        <div
+          className="parent-schedule-action-overlay"
+          role="presentation"
+          onClick={closeScheduleActionSheet}
+        >
+          <section
+            className="parent-schedule-action-sheet parent-schedule-item-action-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="일정 작업 선택"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="parent-schedule-action-button is-edit"
+              onClick={handleOpenScheduleEditFromAction}
+            >
+              수정하기
+            </button>
+            <button
+              type="button"
+              className="parent-schedule-action-button is-delete"
+              onClick={handleDeleteSchedule}
+            >
+              삭제하기
+            </button>
+          </section>
+        </div>
+      ) : null}
+
       {isTodoInputSheetOpen ? (
         <div
           className="parent-schedule-action-overlay"
           role="presentation"
-          onClick={() => setIsTodoInputSheetOpen(false)}
+          onClick={() => {
+            setIsTodoInputSheetOpen(false)
+            setEditingMyListMeta(null)
+          }}
         >
           <section
             className="parent-schedule-todo-input-sheet"
@@ -1451,23 +1752,6 @@ function ParentScheduleScreen({
               </button>
             </div>
 
-            <div className="parent-schedule-todo-priority-row">
-              <span className="parent-schedule-todo-priority-label">시급도</span>
-              <div className="parent-schedule-todo-priority-buttons">
-                {TODO_PRIORITY_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    type="button"
-                    className={`parent-schedule-priority-button ${option.toneClass} ${
-                      selectedPriority === option.key ? 'is-selected' : ''
-                    }`}
-                    onClick={() => setSelectedPriority(option.key)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </section>
         </div>
       ) : null}
@@ -1513,8 +1797,8 @@ function ParentScheduleScreen({
             </div>
 
             <div className="parent-schedule-delete-list">
-              {activeTodoGroup.myList.length ? (
-                activeTodoGroup.myList.map((item) => (
+              {activeMyListItems.length ? (
+                activeMyListItems.map((item) => (
                   <label className="parent-schedule-delete-item" key={item.key}>
                     <input
                       type="checkbox"
