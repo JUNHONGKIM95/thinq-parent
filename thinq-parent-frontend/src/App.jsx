@@ -26,8 +26,6 @@ import whiteCommunityIcon from '@shared-assets/srg/whitecommunity.svg'
 import whiteMyIcon from '@shared-assets/srg/whitemy.svg'
 import chatFloatingIcon from '@shared-assets/srg/chat_floating.svg'
 import sendDuotoneIcon from '@shared-assets/srg/Send_duotone_line.svg'
-import sendMessageBubble from '@shared-assets/srg/send_message.svg'
-import takeMessageBubble from '@shared-assets/srg/take_message.svg'
 import bellIcon from '@shared-assets/icons/a_button.svg'
 import plusButtonIcon from '@shared-assets/icons/button_plus.svg'
 import careIcon from '@shared-assets/assets/icons/care.svg'
@@ -394,10 +392,10 @@ function AssetIcon({ src, alt = '', className = '', size = 20 }) {
   )
 }
 
-function HeaderAction({ icon, label, compact = false }) {
+function HeaderAction({ icon, label, size = 17 }) {
   return (
     <button type="button" className="header-action" aria-label={label}>
-      <AssetIcon src={icon} size={compact ? 14 : 22} />
+      <AssetIcon src={icon} size={size} />
     </button>
   )
 }
@@ -441,7 +439,7 @@ function HomeScreen({ activeTab, onChangeTab, onOpenSheet, isHomeSheetOpen }) {
         <div className="header-actions">
           <HeaderAction icon={plusButtonIcon} label="추가" />
           <HeaderAction icon={bellIcon} label="알림" />
-          <HeaderAction icon={moreButtonIcon} label="더보기" compact />
+          <HeaderAction icon={moreButtonIcon} label="더보기" size={14} />
         </div>
       </header>
 
@@ -553,7 +551,7 @@ function HomeSettingsScreen({ onBack, onOpenLifeAgent }) {
         </button>
         <h1>홈 설정</h1>
         <button type="button" className="settings-plus-button" aria-label="홈 추가">
-          +
+          <AssetIcon src={plusButtonIcon} size={17} />
         </button>
       </header>
 
@@ -651,45 +649,42 @@ function ChatExpertScreen({ onBack }) {
 
   return (
     <div className="chat-expert-shell">
-      <div className="chat-expert-card" aria-hidden="true" />
-      <span className="chat-expert-status-time" aria-hidden="true">
-        2:54
-      </span>
-      <span className="chat-expert-status-island" aria-hidden="true" />
-
-      <header className="chat-expert-header">
-        <button type="button" className="chat-expert-back" onClick={onBack} aria-label="뒤로가기">
-          <span />
+      <header className="settings-header chat-expert-page-header">
+        <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
+          <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
         </button>
-        <span className="chat-expert-title-bold">챗태피티</span>
-        <span className="chat-expert-title-regular">전문가</span>
-        <button type="button" className="chat-expert-menu" aria-label="메뉴">
-          <img src={headerMenuIcon} alt="" className="chat-expert-menu-icon" aria-hidden="true" />
+        <h1>챗태피티 전문가</h1>
+        <button type="button" className="life-agent-more-button chat-expert-menu-button" aria-label="메뉴">
+          <img src={headerMenuIcon} alt="" className="header-menu-icon" aria-hidden="true" />
         </button>
       </header>
 
-      <div className="chat-expert-messages">
-        <div className="chat-expert-bubble chat-expert-bubble-bot">
-          <img src={takeMessageBubble} alt="" className="chat-expert-bubble-shape" aria-hidden="true" />
-          <p>안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.</p>
-        </div>
-        <div className="chat-expert-bubble chat-expert-bubble-user">
-          <img src={sendMessageBubble} alt="" className="chat-expert-bubble-shape" aria-hidden="true" />
-          <p>질문내용</p>
-        </div>
-      </div>
+      <div className="chat-expert-content">
+        <div className="chat-expert-card">
+          <div className="chat-expert-messages">
+            <div className="chat-expert-bubble chat-expert-bubble-bot">
+              <span className="chat-expert-bubble-shape" aria-hidden="true" />
+              <p>안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.</p>
+            </div>
+            <div className="chat-expert-bubble chat-expert-bubble-user">
+              <span className="chat-expert-bubble-shape" aria-hidden="true" />
+              <p>질문내용</p>
+            </div>
+          </div>
 
-      <div className="chat-expert-input-area">
-        <input
-          type="text"
-          placeholder="메세지를 입력하세요."
-          aria-label="메세지를 입력하세요."
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
-        />
-        <button type="button" className="chat-expert-send-btn" aria-label="전송">
-          <img src={sendDuotoneIcon} alt="" aria-hidden="true" />
-        </button>
+          <div className="chat-expert-input-area">
+            <input
+              type="text"
+              placeholder="메세지를 입력하세요."
+              aria-label="메세지를 입력하세요."
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+            />
+            <button type="button" className="chat-expert-send-btn" aria-label="전송">
+              <img src={sendDuotoneIcon} alt="" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -857,8 +852,10 @@ function ParentModeScreen({
           </div>
 
           <button type="button" className="parent-mode-diary parent-mode-diary-button" onClick={onOpenDiary}>
-            <h3>임신 일기</h3>
-            <p className="parent-mode-diary-desc">소중한 매일의 순간을 기록해보세요.</p>
+            <span className="parent-mode-diary-copy">
+              <h3>임신 일기</h3>
+              <p className="parent-mode-diary-desc">소중한 매일의 순간을 기록해보세요.</p>
+            </span>
             <span className="parent-mode-diary-image-wrap">
               <img src={lookDiaryImage} alt="일기 보기" />
             </span>

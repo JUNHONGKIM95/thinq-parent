@@ -198,9 +198,6 @@
 
 .settings-plus-button {
   margin-left: auto;
-  color: #000000;
-  font-size: 1.9rem;
-  line-height: 1;
 }
 
 .settings-header h1 {
@@ -226,10 +223,12 @@
 
 .settings-content {
   padding: 24px 20px 40px;
+  text-align: left;
 }
 
 .life-agent-content {
   padding-top: 20px;
+  text-align: left;
 }
 
 .hero-card,
@@ -253,8 +252,8 @@
 }
 
 .hero-card-icon {
-  width: 42px;
-  height: 54px;
+  width: auto;
+  height: 42px;
   object-fit: contain;
   justify-self: center;
 }
@@ -294,7 +293,7 @@
   margin: 0;
   color: #000000;
   font-size: 1.1875rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.04em;
 }
@@ -428,7 +427,7 @@
 
 .bottom-nav-icon {
   width: auto !important;
-  height: 24px !important;
+  height: 21px !important;
   max-width: none;
   display: block;
   object-fit: contain;
@@ -495,6 +494,7 @@
 
 .settings-content {
   color: #000000;
+  text-align: left;
 }
 
 .current-home-card {
@@ -502,7 +502,7 @@
   display: grid;
   grid-template-columns: 64px 1fr auto auto;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   min-height: 92px;
   padding: 22px 20px;
   border-radius: 22px;
@@ -517,14 +517,14 @@
 }
 
 .current-home-card strong {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: -0.03em;
 }
 
 .current-home-state {
   color: #4f5486;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -584,6 +584,7 @@
   bottom: 0;
   padding: 12px 18px 14px;
   background: rgba(255, 255, 255, 0.8);
+  text-align: left;
 }
 
 .life-agent-card-title {
@@ -636,16 +637,16 @@
 .setting-card-copy strong {
   display: block;
   color: #000000;
-  font-size: 0.96875rem;
+  font-size: 1.1rem;
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.03em;
 }
 
 .setting-card-copy p {
-  margin: 10px 0 0;
+  margin: 4px 0 0;
   color: #111111;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1.26;
   white-space: pre-line;
 }
@@ -657,8 +658,8 @@
 }
 
 .setting-card-image.square {
-  width: 46px;
-  height: 46px;
+  width: 37px;
+  height: 37px;
 }
 
 .setting-card-image.wide {
@@ -904,11 +905,15 @@
   border-radius: 11px;
 }
 
+.parent-mode-todo {
+  padding: 19px;
+}
+
 .parent-mode-calendar h3,
 .parent-mode-todo h3,
 .parent-mode-diary h3,
 .parent-mode-widget h3 {
-  margin: 0 0 6px;
+  margin: 0 0 0px;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.19;
@@ -919,8 +924,8 @@
 .parent-mode-date-line {
   margin: 0 0 8px;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 3px;
 }
 
 .parent-mode-date {
@@ -934,6 +939,8 @@
 
 .parent-mode-day {
   margin: 0;
+  position: relative;
+  top: 4px;
   font-size: 0.8125rem;
   font-weight: 300;
   letter-spacing: -0.02em;
@@ -953,7 +960,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: 11px;
+  border-radius: 15px;
   font-size: 0.8125rem;
   line-height: 15px;
   letter-spacing: -0.02em;
@@ -1017,6 +1024,11 @@
   cursor: pointer;
 }
 
+.parent-mode-todo-item > span:last-child {
+  flex: 1;
+  text-align: right;
+}
+
 
 .parent-mode-todo-checkbox {
   position: absolute;
@@ -1031,10 +1043,10 @@
   height: 17px;
   flex-shrink: 0;
   border: 1.5px solid #33363f;
-  border-radius: 50%;
+  border-radius: 2px;
   background: transparent;
   position: relative;
-  transition: background 0.15s ease, border-radius 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .parent-mode-todo-check::after {
@@ -1053,7 +1065,7 @@
 /* 체크됨: 채워진 원 + 체크 표시 */
 .parent-mode-todo-checkbox:checked ~ .parent-mode-todo-check {
   background: #222222;
-  border-radius: 50%;
+  border-radius: 2px;
 }
 
 .parent-mode-todo-checkbox:checked ~ .parent-mode-todo-check::after {
@@ -1073,7 +1085,7 @@
 
 .parent-mode-diary {
   margin-top: 12px;
-  padding: 14px 20px;
+  padding: 0;
   background: rgba(255, 255, 255, 0.8);
   border-radius: 11px;
 }
@@ -1083,10 +1095,27 @@
   border: 0;
   text-align: left;
   cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 19px;
+  column-gap: 12px;
+  align-items: start;
+}
+
+.parent-mode-diary-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
+.parent-mode-diary-button h3 {
+  margin: 0;
 }
 
 .parent-mode-diary-desc {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 0.8125rem;
   font-weight: 400;
   line-height: 15px;
@@ -1102,8 +1131,8 @@
   background: transparent;
   cursor: pointer;
   display: block;
-  margin-top: 10px;
-  margin-left: auto;
+  align-self: start;
+  justify-self: end;
   width: 145px;
   height: 96px;
   border-radius: 11px;
@@ -1131,13 +1160,12 @@
   padding: 17px 20px;
   border: 1px dashed #848d90;
   border-radius: 18px;
-  opacity: 0.5;
   text-align: center;
 }
 
 .parent-mode-widget-box p {
   margin: 0 0 12px;
-  font-size: 0.8125rem;
+  font-size: 0.88rem;
   font-weight: 400;
   line-height: 1.23;
   letter-spacing: -0.02em;
@@ -1737,16 +1765,8 @@
   inset: 0;
   background: #f0f1f5;
   overflow: hidden;
-}
-
-.chat-expert-card {
-  position: absolute;
-  width: calc(355 / 393 * 100%);
-  height: calc(743 / 852 * 100%);
-  left: calc(19 / 393 * 100%);
-  top: calc(90 / 852 * 100%);
-  background: #ffffff;
-  border-radius: 13px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .chat-expert-status-island {
@@ -1757,18 +1777,7 @@
   display: none;
 }
 
-.chat-expert-header {
-  position: absolute;
-  left: calc(15 / 393 * 100%);
-  top: calc(46 / 852 * 100%);
-  right: calc(13 / 393 * 100%);
-  height: calc(26 / 852 * 100%);
-  display: flex;
-  align-items: center;
-}
-
-.chat-expert-back,
-.chat-expert-menu,
+.chat-expert-menu-button,
 .chat-expert-send-btn {
   appearance: none;
   border: 0;
@@ -1777,138 +1786,123 @@
   cursor: pointer;
 }
 
-.chat-expert-back {
-  position: relative;
-  width: calc(24 / 365 * 100%);
-  height: 100%;
-  flex: 0 0 calc(24 / 365 * 100%);
+.chat-expert-page-header {
+  padding-top: var(--screen-header-padding-top);
 }
 
-.chat-expert-back span {
-  box-sizing: border-box;
-  position: absolute;
-  left: 16.67%;
-  right: 20.83%;
-  top: 25%;
-  bottom: 25%;
-  border-left: 1px solid #222222;
-  border-bottom: 1px solid #222222;
-  transform: rotate(45deg);
-}
-
-.chat-expert-title-bold,
-.chat-expert-title-regular {
-  position: absolute;
-  top: calc(3 / 26 * 100%);
-  display: flex;
-  align-items: center;
-  color: #000000;
-  font-family: 'LG Smart UI';
-  font-style: normal;
-  font-size: calc(20 / 393 * 100vw);
-  line-height: 1.15;
-}
-
-.chat-expert-title-bold {
-  left: calc(31 / 365 * 100%);
-  width: calc(72 / 365 * 100%);
-  height: calc(22 / 26 * 100%);
+.chat-expert-page-header h1 {
+  font-size: var(--screen-header-title-font-size);
   font-weight: 700;
 }
 
-.chat-expert-title-regular {
-  left: calc(106 / 365 * 100%);
-  width: calc(72 / 365 * 100%);
-  height: calc(22 / 26 * 100%);
-  font-weight: 400;
+.chat-expert-content {
+  position: relative;
+  min-height: 0;
+  padding: 18px 19px 24px;
 }
 
-.chat-expert-menu {
-  position: absolute;
-  width: calc(26 / 365 * 100%);
+.chat-expert-card {
+  position: relative;
+  width: 100%;
   height: 100%;
-  left: calc(339 / 365 * 100%);
-  top: 0;
-  display: grid;
-  place-items: center;
-}
-
-.chat-expert-menu-icon {
-  width: 26px;
-  height: 26px;
-  display: block;
+  background: #ffffff;
+  border-radius: 13px;
+  padding: 33px 26px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-expert-messages {
-  position: absolute;
-  left: calc(45.5 / 393 * 100%);
-  top: calc(123 / 852 * 100%);
-  width: calc(302.5 / 393 * 100%);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .chat-expert-bubble {
   position: relative;
-  width: 100%;
-  aspect-ratio: 302.5 / 54.5;
-}
-
-.chat-expert-bubble + .chat-expert-bubble {
-  margin-top: calc(15.5 / 852 * 100%);
+  width: fit-content;
+  max-width: 100%;
+  min-height: 43px;
+  padding: 13px 18px;
+  box-sizing: border-box;
 }
 
 .chat-expert-bubble-shape {
-  width: 100%;
-  height: 100%;
-  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+}
+
+.chat-expert-bubble-shape::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  width: 38px;
+  height: 16px;
+}
+
+.chat-expert-bubble-bot .chat-expert-bubble-shape {
+  background: #d4e5f6;
+}
+
+.chat-expert-bubble-bot .chat-expert-bubble-shape::after {
+  left: 3px;
+  background: #d4e5f6;
+  clip-path: polygon(34% 0, 100% 0, 70% 24%, 4% 100%, 0 100%);
+}
+
+.chat-expert-bubble-user {
+  margin-left: auto;
+}
+
+.chat-expert-bubble-user .chat-expert-bubble-shape {
+  background: #b0bcc8;
+}
+
+.chat-expert-bubble-user .chat-expert-bubble-shape::after {
+  right: 3px;
+  background: #b0bcc8;
+  clip-path: polygon(0 0, 66% 0, 100% 100%, 96% 100%, 30% 24%);
 }
 
 .chat-expert-bubble p {
-  position: absolute;
+  position: relative;
+  z-index: 1;
   margin: 0;
-  display: flex;
-  align-items: center;
+  display: block;
   color: #000000;
   font-family: 'LG Smart UI';
   font-style: normal;
   font-weight: 300;
-  font-size: calc(14 / 302.5 * 100%);
-  line-height: 1.142857;
+  font-size: 0.95rem;
+  line-height: 1.35;
   letter-spacing: -0.03em;
+  word-break: keep-all;
 }
 
 .chat-expert-bubble-bot p {
-  width: calc(266 / 302.5 * 100%);
-  min-height: calc(13 / 54.5 * 100%);
-  left: calc(24.5 / 302.5 * 100%);
-  top: calc(15 / 54.5 * 100%);
-}
-
-.chat-expert-bubble-user p {
-  width: calc(261 / 302.5 * 100%);
-  min-height: calc(13 / 54.5 * 100%);
-  left: calc(24.5 / 302.5 * 100%);
-  top: calc(15 / 54.5 * 100%);
+  font-size: 1.02rem;
 }
 
 .chat-expert-input-area {
   box-sizing: border-box;
-  position: absolute;
-  width: calc(328 / 393 * 100%);
-  height: calc(40 / 852 * 100%);
-  left: calc(32 / 393 * 100%);
-  top: calc(783 / 852 * 100%);
+  width: 100%;
+  height: 40px;
+  margin-top: auto;
   border: 1px solid #a0a0a0;
   border-radius: 10px;
   display: flex;
   align-items: center;
-  padding: 0 calc(8 / 393 * 100%) 0 calc(13 / 393 * 100%);
-  gap: calc(8 / 393 * 100%);
+  padding: 0 8px 0 13px;
+  gap: 8px;
   background: #ffffff;
 }
 
 .chat-expert-input-area input {
   width: 100%;
-  min-height: calc(13 / 40 * 100%);
+  min-height: 13px;
   border: 0;
   outline: none;
   background: transparent;
@@ -1916,7 +1910,7 @@
   font-family: 'LG Smart UI';
   font-style: normal;
   font-weight: 300;
-  font-size: calc(14 / 328 * 100%);
+  font-size: 0.95rem;
   line-height: 1.142857;
   letter-spacing: -0.03em;
 }
@@ -1926,8 +1920,8 @@
 }
 
 .chat-expert-send-btn {
-  width: calc(29 / 328 * 100%);
-  height: calc(29 / 40 * 100%);
+  width: 29px;
+  height: 29px;
   margin-left: auto;
   display: grid;
   place-items: center;
@@ -3132,9 +3126,11 @@
 .parent-mode-card-button {
   width: 100%;
   border: none;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.8);
   text-align: left;
   cursor: default;
+  box-sizing: border-box;
+  padding: 19px;
 }
 
 .parent-mode-card-button h3 {
@@ -3639,7 +3635,46 @@
   color: #000000;
 }
 
-.parent-schedule-recommend-week-button,
+.parent-schedule-recommend-week {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.parent-schedule-recommend-week-number,
+.parent-schedule-recommend-week-suffix {
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #000000;
+}
+
+.parent-schedule-recommend-week-number {
+  min-width: 1.5em;
+  cursor: text;
+}
+
+.parent-schedule-recommend-week-number:focus-visible {
+  outline: 2px solid rgba(51, 54, 63, 0.22);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.parent-schedule-recommend-week-input {
+  width: 2.2em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #000000;
+  outline: none;
+}
+
 .parent-schedule-todo-add {
   display: inline-flex;
   align-items: center;
@@ -3654,19 +3689,16 @@
   border-radius: 999px;
 }
 
-.parent-schedule-recommend-week-button svg,
 .parent-schedule-todo-add svg,
 .parent-schedule-todo-section-title svg {
   width: 24px;
   height: 24px;
 }
 
-.parent-schedule-recommend-week-button:hover,
 .parent-schedule-todo-add:hover {
   background: rgba(51, 54, 63, 0.06);
 }
 
-.parent-schedule-recommend-week-button:focus-visible,
 .parent-schedule-todo-add:focus-visible {
   outline: 2px solid rgba(51, 54, 63, 0.3);
   outline-offset: 2px;

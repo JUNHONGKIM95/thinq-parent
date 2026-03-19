@@ -19,21 +19,6 @@ function PlusIcon() {
   )
 }
 
-function SmallDownIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path
-        d="m4 6 4 4 4-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
 function PinIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -91,6 +76,16 @@ function getUserField(user, ...keys) {
   return null
 }
 
+function normalizeWeekNumber(value) {
+  const parsedValue = Number.parseInt(String(value ?? '').trim(), 10)
+
+  if (!Number.isInteger(parsedValue) || parsedValue < 1 || parsedValue > 40) {
+    return null
+  }
+
+  return parsedValue
+}
+
 async function fetchScheduleUserContext(userId = DEFAULT_SCHEDULE_USER_ID) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
@@ -101,16 +96,16 @@ async function fetchScheduleUserContext(userId = DEFAULT_SCHEDULE_USER_ID) {
 
     const payload = await response.json()
     const user = getUserPayload(payload)
-    const groupId = getUserField(user, 'groupId', 'group_id')
-
-    if (!groupId) {
+    
+    if (!user) {
       return null
     }
 
     return {
       userId: getUserField(user, 'userId', 'user_id') ?? userId,
-      groupId,
+      groupId: getUserField(user, 'groupId', 'group_id'),
       dueDate: getUserField(user, 'dueDate', 'due_date'),
+      currentWeek: normalizeWeekNumber(getUserField(user, 'currentWeek', 'currentweek', 'current_week')),
     }
   } catch {
     return null
@@ -154,6 +149,104 @@ function getRecommendedTodosByWeek(currentWeek) {
     text,
     checked: false,
   }))
+}
+
+function getRecommendedTodoItems(payload) {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items
+  }
+
+  if (Array.isArray(payload?.todos)) {
+    return payload.todos
+  }
+
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items
+  }
+
+  if (Array.isArray(payload?.data?.todos)) {
+    return payload.data.todos
+  }
+
+  return []
+}
+
+function getRecommendedTodoText(item) {
+  if (typeof item === 'string') {
+    return item.trim()
+  }
+
+  if (!item || typeof item !== 'object') {
+    return ''
+  }
+
+  return String(item.todo_name ?? item.todoName ?? item.name ?? item.title ?? item.text ?? '').trim()
+}
+
+function getRecommendedTodoWeek(item) {
+  if (!item || typeof item !== 'object') {
+    return null
+  }
+
+  return normalizeWeekNumber(
+    item.currentWeek ??
+      item.currentweek ??
+      item.current_week ??
+      item.week ??
+      item.weekNumber ??
+      item.week_number
+  )
+}
+
+function normalizeRecommendedTodos(payload, week) {
+  return getRecommendedTodoItems(payload)
+    .filter((item) => {
+      const itemWeek = getRecommendedTodoWeek(item)
+      return itemWeek === null || itemWeek === week
+    })
+    .map((item, index) => ({
+      key:
+        typeof item === 'object' && item !== null
+          ? `recommended-${week}-${item.todoId ?? item.todo_id ?? item.id ?? index}`
+          : `recommended-${week}-${index}`,
+      text: getRecommendedTodoText(item),
+      checked: false,
+    }))
+    .filter((item) => item.text)
+}
+
+async function fetchRecommendedTodos(week) {
+  const queryCandidates = [
+    `?currentWeek=${week}`,
+    `?currentweek=${week}`,
+    `?week=${week}`,
+    '',
+  ]
+
+  for (const query of queryCandidates) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/todos/recommended${query}`)
+
+      if (!response.ok) {
+        continue
+      }
+
+      const payload = await response.json()
+      return normalizeRecommendedTodos(payload, week)
+    } catch {
+      // Try the next request shape.
+    }
+  }
+
+  return getRecommendedTodosByWeek(week)
 }
 
 function getDateKey(date) {
@@ -314,6 +407,23 @@ function createEmptyTodoGroup(baseGroup, dateLabel) {
     weekLabel: dateLabel,
     recommended: baseGroup.recommended.map((item) => ({ ...item })),
     myList: [],
+  }
+}
+
+function splitWeekLabel(weekLabel) {
+  const label = String(weekLabel ?? '').trim()
+  const matched = label.match(/^(\d+)\s*(.*)$/)
+
+  if (!matched) {
+    return {
+      numberText: '',
+      suffixText: label || '주차',
+    }
+  }
+
+  return {
+    numberText: matched[1],
+    suffixText: matched[2]?.trim() || '주차',
   }
 }
 
@@ -558,7 +668,13 @@ function ParentScheduleScreen({
   const [calendarMarkersByDate, setCalendarMarkersByDate] = useState(initialMonthlyState.markersByDate)
   const [scheduleDetails, setScheduleDetails] = useState(initialMonthlyState.detailsByDate)
   const [todosByDate, setTodosByDate] = useState(() => buildTodoState(data.todo))
+  const [currentWeekNumber, setCurrentWeekNumber] = useState(null)
+  const [recommendedWeekNumber, setRecommendedWeekNumber] = useState(null)
+  const [recommendedTodos, setRecommendedTodos] = useState([])
+  const [isWeekEditing, setIsWeekEditing] = useState(false)
+  const [weekInputValue, setWeekInputValue] = useState('')
   const scheduleItemLongPressRef = useRef(null)
+  const lastWeekNumberTapRef = useRef(0)
   const calendarWeeks = useMemo(
     () => buildCalendarWeeks(visibleMonth, calendarMarkersByDate),
     [visibleMonth, calendarMarkersByDate]
@@ -637,35 +753,24 @@ function ParentScheduleScreen({
 
   useEffect(() => {
     let isMounted = true
-    const targetKey = activeDateKey ?? DEFAULT_ACTIVE_DATE_KEY
 
     fetchScheduleUserContext(userId).then((userContext) => {
       if (!isMounted) {
         return
       }
 
-      const currentWeek = calculatePregnancyWeek(targetKey, userContext?.dueDate)
-      const items = currentWeek ? getRecommendedTodosByWeek(currentWeek) : []
+      const resolvedCurrentWeek =
+        userContext?.currentWeek ?? calculatePregnancyWeek(DEFAULT_ACTIVE_DATE_KEY, userContext?.dueDate)
 
-      setTodosByDate((prev) => {
-        const fallbackGroup = prev.default
-        const existingGroup = prev[targetKey] ?? createEmptyTodoGroup(fallbackGroup, fallbackGroup.weekLabel)
-
-        return {
-          ...prev,
-          [targetKey]: {
-            ...existingGroup,
-            weekLabel: currentWeek ? `${currentWeek}주차` : existingGroup.weekLabel,
-            recommended: items,
-          },
-        }
-      })
+      setCurrentWeekNumber(resolvedCurrentWeek)
+      setRecommendedWeekNumber(resolvedCurrentWeek)
+      setWeekInputValue(resolvedCurrentWeek ? String(resolvedCurrentWeek) : '')
     })
 
     return () => {
       isMounted = false
     }
-  }, [activeDateKey, userId])
+  }, [userId])
 
   const handleDayClick = (dayKey) => {
     if (dayKey === activeDateKey) {
@@ -694,7 +799,70 @@ function ParentScheduleScreen({
 
   const activeTodoKey = activeDateKey && todosByDate[activeDateKey] ? activeDateKey : 'default'
   const activeTodoGroup = todosByDate[activeTodoKey]
+  const displayWeekNumber = recommendedWeekNumber ?? currentWeekNumber
+
+  useEffect(() => {
+    setIsWeekEditing(false)
+    setWeekInputValue(displayWeekNumber ? String(displayWeekNumber) : '')
+  }, [displayWeekNumber, activeTodoKey])
+
+  useEffect(() => {
+    let isMounted = true
+    const targetWeek = normalizeWeekNumber(displayWeekNumber)
+
+    if (!targetWeek) {
+      setRecommendedTodos([])
+      return () => {
+        isMounted = false
+      }
+    }
+
+    fetchRecommendedTodos(targetWeek).then((items) => {
+      if (!isMounted) {
+        return
+      }
+
+      setRecommendedTodos(items)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [displayWeekNumber])
+
+  const saveWeekLabel = () => {
+    const nextWeek = normalizeWeekNumber(weekInputValue) ?? currentWeekNumber
+
+    setRecommendedWeekNumber(nextWeek)
+    setWeekInputValue(nextWeek ? String(nextWeek) : '')
+    setIsWeekEditing(false)
+  }
+
+  const openWeekEditor = () => {
+    setWeekInputValue(displayWeekNumber ? String(displayWeekNumber) : '')
+    setIsWeekEditing(true)
+  }
+
+  const handleWeekNumberPress = () => {
+    const now = Date.now()
+
+    if (now - lastWeekNumberTapRef.current < 320) {
+      openWeekEditor()
+      lastWeekNumberTapRef.current = 0
+      return
+    }
+
+    lastWeekNumberTapRef.current = now
+  }
+
   const toggleTodo = (listType, todoKey) => {
+    if (listType === 'recommended') {
+      setRecommendedTodos((prev) =>
+        prev.map((item) => (item.key === todoKey ? { ...item, checked: !item.checked } : item))
+      )
+      return
+    }
+
     setTodosByDate((prev) => {
       const currentGroup = prev[activeTodoKey]
 
@@ -1068,11 +1236,49 @@ function ParentScheduleScreen({
           <div className="parent-schedule-recommend-head">
             <div className="parent-schedule-recommend-title">
               <strong>주간 추천</strong>
-              <span>{activeTodoGroup.weekLabel}</span>
+              <div className="parent-schedule-recommend-week">
+                {isWeekEditing ? (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="parent-schedule-recommend-week-input"
+                    value={weekInputValue}
+                    onChange={(event) => setWeekInputValue(event.target.value.replace(/[^\d]/g, '').slice(0, 2))}
+                    onBlur={saveWeekLabel}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        saveWeekLabel()
+                      }
+
+                      if (event.key === 'Escape') {
+                        setWeekInputValue(displayWeekNumber ? String(displayWeekNumber) : '')
+                        setIsWeekEditing(false)
+                      }
+                    }}
+                    autoFocus
+                    aria-label="추천 주차 수정"
+                  />
+                ) : (
+                  <span
+                    className="parent-schedule-recommend-week-number"
+                    onDoubleClick={openWeekEditor}
+                    onClick={handleWeekNumberPress}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        openWeekEditor()
+                      }
+                    }}
+                    aria-label="추천 주차 숫자 수정"
+                  >
+                    {displayWeekNumber ?? ''}
+                  </span>
+                )}
+                <span className="parent-schedule-recommend-week-suffix">주차</span>
+              </div>
             </div>
-            <button type="button" className="parent-schedule-recommend-week-button" aria-label="추천 주차">
-              <SmallDownIcon />
-            </button>
           </div>
 
           <div className="parent-schedule-todo-body">
@@ -1082,7 +1288,7 @@ function ParentScheduleScreen({
                 <span>추천</span>
               </p>
               <div className="parent-schedule-todo-list">
-                {activeTodoGroup.recommended.map((item) => (
+                {recommendedTodos.map((item) => (
                   <label className="parent-schedule-todo-item" key={item.key}>
                     <input
                       type="checkbox"
