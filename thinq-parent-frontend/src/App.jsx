@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import addHomeImage from '@shared-assets/addhome.png'
 import anomalyImage from '@shared-assets/check.png'
@@ -94,6 +94,8 @@ const DEFAULT_PREGNANCY_SUMMARY = {
 const DEFAULT_CHEER_MESSAGE = ''
 const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
 const DEFAULT_CURRENT_USER_ID = 3
+const CHATBOT_API_URL = 'https://chatbot-api-338378601376.asia-northeast3.run.app/ask'
+const DEFAULT_CHATBOT_GREETING = '안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.'
 
 function getDateKey(date) {
   const year = date.getFullYear()
@@ -400,6 +402,19 @@ function HeaderAction({ icon, label, size = 17 }) {
   )
 }
 
+function removeChatMarkdown(text) {
+  return String(text ?? '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/`{1,3}(.*?)`{1,3}/gs, '$1')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/^\s*>\s+/gm, '')
+    .replace(/(?<!\n)(\n?)(\d+\.)/g, '\n\n$2')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 function HomeSelectionSheet({ onClose, onOpenSettings }) {
   return (
     <div className="sheet-overlay" onClick={onClose} role="presentation">
@@ -646,6 +661,69 @@ function LifeAgentScreen({ onBack, onOpenParentMode }) {
 
 function ChatExpertScreen({ onBack }) {
   const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState([{ role: 'bot', text: DEFAULT_CHATBOT_GREETING }])
+  const [isSending, setIsSending] = useState(false)
+  const messagesRef = useRef(null)
+  const sessionIdRef = useRef(`user-${Date.now()}`)
+
+  useEffect(() => {
+    if (!messagesRef.current) {
+      return
+    }
+
+    messagesRef.current.scrollTop = messagesRef.current.scrollHeight
+  }, [messages, isSending])
+
+  const sendMessage = async () => {
+    const trimmedMessage = message.trim()
+
+    if (!trimmedMessage || isSending) {
+      return
+    }
+
+    setMessages((prev) => [...prev, { role: 'user', text: trimmedMessage }])
+    setMessage('')
+    setIsSending(true)
+
+    try {
+      const response = await fetch(CHATBOT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: trimmedMessage,
+          session_id: sessionIdRef.current,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Chat request failed: ${response.status}`)
+      }
+
+      const payload = await response.json()
+      const answer = removeChatMarkdown(payload?.answer)
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          text: answer || '응답을 받아오지 못했어요. 잠시 후 다시 시도해주세요.',
+        },
+      ])
+    } catch (error) {
+      console.error(error)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          text: '서버와 연결되지 않았어요. 잠시 후 다시 시도해주세요.',
+        },
+      ])
+    } finally {
+      setIsSending(false)
+    }
+  }
 
   return (
     <div className="chat-expert-shell">
@@ -661,15 +739,19 @@ function ChatExpertScreen({ onBack }) {
 
       <div className="chat-expert-content">
         <div className="chat-expert-card">
-          <div className="chat-expert-messages">
-            <div className="chat-expert-bubble chat-expert-bubble-bot">
-              <span className="chat-expert-bubble-shape" aria-hidden="true" />
-              <p>안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.</p>
-            </div>
-            <div className="chat-expert-bubble chat-expert-bubble-user">
-              <span className="chat-expert-bubble-shape" aria-hidden="true" />
-              <p>질문내용</p>
-            </div>
+          <div className="chat-expert-messages" ref={messagesRef}>
+            {messages.map((item, index) => (
+              <div
+                key={`${item.role}-${index}-${item.text}`}
+                className={`chat-expert-bubble ${
+                  item.role === 'user' ? 'chat-expert-bubble-user' : 'chat-expert-bubble-bot'
+                }`}
+              >
+                <span className="chat-expert-bubble-shape" aria-hidden="true" />
+                <p>{item.text}</p>
+              </div>
+            ))}
+            {isSending ? <p className="chat-expert-loading">답변을 생성 중입니다...</p> : null}
           </div>
 
           <div className="chat-expert-input-area">
@@ -679,8 +761,20 @@ function ChatExpertScreen({ onBack }) {
               aria-label="메세지를 입력하세요."
               value={message}
               onChange={(event) => setMessage(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  sendMessage()
+                }
+              }}
             />
-            <button type="button" className="chat-expert-send-btn" aria-label="전송">
+            <button
+              type="button"
+              className="chat-expert-send-btn"
+              aria-label="전송"
+              onClick={sendMessage}
+              disabled={isSending}
+            >
               <img src={sendDuotoneIcon} alt="" aria-hidden="true" />
             </button>
           </div>
