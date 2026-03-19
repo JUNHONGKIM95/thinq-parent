@@ -40,8 +40,18 @@ const NAV_ITEMS = [
 const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
 function parseIsoDate(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+    return new Date()
+  }
+
   const [year, month, day] = isoDate.split('-').map(Number)
-  return new Date(year, month - 1, day)
+  const parsedDate = new Date(year, month - 1, day)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return new Date()
+  }
+
+  return parsedDate
 }
 
 function formatIsoDate(date) {

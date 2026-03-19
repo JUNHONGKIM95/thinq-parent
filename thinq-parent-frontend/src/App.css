@@ -10,7 +10,7 @@
 :root {
   --screen-header-min-height: 56px;
   --screen-header-padding-top: 24px;
-  --screen-header-padding-bottom: 0;
+  --screen-header-padding-bottom: 5px;
   --screen-header-title-font-size: 1.28rem;
   --screen-header-title-line-height: 1;
   --screen-header-title-letter-spacing: -0.04em;
@@ -357,7 +357,7 @@
   align-items: center;
   gap: 10px;
   padding: 0 18px;
-  border-radius: 20px;
+  border-radius: 24px;
   color: #111111;
   font-size: 0.875rem;
 }
@@ -2561,8 +2561,8 @@
 }
 
 .my-name-edit {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -2573,8 +2573,8 @@
 }
 
 .my-name-edit svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .my-section {
@@ -2626,9 +2626,10 @@
   margin-top: 9px;
   min-height: 46px;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  padding: 0 24px;
+  column-gap: 10px;
+  padding: 0 75px 0 0px;
   border-radius: 13px;
   background: rgba(252, 249, 248, 0.9);
 }
@@ -2636,9 +2637,19 @@
 .my-baby-info {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 22px;
+  width: 100%;
+  gap: 14px;
   color: #111111;
+}
+
+.my-baby-info:first-of-type {
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+
+.my-baby-info:last-of-type {
+  justify-content: flex-start;
+  padding-left: 6px;
 }
 
 .my-baby-info strong,
@@ -2652,12 +2663,19 @@
   font-weight: 300;
 }
 
+.my-baby-heart {
+  width: 12px;
+  height: 12px;
+  display: block;
+  flex-shrink: 0;
+}
+
 .my-baby-info strong {
   font-weight: 400;
 }
 
 .my-baby-divider {
-  width: 4px;
+  width: 2px;
   height: 19px;
   border-radius: 999px;
   background: #ff4b4b;
@@ -2742,33 +2760,39 @@
 
 .my-diary-image {
   max-width: 100%;
-  max-height: calc(100% - 28px);
+  max-height: none;
   object-fit: contain;
   display: block;
 }
 
 .my-diary-card--write .my-diary-image {
-  width: 122px;
-  height: 81px;
-  margin-top: 13px;
+  width: 150px;
+  height: auto;
+  margin-top: 4px;
 }
 
 .my-diary-card--read .my-diary-image {
-  width: 185px;
-  height: 123px;
+  width: 195px;
+  height: 130px;
   margin-top: -3px;
 }
 
 .my-diary-label {
   position: absolute;
-  right: 0;
+  left: 50%;
   bottom: 8px;
-  left: 0;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.2143;
   letter-spacing: -0.02em;
-  text-align: center;
   color: #515151;
 }
 
@@ -2855,22 +2879,24 @@
 
 .my-schedule-date {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 0px;
   color: #000000;
 }
 
 .my-schedule-day {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 300;
   line-height: 1;
 }
 
 .my-schedule-weekday {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 300;
   line-height: 1.15;
+  margin-top : 3px;
+  align-self: flex-start;
 }
 
 .my-schedule-list {
@@ -2885,7 +2911,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 19px;
-  border-radius: 11px;
+  border-radius: 20px;
   font-size: 0.875rem;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -2932,7 +2958,7 @@
 .my-todo-list {
   margin-top: 18px;
   display: grid;
-  gap: 12px;
+  gap: 6px;
 }
 
 .my-todo-item {
@@ -4684,7 +4710,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 24px 15px 0;
+  padding: 24px 15px 5px;
 }
 
 .community-write-header-actions {

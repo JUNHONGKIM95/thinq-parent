@@ -152,7 +152,7 @@ function formatDueDateLabel(dueDate) {
 }
 
 function formatDaysUntilDueDateLabel(daysUntilDueDate) {
-  return `- ${daysUntilDueDate}일 전`
+  return String(daysUntilDueDate)
 }
 
 function getDailyScheduleCacheKey(userId, date) {
@@ -1194,12 +1194,10 @@ function App() {
         role: data.role ?? DEFAULT_PREGNANCY_SUMMARY.role,
       })
 
-      if (data.dueDate) {
-        setChildProfile((prev) => ({
-          ...prev,
-          selectedDate: data.dueDate,
-        }))
-      }
+      setChildProfile((prev) => ({
+        ...prev,
+        selectedDate: data.dueDate || getDateKey(new Date()),
+      }))
 
       if (data.babyNickname) {
         setChildProfile((prev) => ({

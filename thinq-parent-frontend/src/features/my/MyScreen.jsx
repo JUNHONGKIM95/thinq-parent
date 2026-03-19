@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
+import heartIcon from '@shared-assets/srg/heart.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import plusScheduleIcon from '@shared-assets/srg/plus_schedule.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
@@ -226,6 +227,7 @@ function MyScreen({
           <div className="my-baby-card">
             <div className="my-baby-info">
               <span className="my-baby-label">D-DAY</span>
+              <img src={heartIcon} alt="" className="my-baby-heart" aria-hidden="true" />
               <strong>{data.dDay}</strong>
             </div>
             <span className="my-baby-divider" aria-hidden="true" />
