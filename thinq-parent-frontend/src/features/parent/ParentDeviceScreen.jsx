@@ -14,7 +14,14 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY' },
 ]
 
-function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
+function ParentDeviceScreen({
+  onBack,
+  onOpenHome,
+  onOpenMy,
+  onOpenCommunity,
+  onOpenRoutine,
+  navIcons,
+}) {
   const [isAutoControlEnabled, setIsAutoControlEnabled] = useState(true)
   const [isSoundControlEnabled, setIsSoundControlEnabled] = useState(false)
 
@@ -35,7 +42,7 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
           <span className="parent-device-add-accent" aria-hidden="true" />
           <div className="parent-device-add-copy">
             <h2>가전제품 추가</h2>
-            <p>라이프모드로 제어할 가전을 추가해주세요.</p>
+            <p>라이프모드로 제어할 가전을 추가해 주세요.</p>
           </div>
           <img src={rightIcon} alt="" className="parent-device-add-arrow" aria-hidden="true" />
         </button>
@@ -43,13 +50,13 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
         <section className="parent-device-automation-card">
           <div className="parent-device-control-row">
             <div className="parent-device-control-copy">
-              <h3>가전제품 자동제어</h3>
+              <h3>가전제품 자동 제어</h3>
               <p>라이프모드가 최적 상태로 자동 제어해요.</p>
             </div>
             <button
               type="button"
               className="parent-device-toggle-button parent-device-toggle-button--auto"
-              aria-label="가전제품 자동제어 토글"
+              aria-label="가전제품 자동 제어 토글"
               aria-pressed={isAutoControlEnabled}
               onClick={() => setIsAutoControlEnabled((prev) => !prev)}
             >
@@ -57,12 +64,16 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
                 <img
                   src={autoOffIcon}
                   alt=""
-                  className={`parent-device-toggle-image parent-device-toggle-image--auto-off ${!isAutoControlEnabled ? 'is-visible' : ''}`}
+                  className={`parent-device-toggle-image parent-device-toggle-image--auto-off ${
+                    !isAutoControlEnabled ? 'is-visible' : ''
+                  }`}
                 />
                 <img
                   src={autoOnIcon}
                   alt=""
-                  className={`parent-device-toggle-image parent-device-toggle-image--auto-on ${isAutoControlEnabled ? 'is-visible' : ''}`}
+                  className={`parent-device-toggle-image parent-device-toggle-image--auto-on ${
+                    isAutoControlEnabled ? 'is-visible' : ''
+                  }`}
                 />
               </span>
             </button>
@@ -73,7 +84,7 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
           <div className="parent-device-control-row">
             <div className="parent-device-control-copy">
               <h3>가전 알림음 제어</h3>
-              <p>민감한 사용자를 위해 가전 알림음을 조명으로 대신해요.</p>
+              <p>민감한 수면을 위해 가전 알림음을 조용한 상태로 바꿔줘요.</p>
             </div>
             <button
               type="button"
@@ -86,12 +97,16 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
                 <img
                   src={soundOffIcon}
                   alt=""
-                  className={`parent-device-toggle-image parent-device-toggle-image--sound-off ${!isSoundControlEnabled ? 'is-visible' : ''}`}
+                  className={`parent-device-toggle-image parent-device-toggle-image--sound-off ${
+                    !isSoundControlEnabled ? 'is-visible' : ''
+                  }`}
                 />
                 <img
                   src={soundOnIcon}
                   alt=""
-                  className={`parent-device-toggle-image parent-device-toggle-image--sound-on ${isSoundControlEnabled ? 'is-visible' : ''}`}
+                  className={`parent-device-toggle-image parent-device-toggle-image--sound-on ${
+                    isSoundControlEnabled ? 'is-visible' : ''
+                  }`}
                 />
               </span>
             </button>
@@ -99,13 +114,13 @@ function ParentDeviceScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, nav
         </section>
 
         <button type="button" className="parent-device-info-card">
-          <h3>가전제품 수동제어</h3>
-          <p>가족을 위한 가전제품 어쩌구</p>
+          <h3>가전제품 원격 제어</h3>
+          <p>가족을 위한 가전제품 케어와 제어를 한 번에 관리해 보세요.</p>
         </button>
 
-        <button type="button" className="parent-device-info-card">
+        <button type="button" className="parent-device-info-card" onClick={onOpenRoutine}>
           <h3>가전제품 루틴</h3>
-          <p>내 일상에 맞춰진 가전</p>
+          <p>임신 시기와 생활 패턴에 맞춰 추천 루틴을 확인해 보세요.</p>
         </button>
       </div>
 

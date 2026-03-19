@@ -20,6 +20,10 @@ import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg
 import parentModeBabyIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
+import whiteHomeIcon from '@shared-assets/srg/whitehome.svg'
+import whiteBabyIcon from '@shared-assets/srg/whiteelec.svg'
+import whiteCommunityIcon from '@shared-assets/srg/whitecommunity.svg'
+import whiteMyIcon from '@shared-assets/srg/whitemy.svg'
 import chatFloatingIcon from '@shared-assets/srg/chat_floating.svg'
 import sendDuotoneIcon from '@shared-assets/srg/Send_duotone_line.svg'
 import sendMessageBubble from '@shared-assets/srg/send_message.svg'
@@ -48,6 +52,7 @@ import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
 import MombtiTestScreen from './features/mombti/MombtiTestScreen'
 import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
+import ParentDeviceRoutineScreen from './features/parent/ParentDeviceRoutineScreen'
 import ParentScheduleScreen from './features/parent/ParentScheduleScreen'
 import MyScreen from './features/my/MyScreen'
 import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
@@ -1067,6 +1072,10 @@ function App() {
     navigateToScreen('parent-mode-device')
   }
 
+  const openParentDeviceRoutine = () => {
+    navigateToScreen('parent-mode-device-routine')
+  }
+
   const openMyScreen = () => {
     navigateToScreen('my')
   }
@@ -1156,6 +1165,7 @@ function App() {
       ? 'home-mode'
       : currentScreen === 'parent-mode' ||
         currentScreen === 'parent-mode-device' ||
+        currentScreen === 'parent-mode-device-routine' ||
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
@@ -1221,11 +1231,27 @@ function App() {
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenMy={openMyScreen}
             onOpenCommunity={openCommunity}
+            onOpenRoutine={openParentDeviceRoutine}
             navIcons={{
               home: parentModeHomeIcon,
               device: parentModeBabyIcon,
               community: parentModeCommunityIcon,
               my: parentModeMyIcon,
+            }}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-device-routine' && (
+          <ParentDeviceRoutineScreen
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            onOpenCommunity={openCommunity}
+            navIcons={{
+              home: whiteHomeIcon,
+              device: whiteBabyIcon,
+              community: whiteCommunityIcon,
+              my: whiteMyIcon,
             }}
           />
         )}
