@@ -2,6 +2,8 @@ import { useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
+import diaryEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
+import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -18,22 +20,6 @@ function PencilIcon({ className = '' }) {
         strokeLinejoin="round"
       />
       <path d="m13.5 6.5 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M6.5 7.5h11M9.5 7.5V6a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.5m-7 0V18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path d="M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }
@@ -69,8 +55,8 @@ const DIARY_ITEMS = Array.from({ length: 5 }, (_, index) => ({
   id: `pregnancy-diary-${index + 1}`,
   image: diaryExampleImage,
   date: '2026/03/28',
-  author: '틔움이엄마',
-  title: '일기제목어쩌구',
+  author: '요정이맘',
+  title: '일기제목이철구',
 }))
 
 function PregnancyDiaryScreen({ onBack, onOpenWrite }) {
@@ -106,10 +92,10 @@ function PregnancyDiaryScreen({ onBack, onOpenWrite }) {
                 <h2>{item.title}</h2>
                 <div className="pregnancy-diary-actions">
                   <button type="button" className="pregnancy-diary-action pregnancy-diary-action--edit" aria-label="일기 수정">
-                    <PencilIcon />
+                    <img src={diaryEditActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
                   </button>
                   <button type="button" className="pregnancy-diary-action pregnancy-diary-action--delete" aria-label="일기 삭제">
-                    <TrashIcon />
+                    <img src={diaryDeleteActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
                   </button>
                 </div>
               </div>

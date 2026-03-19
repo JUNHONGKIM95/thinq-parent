@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
+import commentReactionIcon from '@shared-assets/srg/fi-rr-comment.svg'
+import heartReactionIcon from '@shared-assets/srg/fi-rr-heart.svg'
+import searchIcon from '@shared-assets/srg/fi-rr-search.svg'
+import toggleOffIcon from '@shared-assets/srg/buttonoff.svg'
+import toggleOnIcon from '@shared-assets/srg/buttonon.svg'
 import keywordActiveBackground from '@shared-assets/srg/bold.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
+import plusIcon from '@shared-assets/srg/plusiconwhite.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
@@ -12,49 +18,19 @@ function BackIcon() {
 }
 
 function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <path d="m16 16 4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src={searchIcon} alt="" aria-hidden="true" />
 }
 
 function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src={plusIcon} alt="" aria-hidden="true" />
 }
 
 function HeartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M12 20.2 4.7 13a4.4 4.4 0 0 1 6.2-6.3L12 7.8l1.1-1.1A4.4 4.4 0 1 1 19.3 13Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={heartReactionIcon} alt="" aria-hidden="true" />
 }
 
 function CommentIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M5 6.5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path d="M8 10.5h8M8 14h5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src={commentReactionIcon} alt="" aria-hidden="true" />
 }
 
 function PaginationDoubleIcon({ direction = 'left' }) {
@@ -280,9 +256,12 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
               onClick={() => setIsMomBtiOnly((prev) => !prev)}
             >
               <span>내 MomBTI만</span>
-              <span className="community-toggle-track" aria-hidden="true">
-                <span className="community-toggle-thumb" />
-              </span>
+              <img
+                src={isMomBtiOnly ? toggleOnIcon : toggleOffIcon}
+                alt=""
+                className="community-toggle-icon"
+                aria-hidden="true"
+              />
             </button>
 
             {!isKeywordMenuOpen && canWrite ? (

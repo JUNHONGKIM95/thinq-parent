@@ -1,3 +1,4 @@
+
 import backIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import airPurifierIcon from '@shared-assets/srg/airpurifer.svg'

@@ -2,6 +2,9 @@
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import myListIcon from '@shared-assets/srg/MYLISTICON.svg'
+import plusIcon from '@shared-assets/srg/plusicon.svg'
+import starIcon from '@shared-assets/srg/star.svg'
+import todoEditIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import { useEffect } from 'react'
 import { useRef } from 'react'
 import { API_BASE_URL } from '../../config/api'
@@ -13,21 +16,11 @@ function BackIcon() {
 }
 
 function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
+  return <img src={plusIcon} alt="" aria-hidden="true" />
 }
 
 function MoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="6" cy="12" r="1.6" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
-      <circle cx="18" cy="12" r="1.6" fill="currentColor" />
-    </svg>
-  )
+  return <img src={todoEditIcon} alt="" aria-hidden="true" />
 }
 
 function PinIcon() {
@@ -46,17 +39,7 @@ function MyListIcon() {
 }
 
 function StarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="m12 3.6 2.45 4.97 5.49.8-3.97 3.87.94 5.47L12 16.1l-4.91 2.58.94-5.47-3.97-3.87 5.49-.8L12 3.6Z"
-        fill="#FFB700"
-        stroke="#222222"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={starIcon} alt="" aria-hidden="true" />
 }
 
 const NAV_ITEMS = [

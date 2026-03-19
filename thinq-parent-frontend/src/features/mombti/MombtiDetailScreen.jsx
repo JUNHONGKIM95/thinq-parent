@@ -32,15 +32,15 @@ function highlightText(text, target) {
   )
 }
 
-function MombtiDetailScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenCommunity }) {
+function MombtiDetailScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, onOpenDevice, onOpenCommunity }) {
   return (
     <div className="mombti-screen-shell">
       <header className="mombti-header">
-        <button type="button" className="mombti-icon-button" aria-label="뒤로 가기" onClick={onBack}>
+        <button type="button" className="mombti-icon-button" aria-label="뒤로 가기" onClick={onOpenMombtiMenu}>
           <BackIcon />
         </button>
         <h1>MomBTI</h1>
-        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기">
+        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기" onClick={onOpenMombtiMenu}>
           <img src={menuIcon} alt="" className="mombti-header-menu-icon" aria-hidden="true" />
         </button>
       </header>
@@ -53,9 +53,7 @@ function MombtiDetailScreen({ data, onBack, onOpenHome, onOpenDevice, onOpenComm
               <div>
                 <p className="mombti-type">{data.type}</p>
                 <p className="mombti-title">{data.title}</p>
-                <p className="mombti-subtitle">
-                  {highlightText(data.subtitle, data.subtitleHighlight)}
-                </p>
+                <p className="mombti-subtitle">{highlightText(data.subtitle, data.subtitleHighlight)}</p>
               </div>
             </div>
 

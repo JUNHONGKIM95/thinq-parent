@@ -1345,6 +1345,31 @@ function App() {
     navigateToScreen('mombti-test')
   }
 
+  const handleMombtiMenuBack = () => {
+    setScreenHistory((prevHistory) => {
+      if (!prevHistory.length) {
+        return prevHistory
+      }
+
+      const previousScreen = prevHistory[prevHistory.length - 1]
+
+      if (previousScreen === 'mombti') {
+        let nextHistory = prevHistory.slice(0, -1)
+
+        while (nextHistory.length && nextHistory[nextHistory.length - 1] === 'mombti-menu') {
+          nextHistory = nextHistory.slice(0, -1)
+        }
+
+        setCurrentScreen('parent-mode')
+        return nextHistory
+      }
+
+      const nextHistory = prevHistory.slice(0, -1)
+      setCurrentScreen(previousScreen)
+      return nextHistory
+    })
+  }
+
   const handleSaveChildDueDate = (dueDate) => {
     setChildProfile((prev) => ({
       ...prev,
@@ -1566,7 +1591,7 @@ function App() {
 
         {currentScreen === 'mombti-menu' && (
           <MombtiMenuScreen
-            onBack={goBack}
+            onBack={handleMombtiMenuBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenCommunity={openCommunity}
@@ -1578,6 +1603,7 @@ function App() {
         {currentScreen === 'mombti-test' && (
           <MombtiTestScreen
             onBack={goBack}
+            onOpenMombtiMenu={openMombtiMenu}
             onComplete={() => navigateToScreen('mombti')}
           />
         )}
@@ -1586,6 +1612,7 @@ function App() {
           <MombtiDetailScreen
             data={mombti}
             onBack={goBack}
+            onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
             onOpenCommunity={openCommunity}

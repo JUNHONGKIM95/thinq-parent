@@ -1,27 +1,13 @@
 import { useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
+import nextArrowIcon from '@shared-assets/srg/Transfer_right_light.svg'
 import { MOMB_TI_OPTIONS, mockMombtiQuestions } from '../../data/mockMombtiQuestions'
 
-const QUESTIONS_PER_PAGE = 5
+const QUESTIONS_PER_PAGE = 6
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
-}
-
-function NextPageIcon() {
-  return (
-    <svg viewBox="0 0 26 23" aria-hidden="true">
-      <path
-        d="M1.8 11.5h16.6M13.6 2.3 24 11.5 13.6 20.7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
 }
 
 function chunkQuestions(questions, size) {
@@ -60,7 +46,7 @@ function MombtiQuestionCard({ question, selectedValue, onSelect }) {
   )
 }
 
-function MombtiTestScreen({ onBack, onComplete }) {
+function MombtiTestScreen({ onBack, onOpenMombtiMenu, onComplete }) {
   const [currentPage, setCurrentPage] = useState(0)
   const [answers, setAnswers] = useState({})
 
@@ -92,7 +78,7 @@ function MombtiTestScreen({ onBack, onComplete }) {
           <BackIcon />
         </button>
         <h1>MomBTI</h1>
-        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기">
+        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기" onClick={onOpenMombtiMenu}>
           <img src={menuIcon} alt="" className="mombti-header-menu-icon" aria-hidden="true" />
         </button>
       </header>
@@ -102,11 +88,11 @@ function MombtiTestScreen({ onBack, onComplete }) {
           <section className="mombti-test-intro">
             <div className="mombti-test-intro-title">
               <strong>검사 시작하기</strong>
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">:</span>
             </div>
-            <p>질문을 읽고, 가장 먼저 떠오르는 정도에 표시해 주세요.</p>
-            <p>(1점: 매우 아니다 ~ 5점: 매우 그렇다)</p>
-            <p>총 20문항이며, 예상 소요 시간은 약 10분입니다.</p>
+            <p>질문을 읽고, 가장 먼저 떠오르는 정도를 표시해 주세요.</p>
+            <p>(1점 매우 아니다 ~ 5점 매우 그렇다)</p>
+            <p>총 20문항이고, 예상 소요 시간은 약 10분입니다.</p>
           </section>
         ) : null}
 
@@ -121,9 +107,13 @@ function MombtiTestScreen({ onBack, onComplete }) {
           ))}
         </section>
 
-        <button type="button" className="mombti-test-next" onClick={handleNext}>
-          <span>{isLastPage ? '결과 보기' : '다음 페이지'}</span>
-          <NextPageIcon />
+        <button
+          type="button"
+          className={`mombti-test-next ${isLastPage ? 'is-submit' : ''}`}
+          onClick={handleNext}
+        >
+          <span>{isLastPage ? '검사 제출하기' : '다음 페이지'}</span>
+          {isLastPage ? null : <img src={nextArrowIcon} alt="" className="mombti-test-next-icon" aria-hidden="true" />}
         </button>
       </div>
     </div>
