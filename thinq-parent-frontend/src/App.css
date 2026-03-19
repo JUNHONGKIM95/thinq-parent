@@ -3189,6 +3189,9 @@
   align-items: center;
   gap: 14px;
   padding: 18px 15px 10px 20px;
+  position: relative;
+  z-index: 6;
+  background: #edd5d8;
 }
 
 .home-header,
@@ -3226,6 +3229,12 @@
 
 .parent-mode-header {
   grid-template-columns: 32px minmax(0, 1fr) auto;
+}
+
+.community-header {
+  min-height: 0;
+  padding-top: 18px;
+  padding-bottom: 2px;
 }
 
 .settings-header h1,
@@ -4244,7 +4253,7 @@
 .community-content {
   position: relative;
   overflow: auto;
-  padding: 12px 19px 110px;
+  padding: 0 19px 110px;
 }
 
 .community-controls {
@@ -4252,9 +4261,22 @@
   top: 0;
   z-index: 3;
   display: grid;
+  position: sticky;
   gap: 12px;
+  padding-top: 0;
   padding-bottom: 14px;
   background: linear-gradient(180deg, #edd5d8 0%, #edd5d8 84%, rgba(237, 213, 216, 0) 100%);
+}
+
+.community-controls::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 12px;
+  background: #edd5d8;
+  pointer-events: none;
 }
 
 .community-tab-row {
