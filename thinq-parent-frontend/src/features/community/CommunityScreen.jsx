@@ -73,8 +73,8 @@ const NAV_ITEMS = [
 
 const TAB_ITEMS = [
   { key: 'all', label: '전체', boardId: null },
-  { key: 'pregnancy-talk', label: '임신 수다', boardId: 0 },
-  { key: 'info-concern', label: '정보/고민', boardId: 1 },
+  { key: 'pregnancy-talk', label: '임신 수다', boardId: 1 },
+  { key: 'info-concern', label: '정보/고민', boardId: 2 },
 ]
 
 const KEYWORD_OPTIONS = [
@@ -121,11 +121,11 @@ function getCommunityPostsPayload(payload) {
 function getBoardLabel(post) {
   const boardId = normalizeNumber(post?.boardId ?? post?.board_id)
 
-  if (boardId === 0) {
+  if (boardId === 1) {
     return '임신 수다'
   }
 
-  if (boardId === 1) {
+  if (boardId === 2) {
     return '정보/고민'
   }
 

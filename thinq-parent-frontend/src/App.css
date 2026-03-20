@@ -4366,7 +4366,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .community-search-wrap {
@@ -4374,7 +4375,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1 1 auto;
+  flex: 1 1 34%;
   min-width: 0;
 }
 
@@ -4390,17 +4391,27 @@
 .community-search-trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  width: 111px;
-  padding: 0 14px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
   border-radius: 17.5px;
   background: rgba(250, 248, 240, 0.9);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #575550;
   white-space: nowrap;
-  flex: 0 0 124px;
+  flex: 1 1 auto;
+}
+
+.community-search-trigger span {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .community-search-trigger svg,
@@ -4412,18 +4423,28 @@
 .community-mombti-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
+  justify-content: space-between;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 40%;
+  padding: 0 12px;
   border-radius: 17.5px;
   background: rgba(250, 248, 240, 0.9);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #575550;
 }
 
+.community-mombti-toggle span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .community-toggle-icon {
-  width: 36px;
-  height: 18px;
+  width: 38px;
+  height: 19px;
   display: block;
   flex-shrink: 0;
 }
@@ -4461,14 +4482,17 @@
 .community-write-button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 16px;
-  margin-left: auto;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 96px;
+  padding: 0 14px;
+  margin-left: 0;
   border-radius: 10px;
   background: rgba(212, 53, 95, 0.95);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
+  white-space: nowrap;
 }
 
 .community-write-button svg,

@@ -1868,7 +1868,11 @@ function App() {
         )}
 
         {currentScreen === 'community-write' && (
-          <CommunityWriteScreen onBack={goBack} />
+          <CommunityWriteScreen
+            userId={currentUserId}
+            onBack={goBack}
+            onSuccess={goBack}
+          />
         )}
 
         {currentScreen === 'pregnancy-diary' && (
