@@ -42,6 +42,7 @@ import { mockParentSchedule } from './data/mockParentSchedule'
 import { mockMyPage } from './data/mockMyPage'
 import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
 import CommunityScreen from './features/community/CommunityScreen'
+import CommunityDetailScreen from './features/community/CommunityDetailScreen'
 import CommunityWriteScreen from './features/community/CommunityWriteScreen'
 import PregnancyDiaryScreen from './features/diary/PregnancyDiaryScreen'
 import PregnancyDiaryWriteScreen from './features/diary/PregnancyDiaryWriteScreen'
@@ -1342,6 +1343,7 @@ function App() {
     readDailyScheduleCache(DEFAULT_CURRENT_USER_ID, new Date())
   )
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
+  const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(null)
   const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
   const [mombtiResultData, setMombtiResultData] = useState(() =>
     buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
@@ -1524,6 +1526,15 @@ function App() {
     }
 
     navigateToScreen('community-write')
+  }
+
+  const openCommunityDetail = (postId) => {
+    if (!postId) {
+      return
+    }
+
+    setSelectedCommunityPostId(postId)
+    navigateToScreen('community-detail')
   }
 
   const openPregnancyDiary = () => {
@@ -1709,7 +1720,7 @@ function App() {
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
-        : currentScreen === 'community'
+        : currentScreen === 'community' || currentScreen === 'community-detail'
           ? 'community-mode'
         : currentScreen === 'community-write'
           ? 'community-write-mode'
@@ -1863,7 +1874,19 @@ function App() {
             onOpenDevice={openParentDevice}
             onOpenMy={openMyScreen}
             onOpenWrite={openCommunityWrite}
+            onOpenPost={openCommunityDetail}
             canWrite={pregnancySummary.role === 'USER'}
+          />
+        )}
+
+        {currentScreen === 'community-detail' && (
+          <CommunityDetailScreen
+            postId={selectedCommunityPostId}
+            userId={currentUserId}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+            onOpenMy={openMyScreen}
           />
         )}
 

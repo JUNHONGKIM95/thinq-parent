@@ -98,6 +98,18 @@ function normalizeNumber(value) {
   return Number.isFinite(parsedValue) ? parsedValue : null
 }
 
+function getUserPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+
+  if (payload?.user && typeof payload.user === 'object') {
+    return payload.user
+  }
+
+  return null
+}
+
 function getCommunityPostsPayload(payload) {
   if (Array.isArray(payload)) {
     return payload
@@ -145,6 +157,8 @@ function mapCommunityPost(post, index) {
   return {
     key: `community-post-${postId}`,
     postId,
+    authorUserId: normalizeNumber(post?.authorUserId ?? post?.author_user_id),
+    authorUsername: normalizeString(post?.authorUsername ?? post?.author_username) || '',
     mbtiLabel: getMombtiLabel(post),
     boardLabel: getBoardLabel(post),
     title,
@@ -183,10 +197,34 @@ async function fetchCommunityPosts({ boardId, keywordId, sameMombtiOnly, userId 
   }
 
   const payload = await response.json()
-  return getCommunityPostsPayload(payload).map(mapCommunityPost)
+  const mappedPosts = getCommunityPostsPayload(payload).map(mapCommunityPost)
+
+  const uniqueAuthorIds = [...new Set(mappedPosts.map((post) => post.authorUserId).filter(Boolean))]
+  const authorEntries = await Promise.all(
+    uniqueAuthorIds.map(async (authorId) => {
+      try {
+        const authorResponse = await fetch(`${API_BASE_URL}/api/v1/users/${authorId}`)
+
+        if (!authorResponse.ok) {
+          return [authorId, '']
+        }
+
+        const authorPayload = await authorResponse.json()
+        return [authorId, normalizeString(getUserPayload(authorPayload)?.username)]
+      } catch {
+        return [authorId, '']
+      }
+    })
+  )
+  const authorMap = new Map(authorEntries)
+
+  return mappedPosts.map((post) => ({
+    ...post,
+    authorUsername: post.authorUsername || authorMap.get(post.authorUserId) || '익명',
+  }))
 }
 
-function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWrite, canWrite = true }) {
+function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWrite, onOpenPost, canWrite = true }) {
   const [selectedTab, setSelectedTab] = useState('all')
   const [isMomBtiOnly, setIsMomBtiOnly] = useState(false)
   const [selectedKeywordId, setSelectedKeywordId] = useState(null)
@@ -366,12 +404,19 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
             </div>
           ) : pagedPosts.length ? (
             pagedPosts.map((post) => (
-              <article className="community-post-card" key={post.key} data-post-id={post.postId}>
+              <button
+                type="button"
+                className="community-post-card community-post-card--button"
+                key={post.key}
+                data-post-id={post.postId}
+                onClick={() => onOpenPost?.(post.postId)}
+              >
                 <div className="community-post-topline">
                   <div className="community-post-tags">
                     <span className="community-tag community-tag--mbti">{post.mbtiLabel}</span>
                     <span className="community-tag community-tag--board">{post.boardLabel}</span>
                   </div>
+                  <span className="community-post-author">{post.authorUsername || '??'}</span>
                 </div>
 
                 <h2>{post.title}</h2>
@@ -390,7 +435,7 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
                   </div>
                   <span>{post.elapsedTimeText}</span>
                 </div>
-              </article>
+              </button>
             ))
           ) : (
             <div className="community-empty-state">
