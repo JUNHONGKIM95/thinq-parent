@@ -16,7 +16,15 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY', icon: parentModeMyIcon },
 ]
 
-function MombtiMenuScreen({ onBack, onOpenHome, onOpenDevice, onOpenCommunity, onOpenResult, onOpenTest }) {
+function MombtiMenuScreen({
+  onBack,
+  onOpenHome,
+  onOpenDevice,
+  onOpenCommunity,
+  onOpenResult,
+  onOpenTest,
+  isCreatingAttempt = false,
+}) {
   return (
     <div className="mombti-menu-shell">
       <header className="mombti-menu-header">
@@ -35,7 +43,12 @@ function MombtiMenuScreen({ onBack, onOpenHome, onOpenDevice, onOpenCommunity, o
           <p>상세한 분석 결과를 통해 나를 이해해보세요.</p>
         </button>
 
-        <button type="button" className="mombti-menu-card" onClick={onOpenTest}>
+        <button
+          type="button"
+          className="mombti-menu-card"
+          onClick={onOpenTest}
+          disabled={isCreatingAttempt}
+        >
           <strong>테스트하기</strong>
           <p>나의 유형을 알아보아요.</p>
         </button>

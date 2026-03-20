@@ -346,7 +346,6 @@ function MyScreen({
           <div className="my-todo-card">
             <div className="my-todo-head">
               <strong>TO DO</strong>
-              <span>{data.todo.weekLabel}</span>
             </div>
 
             <div className="my-todo-list">

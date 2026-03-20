@@ -136,7 +136,7 @@ const COMMUNITY_POSTS = Array.from({ length: 25 }, (_, index) => {
 const POSTS_PER_PAGE = 5
 
 function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWrite, canWrite = true }) {
-  const [selectedTab, setSelectedTab] = useState('pregnancy-talk')
+  const [selectedTab, setSelectedTab] = useState('all')
   const [isMomBtiOnly, setIsMomBtiOnly] = useState(true)
   const [selectedKeyword, setSelectedKeyword] = useState('')
   const [isKeywordMenuOpen, setIsKeywordMenuOpen] = useState(false)

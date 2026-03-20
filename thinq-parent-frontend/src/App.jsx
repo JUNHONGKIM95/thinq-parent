@@ -92,6 +92,10 @@ const DEFAULT_PREGNANCY_SUMMARY = {
   role: '',
 }
 const DEFAULT_CHEER_MESSAGE = ''
+const DEFAULT_TODAY_TODO_CARD = {
+  weekLabel: '',
+  items: [],
+}
 const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
 const DEFAULT_CURRENT_USER_ID = 3
 const CHATBOT_API_URL = 'https://chatbot-api-338378601376.asia-northeast3.run.app/ask'
@@ -128,6 +132,46 @@ function calculateDaysUntilDueDate(dueDate) {
   }
 
   return Math.max(0, Math.ceil((dueDateValue.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)))
+}
+
+function parseDueDateValue(dueDate) {
+  if (!dueDate) {
+    return null
+  }
+
+  const parsedDate = new Date(`${dueDate}T00:00:00`)
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate
+}
+
+function calculatePregnancyWeek(targetDate, dueDate) {
+  const targetValue =
+    typeof targetDate === 'string' ? new Date(`${targetDate}T00:00:00`) : new Date(targetDate)
+  const dueDateValue = parseDueDateValue(dueDate)
+
+  if (Number.isNaN(targetValue.getTime()) || !dueDateValue) {
+    return null
+  }
+
+  const millisecondsPerDay = 1000 * 60 * 60 * 24
+  const daysRemaining = Math.ceil((dueDateValue.getTime() - targetValue.getTime()) / millisecondsPerDay)
+  const elapsedDays = 280 - daysRemaining
+  const currentWeek = Math.floor(elapsedDays / 7)
+
+  if (currentWeek < 0 || currentWeek > 40) {
+    return null
+  }
+
+  return currentWeek
+}
+
+function normalizeWeekNumber(value) {
+  const parsedValue = Number.parseInt(String(value ?? '').trim(), 10)
+
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+    return null
+  }
+
+  return parsedValue
 }
 
 function formatDueDateLabel(dueDate) {
@@ -432,47 +476,90 @@ function isMyListChecked(item) {
   return String(item?.checkYn ?? item?.check_yn ?? 'N').trim().toUpperCase() === 'Y'
 }
 
-async function fetchTodayMyListItems(userId = 3, date = new Date()) {
+function getWeekLabelFromValue(value) {
+  const weekLabel = String(value?.weekLabel ?? value?.week_label ?? '').trim()
+
+  if (weekLabel) {
+    return weekLabel
+  }
+
+  const weekNumber = normalizeWeekNumber(
+    value?.currentWeek ?? value?.currentweek ?? value?.current_week ?? value?.week ?? value?.weekNumber
+  )
+
+  return weekNumber ? `${weekNumber}주차` : ''
+}
+
+function resolveTodayTodoWeekLabel(payload, userData, dateKey) {
+  const candidates = [
+    payload,
+    payload?.data,
+    Array.isArray(payload?.data) ? payload.data[0] : null,
+    userData,
+  ]
+
+  for (const candidate of candidates) {
+    const weekLabel = getWeekLabelFromValue(candidate)
+
+    if (weekLabel) {
+      return weekLabel
+    }
+  }
+
+  const calculatedWeek = calculatePregnancyWeek(dateKey, userData?.dueDate)
+  return calculatedWeek ? `${calculatedWeek}주차` : ''
+}
+
+async function fetchTodayTodoCard(userId = 3, date = new Date()) {
   const dateKey = getDateKey(date)
 
   try {
     const userResponse = await fetch(`${API_BASE_URL}/api/v1/users/${userId}`)
 
     if (!userResponse.ok) {
-      return []
+      return DEFAULT_TODAY_TODO_CARD
     }
 
     const userPayload = await userResponse.json()
-    const groupId = getUserPayload(userPayload)?.groupId
+    const userData = getUserPayload(userPayload)
+    const groupId = userData?.groupId
 
     if (!groupId) {
-      return []
+      return DEFAULT_TODAY_TODO_CARD
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/my-list/groups/${groupId}`)
+    const query = new URLSearchParams({
+      date: dateKey,
+    })
+    const response = await fetch(`${API_BASE_URL}/api/v1/my-list/groups/${groupId}/daily?${query.toString()}`)
 
     if (!response.ok) {
-      return []
+      return {
+        weekLabel: resolveTodayTodoWeekLabel(null, userData, dateKey),
+        items: [],
+      }
     }
 
     const payload = await response.json()
 
-    return getMyListPayloadItems(payload)
-      .map((item, index) => {
-        const myListId = item?.myListId ?? item?.my_list_id ?? item?.id ?? null
+    return {
+      weekLabel: resolveTodayTodoWeekLabel(payload, userData, dateKey),
+      items: getMyListPayloadItems(payload)
+        .map((item, index) => {
+          const myListId = item?.myListId ?? item?.my_list_id ?? item?.id ?? null
 
-        return {
-          key: myListId ? `my-list-${myListId}` : `my-list-${dateKey}-${index}`,
-          myListId,
-          dateKey: getMyListDateKey(item),
-          text: getMyListTitle(item),
-          checked: isMyListChecked(item),
-        }
-      })
-      .filter((item) => item.dateKey === dateKey && item.text)
-      .slice(0, 2)
+          return {
+            key: myListId ? `my-list-${myListId}` : `my-list-${dateKey}-${index}`,
+            myListId,
+            dateKey: getMyListDateKey(item),
+            text: getMyListTitle(item),
+            checked: isMyListChecked(item),
+          }
+        })
+        .filter((item) => item.dateKey === dateKey && item.text),
+    }
   } catch {
-    return []
+    return DEFAULT_TODAY_TODO_CARD
   }
 }
 
@@ -496,6 +583,42 @@ async function updateMyListCheckYn(myListId, checked) {
     return response.ok
   } catch {
     return false
+  }
+}
+
+function getMombtiAttemptPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+
+  if (payload && typeof payload === 'object') {
+    return payload
+  }
+
+  return null
+}
+
+async function createMombtiAttempt(userId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/mombti/attempts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        user_id: userId,
+      }),
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    return getMombtiAttemptPayload(payload)
+  } catch {
+    return null
   }
 }
 
@@ -1150,7 +1273,9 @@ function App() {
   const [dailyScheduleItems, setDailyScheduleItems] = useState(() =>
     readDailyScheduleCache(DEFAULT_CURRENT_USER_ID, new Date())
   )
-  const [todayTodoItems, setTodayTodoItems] = useState([])
+  const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
+  const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
+  const [isCreatingMombtiAttempt, setIsCreatingMombtiAttempt] = useState(false)
   const [childProfile, setChildProfile] = useState(mockChildProfile)
   const today = new Date()
   const myPage = {
@@ -1165,6 +1290,11 @@ function App() {
       dayOfWeek: getDayOfWeekLabel(today),
       items: dailyScheduleItems,
     },
+    todo: {
+      ...mockMyPage.todo,
+      weekLabel: todayTodoCard.weekLabel,
+      items: todayTodoCard.items,
+    },
   }
   const parentSchedule = mockParentSchedule
   const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
@@ -1176,7 +1306,7 @@ function App() {
     setChildProfile(mockChildProfile)
     setCheerMessageText(DEFAULT_CHEER_MESSAGE)
     setDailyScheduleItems(readDailyScheduleCache(currentUserId, new Date()))
-    setTodayTodoItems([])
+    setTodayTodoCard(DEFAULT_TODAY_TODO_CARD)
 
     fetchPregnancySummary(currentUserId).then((data) => {
       if (!isMounted || !data) {
@@ -1223,18 +1353,38 @@ function App() {
       setDailyScheduleItems(items)
     })
 
-    fetchTodayMyListItems(currentUserId, new Date()).then((items) => {
+    fetchTodayTodoCard(currentUserId, new Date()).then((todoCard) => {
       if (!isMounted) {
         return
       }
 
-      setTodayTodoItems(items)
+      setTodayTodoCard(todoCard)
     })
 
     return () => {
       isMounted = false
     }
   }, [currentUserId])
+
+  useEffect(() => {
+    if (currentScreen !== 'parent-mode' && currentScreen !== 'my') {
+      return undefined
+    }
+
+    let isMounted = true
+
+    fetchTodayTodoCard(currentUserId, new Date()).then((todoCard) => {
+      if (!isMounted) {
+        return
+      }
+
+      setTodayTodoCard(todoCard)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentScreen, currentUserId])
 
   const navigateToScreen = (nextScreen) => {
     setCurrentScreen((prevScreen) => {
@@ -1341,8 +1491,24 @@ function App() {
     navigateToScreen('mombti')
   }
 
-  const openMombtiTest = () => {
+  const openMombtiTest = async () => {
+    if (isCreatingMombtiAttempt) {
+      navigateToScreen('mombti-test')
+      return
+    }
+
+    setIsCreatingMombtiAttempt(true)
     navigateToScreen('mombti-test')
+
+    try {
+      const attempt = await createMombtiAttempt(currentUserId)
+
+      if (attempt) {
+        setActiveMombtiAttempt(attempt)
+      }
+    } finally {
+      setIsCreatingMombtiAttempt(false)
+    }
   }
 
   const handleMombtiMenuBack = () => {
@@ -1402,16 +1568,18 @@ function App() {
 
     const nextChecked = !targetItem.checked
 
-    setTodayTodoItems((prev) =>
-      prev.map((item) => (item.key === targetItem.key ? { ...item, checked: nextChecked } : item))
-    )
+    setTodayTodoCard((prev) => ({
+      ...prev,
+      items: prev.items.map((item) => (item.key === targetItem.key ? { ...item, checked: nextChecked } : item)),
+    }))
 
     const isUpdated = await updateMyListCheckYn(targetItem.myListId, nextChecked)
 
     if (!isUpdated) {
-      setTodayTodoItems((prev) =>
-        prev.map((item) => (item.key === targetItem.key ? { ...item, checked: targetItem.checked } : item))
-      )
+      setTodayTodoCard((prev) => ({
+        ...prev,
+        items: prev.items.map((item) => (item.key === targetItem.key ? { ...item, checked: targetItem.checked } : item)),
+      }))
     }
   }
 
@@ -1477,7 +1645,7 @@ function App() {
             pregnancySummary={pregnancySummary}
             cheerMessageText={cheerMessageText}
             dailyScheduleItems={dailyScheduleItems}
-            todayTodoItems={todayTodoItems}
+            todayTodoItems={todayTodoCard.items}
             onToggleTodayTodo={handleToggleTodayTodo}
           />
         )}
@@ -1597,6 +1765,7 @@ function App() {
             onOpenCommunity={openCommunity}
             onOpenResult={openMombtiResult}
             onOpenTest={openMombtiTest}
+            isCreatingAttempt={isCreatingMombtiAttempt}
           />
         )}
 
