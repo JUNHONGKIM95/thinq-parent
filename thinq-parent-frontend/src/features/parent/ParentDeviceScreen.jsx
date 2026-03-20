@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import backIcon from '@shared-assets/srg/Arrow_left.svg'
 import rightIcon from '@shared-assets/srg/Arrow_right.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
@@ -42,7 +42,7 @@ function ParentDeviceScreen({
           <span className="parent-device-add-accent" aria-hidden="true" />
           <div className="parent-device-add-copy">
             <h2>가전제품 추가</h2>
-            <p>라이프모드로 제어할 가전을 추가해 주세요.</p>
+            <p>와이파이로 제어할 가전을 추가해 주세요.</p>
           </div>
           <img src={rightIcon} alt="" className="parent-device-add-arrow" aria-hidden="true" />
         </button>
@@ -51,7 +51,7 @@ function ParentDeviceScreen({
           <div className="parent-device-control-row">
             <div className="parent-device-control-copy">
               <h3>가전제품 자동 제어</h3>
-              <p>라이프모드가 최적 상태로 자동 제어해요.</p>
+              <p>와이파이모드가 최적 상태로 자동 제어해요.</p>
             </div>
             <button
               type="button"
@@ -115,12 +115,12 @@ function ParentDeviceScreen({
 
         <button type="button" className="parent-device-info-card">
           <h3>가전제품 원격 제어</h3>
-          <p>가족을 위한 가전제품 케어와 제어를 한 번에 관리해 보세요.</p>
+          <p>가족을 위한 가전 관리와 케어를 한 번에 확인해 보세요.</p>
         </button>
 
         <button type="button" className="parent-device-info-card" onClick={onOpenRoutine}>
           <h3>가전제품 루틴</h3>
-          <p>임신 시기와 생활 패턴에 맞춰 추천 루틴을 확인해 보세요.</p>
+          <p>임신 시기와 생활 패턴에 맞춘 추천 루틴을 확인해 보세요.</p>
         </button>
       </div>
 
@@ -160,3 +160,4 @@ function ParentDeviceScreen({
 }
 
 export default ParentDeviceScreen
+

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
-import commentReactionIcon from '@shared-assets/srg/fi-rr-comment.svg'
-import heartReactionIcon from '@shared-assets/srg/fi-rr-heart.svg'
+import commentReactionIcon from '@shared-assets/srg/fi-rr-comment2.svg'
+import heartReactionIcon from '@shared-assets/srg/fi-rr-heart2.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import commentEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import commentDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
@@ -52,6 +52,82 @@ function normalizeString(value) {
 function normalizeNumber(value) {
   const parsedValue = Number.parseInt(String(value ?? '').trim(), 10)
   return Number.isFinite(parsedValue) ? parsedValue : null
+}
+
+function normalizeMombtiAttemptStatus(value) {
+  return String(value ?? '').trim().toUpperCase()
+}
+
+function getMombtiAttemptCompletedAt(attempt) {
+  return attempt?.completedAt ?? attempt?.completed_at ?? null
+}
+
+function getLatestMombtiAttemptFromPayload(payload) {
+  const rawValue = payload?.data ?? payload
+  const attempts = Array.isArray(rawValue)
+    ? rawValue
+    : Array.isArray(rawValue?.items)
+      ? rawValue.items
+      : Array.isArray(rawValue?.attempts)
+        ? rawValue.attempts
+        : rawValue
+          ? [rawValue]
+          : []
+
+  return attempts
+    .sort((first, second) => {
+      const firstCompletedTime = new Date(getMombtiAttemptCompletedAt(first) ?? 0).getTime()
+      const secondCompletedTime = new Date(getMombtiAttemptCompletedAt(second) ?? 0).getTime()
+
+      if (firstCompletedTime !== secondCompletedTime) {
+        return secondCompletedTime - firstCompletedTime
+      }
+
+      const firstId = Number(first?.attemptId ?? first?.attempt_id ?? first?.id ?? 0)
+      const secondId = Number(second?.attemptId ?? second?.attempt_id ?? second?.id ?? 0)
+      return secondId - firstId
+    })[0] ?? null
+}
+
+function isCompletedMombtiAttempt(attempt) {
+  return normalizeMombtiAttemptStatus(attempt?.status) === 'COMPLETED'
+}
+
+function getLatestCompletedMombtiAttemptFromPayload(payload) {
+  const rawValue = payload?.data ?? payload
+  const attempts = Array.isArray(rawValue)
+    ? rawValue
+    : Array.isArray(rawValue?.items)
+      ? rawValue.items
+      : Array.isArray(rawValue?.attempts)
+        ? rawValue.attempts
+        : rawValue
+          ? [rawValue]
+          : []
+
+  return attempts
+    .filter(isCompletedMombtiAttempt)
+    .sort((first, second) => {
+      const firstCompletedTime = new Date(getMombtiAttemptCompletedAt(first) ?? 0).getTime()
+      const secondCompletedTime = new Date(getMombtiAttemptCompletedAt(second) ?? 0).getTime()
+
+      if (firstCompletedTime !== secondCompletedTime) {
+        return secondCompletedTime - firstCompletedTime
+      }
+
+      const firstId = Number(first?.attemptId ?? first?.attempt_id ?? first?.id ?? 0)
+      const secondId = Number(second?.attemptId ?? second?.attempt_id ?? second?.id ?? 0)
+      return secondId - firstId
+    })[0] ?? null
+}
+
+function getMombtiResultType(attempt) {
+  return normalizeString(
+    attempt?.resultType ??
+      attempt?.result_type ??
+      attempt?.profile?.resultType ??
+      attempt?.profile?.result_type
+  )
 }
 
 function getObjectPayload(payload) {
@@ -117,6 +193,13 @@ function mapCommunityComment(comment) {
   return {
     commentId: comment?.commentId ?? comment?.comment_id ?? null,
     authorUserId: normalizeNumber(comment?.authorUserId ?? comment?.author_user_id),
+    mbtiLabel:
+      normalizeString(
+        comment?.authorMombtiResultType ??
+          comment?.author_mombti_result_type ??
+          comment?.mombtiResultType ??
+          comment?.mombti_result_type
+      ) || 'MBTI',
     authorUsername: normalizeString(comment?.authorUsername ?? comment?.author_username) || '익명',
     content: normalizeString(comment?.content),
     elapsedTimeText: normalizeString(comment?.elapsedTimeText ?? comment?.elapsed_time_text),
@@ -175,6 +258,47 @@ async function fetchCommunityPostComments(postId) {
 
   const payload = await response.json()
   return getArrayPayload(payload).map(mapCommunityComment)
+}
+
+async function fetchUserCommentMombtiLabel(userId) {
+  if (!userId) {
+    return ''
+  }
+
+  try {
+    const query = new URLSearchParams({
+      userId: String(userId),
+    })
+    const response = await fetch(`${API_BASE_URL}/api/v1/mombti/attempts/latest?${query.toString()}`)
+
+    if (!response.ok) {
+      return ''
+    }
+
+    const payload = await response.json()
+    const latestCompletedAttempt = getLatestCompletedMombtiAttemptFromPayload(payload)
+    return getMombtiResultType(latestCompletedAttempt)
+  } catch {
+    return ''
+  }
+}
+
+async function enrichCommentMombtiLabels(comments) {
+  const authorIds = [...new Set(comments.map((comment) => comment.authorUserId).filter(Boolean))]
+
+  if (!authorIds.length) {
+    return comments
+  }
+
+  const mbtiEntries = await Promise.all(
+    authorIds.map(async (authorId) => [authorId, await fetchUserCommentMombtiLabel(authorId)])
+  )
+  const mbtiByAuthorId = new Map(mbtiEntries)
+
+  return comments.map((comment) => ({
+    ...comment,
+    mbtiLabel: normalizeString(mbtiByAuthorId.get(comment.authorUserId)) || comment.mbtiLabel || 'MBTI',
+  }))
 }
 
 async function createCommunityPostComment(postId, authorUserId, content) {
@@ -251,7 +375,7 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     ])
 
     setDetail(nextDetail)
-    setComments(nextComments)
+    setComments(await enrichCommentMombtiLabels(nextComments))
   }
 
   useEffect(() => {
@@ -271,13 +395,19 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     setEditingCommentInput('')
 
     Promise.all([fetchCommunityPostDetail(postId), fetchCommunityPostComments(postId)])
-      .then(([nextDetail, nextComments]) => {
+      .then(async ([nextDetail, nextComments]) => {
+        if (!isMounted) {
+          return
+        }
+
+        const nextCommentsWithMombti = await enrichCommentMombtiLabels(nextComments)
+
         if (!isMounted) {
           return
         }
 
         setDetail(nextDetail)
-        setComments(nextComments)
+        setComments(nextCommentsWithMombti)
       })
       .catch((error) => {
         console.error(error)
@@ -447,8 +577,8 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
                     <section key={comment.commentId ?? `${comment.authorUserId}-${comment.elapsedTimeText}`} className="community-detail-meta-card">
                       <div className="community-detail-meta-top">
                         <div className="community-detail-meta-author">
-                          <span className="community-tag community-tag--outline">MBTI</span>
-                          <strong>{comment.authorUsername || '익명'}</strong>
+                          <span className="community-tag community-tag--outline">{comment.mbtiLabel || 'MBTI'}</span>
+                          <strong>익명</strong>
                         </div>
 
                         <div className="community-detail-meta-right">
@@ -501,7 +631,7 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
                               onClick={handleSaveCommentEdit}
                               disabled={isUpdatingComment || !editingCommentInput.trim()}
                             >
-                              {isUpdatingComment ? '저장 중' : '저장'}
+                              {isUpdatingComment ? '저장중' : '저장'}
                             </button>
                           </div>
                         </>
@@ -596,3 +726,4 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
 }
 
 export default CommunityDetailScreen
+

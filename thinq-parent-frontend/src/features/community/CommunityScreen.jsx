@@ -416,7 +416,6 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
                     <span className="community-tag community-tag--mbti">{post.mbtiLabel}</span>
                     <span className="community-tag community-tag--board">{post.boardLabel}</span>
                   </div>
-                  <span className="community-post-author">{post.authorUsername || '??'}</span>
                 </div>
 
                 <h2>{post.title}</h2>

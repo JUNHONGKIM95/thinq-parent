@@ -972,12 +972,8 @@ function LifeAgentScreen({ onBack, onOpenParentMode }) {
   )
 }
 
-function ChatExpertScreen({ onBack }) {
-  const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState([{ role: 'bot', text: DEFAULT_CHATBOT_GREETING }])
-  const [isSending, setIsSending] = useState(false)
+function ChatExpertScreen({ onBack, message, messages, isSending, onMessageChange, onSendMessage }) {
   const messagesRef = useRef(null)
-  const sessionIdRef = useRef(`user-${Date.now()}`)
 
   useEffect(() => {
     if (!messagesRef.current) {
@@ -987,64 +983,16 @@ function ChatExpertScreen({ onBack }) {
     messagesRef.current.scrollTop = messagesRef.current.scrollHeight
   }, [messages, isSending])
 
-  const sendMessage = async () => {
-    const trimmedMessage = message.trim()
-
-    if (!trimmedMessage || isSending) {
-      return
-    }
-
-    setMessages((prev) => [...prev, { role: 'user', text: trimmedMessage }])
-    setMessage('')
-    setIsSending(true)
-
-    try {
-      const response = await fetch(CHATBOT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: trimmedMessage,
-          session_id: sessionIdRef.current,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Chat request failed: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      const answer = removeChatMarkdown(payload?.answer)
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'bot',
-          text: answer || '응답을 받아오지 못했어요. 잠시 후 다시 시도해주세요.',
-        },
-      ])
-    } catch (error) {
-      console.error(error)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'bot',
-          text: '서버와 연결되지 않았어요. 잠시 후 다시 시도해주세요.',
-        },
-      ])
-    } finally {
-      setIsSending(false)
-    }
-  }
-
   return (
     <div className="chat-expert-shell">
       <header className="settings-header chat-expert-page-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
           <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
         </button>
-        <h1>챗태피티 전문가</h1>
+        <h1>
+          <span>챗태피티</span>
+          <span className="chat-expert-page-header-subtitle">전문가</span>
+        </h1>
         <button type="button" className="life-agent-more-button chat-expert-menu-button" aria-label="메뉴">
           <img src={headerMenuIcon} alt="" className="header-menu-icon" aria-hidden="true" />
         </button>
@@ -1073,11 +1021,11 @@ function ChatExpertScreen({ onBack }) {
               placeholder="메세지를 입력하세요."
               aria-label="메세지를 입력하세요."
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
+              onChange={(event) => onMessageChange(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
                   event.preventDefault()
-                  sendMessage()
+                  onSendMessage()
                 }
               }}
             />
@@ -1085,7 +1033,7 @@ function ChatExpertScreen({ onBack }) {
               type="button"
               className="chat-expert-send-btn"
               aria-label="전송"
-              onClick={sendMessage}
+              onClick={onSendMessage}
               disabled={isSending}
             >
               <img src={sendDuotoneIcon} alt="" aria-hidden="true" />
@@ -1362,7 +1310,11 @@ function App() {
   const [latestMombtiResultData, setLatestMombtiResultData] = useState(null)
   const [isCreatingMombtiAttempt, setIsCreatingMombtiAttempt] = useState(false)
   const [childProfile, setChildProfile] = useState(mockChildProfile)
+  const [chatExpertDraft, setChatExpertDraft] = useState('')
+  const [chatExpertMessages, setChatExpertMessages] = useState([{ role: 'bot', text: DEFAULT_CHATBOT_GREETING }])
+  const [isChatExpertSending, setIsChatExpertSending] = useState(false)
   const mombtiAttemptRequestRef = useRef(null)
+  const chatExpertSessionIdRef = useRef(`user-${Date.now()}`)
   const today = new Date()
   const myPage = {
     ...mockMyPage,
@@ -1455,6 +1407,13 @@ function App() {
   }, [currentUserId])
 
   useEffect(() => {
+    setChatExpertDraft('')
+    setChatExpertMessages([{ role: 'bot', text: DEFAULT_CHATBOT_GREETING }])
+    setIsChatExpertSending(false)
+    chatExpertSessionIdRef.current = `user-${currentUserId}-${Date.now()}`
+  }, [currentUserId])
+
+  useEffect(() => {
     if (currentScreen !== 'parent-mode' && currentScreen !== 'my') {
       return undefined
     }
@@ -1514,6 +1473,57 @@ function App() {
 
   const openParentModeChat = () => {
     navigateToScreen('parent-mode-chat')
+  }
+
+  const handleSendChatExpertMessage = async () => {
+    const trimmedMessage = chatExpertDraft.trim()
+
+    if (!trimmedMessage || isChatExpertSending) {
+      return
+    }
+
+    setChatExpertMessages((prev) => [...prev, { role: 'user', text: trimmedMessage }])
+    setChatExpertDraft('')
+    setIsChatExpertSending(true)
+
+    try {
+      const response = await fetch(CHATBOT_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: trimmedMessage,
+          session_id: chatExpertSessionIdRef.current,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Chat request failed: ${response.status}`)
+      }
+
+      const payload = await response.json()
+      const answer = removeChatMarkdown(payload?.answer)
+
+      setChatExpertMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          text: answer || '응답을 받아오지 못했어요. 잠시 후 다시 시도해주세요.',
+        },
+      ])
+    } catch (error) {
+      console.error(error)
+      setChatExpertMessages((prev) => [
+        ...prev,
+        {
+          role: 'bot',
+          text: '서버와 연결되지 않았어요. 잠시 후 다시 시도해주세요.',
+        },
+      ])
+    } finally {
+      setIsChatExpertSending(false)
+    }
   }
 
   const openParentDevice = () => {
@@ -1921,7 +1931,14 @@ function App() {
         )}
 
         {currentScreen === 'parent-mode-chat' && (
-          <ChatExpertScreen onBack={goBack} />
+          <ChatExpertScreen
+            onBack={goBack}
+            message={chatExpertDraft}
+            messages={chatExpertMessages}
+            isSending={isChatExpertSending}
+            onMessageChange={setChatExpertDraft}
+            onSendMessage={handleSendChatExpertMessage}
+          />
         )}
 
         {currentScreen === 'parent-mode-schedule' && (

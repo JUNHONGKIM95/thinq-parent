@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react'
+
 export const SCHEDULE_TYPE_OPTIONS = [
   { key: 'baby', label: '아기', color: '#ff3b3b', textColor: '#ffffff' },
   { key: 'family', label: '가족', color: '#8fbc69', textColor: '#ffffff' },
-  { key: 'work', label: '일', color: '#7478a8', textColor: '#ffffff' },
+  { key: 'work', label: '업무', color: '#7478a8', textColor: '#ffffff' },
   { key: 'personal', label: '개인', color: '#fef19f', textColor: '#000000' },
   { key: 'important', label: '중요', color: '#2e2e2e', textColor: '#ffffff' },
   { key: 'etc', label: '기타', color: '#b285bb', textColor: '#ffffff' },
@@ -16,6 +18,9 @@ export const DEFAULT_SCHEDULE_FORM = {
   memo: '',
 }
 
+const SHEET_TRANSITION_MS = 280
+const SHEET_OPEN_DELAY_MS = 24
+
 function normalizeTimePart(rawValue, maxValue) {
   const digitsOnly = rawValue.replace(/\D/g, '').slice(0, 2)
 
@@ -28,14 +33,44 @@ function normalizeTimePart(rawValue, maxValue) {
 }
 
 function ScheduleInputSheet({ open, form, onFormChange, onClose, onSave }) {
-  if (!open) {
+  const [shouldRender, setShouldRender] = useState(open)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    let timeoutId
+
+    if (open) {
+      setShouldRender(true)
+      setIsVisible(false)
+      timeoutId = window.setTimeout(() => {
+        setIsVisible(true)
+      }, SHEET_OPEN_DELAY_MS)
+    } else if (shouldRender) {
+      setIsVisible(false)
+      timeoutId = window.setTimeout(() => {
+        setShouldRender(false)
+      }, SHEET_TRANSITION_MS)
+    }
+
+    return () => {
+      if (typeof timeoutId === 'number') {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [open, shouldRender])
+
+  if (!shouldRender) {
     return null
   }
 
   return (
-    <div className="parent-schedule-action-overlay" role="presentation" onClick={onClose}>
+    <div
+      className={`parent-schedule-action-overlay parent-schedule-schedule-overlay ${isVisible ? 'is-open' : ''}`}
+      role="presentation"
+      onClick={onClose}
+    >
       <section
-        className="parent-schedule-schedule-sheet"
+        className={`parent-schedule-schedule-sheet ${isVisible ? 'is-open' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="일정 입력"
@@ -51,7 +86,6 @@ function ScheduleInputSheet({ open, form, onFormChange, onClose, onSave }) {
               value={form.title}
               onChange={(event) => onFormChange((prev) => ({ ...prev, title: event.target.value }))}
               placeholder="일정제목입력"
-              autoFocus
             />
           </label>
           <button type="button" className="parent-schedule-schedule-save" onClick={onSave}>
@@ -110,7 +144,7 @@ function ScheduleInputSheet({ open, form, onFormChange, onClose, onSave }) {
                   }))
                 }
                 onFocus={(event) => event.target.select()}
-                aria-label="시"
+                aria-label="시간"
               />
               <span className="parent-schedule-time-divider" aria-hidden="true" />
               <input

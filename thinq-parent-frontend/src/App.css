@@ -785,7 +785,7 @@
 .parent-mode-meet-title {
   margin: 0;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 19px;
   letter-spacing: -0.02em;
   color: #000000;
@@ -798,7 +798,7 @@
   margin: 0;
   transform: translateY(-50%);
   font-size: 1.25rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 23px;
   letter-spacing: -0.02em;
   color: #000000;
@@ -885,7 +885,7 @@
   margin: 0 0 0 auto;
   padding-left: 8px;
   font-size: 0.875rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 16px;
   letter-spacing: -0.02em;
   color: #000000;
@@ -1002,10 +1002,10 @@
 
 .cheer-message-card-title-row h2 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.2;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.2em;
   color: #000000;
 }
 
@@ -1024,7 +1024,7 @@
 }
 
 .cheer-message-progress {
-  margin-top: 30px;
+  margin-top: 18px;
 }
 
 .cheer-message-progress-track {
@@ -1088,7 +1088,7 @@
   margin-top: 30px;
   padding: 0 12px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 90px;
   background: #e75a5f;
   font: inherit;
   font-size: 0.75rem;
@@ -1108,7 +1108,7 @@
   margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 6px;
 }
 
 .parent-mode-card {
@@ -1143,7 +1143,7 @@
 .parent-mode-date {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.17;
   letter-spacing: -0.02em;
   color: #000000;
@@ -1154,7 +1154,7 @@
   position: relative;
   top: 4px;
   font-size: 0.8125rem;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: -0.02em;
   color: #000000;
 }
@@ -1229,7 +1229,7 @@
   gap: 8px;
   margin-top: 6px;
   font-size: 0.8125rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #000000;
@@ -1238,7 +1238,8 @@
 
 .parent-mode-todo-item > span:last-child {
   flex: 1;
-  text-align: right;
+  text-align: left;
+  margin-left: 10px;
 }
 
 
@@ -1248,6 +1249,7 @@
   width: 0;
   height: 0;
   margin: 0;
+  ;
 }
 
 .parent-mode-todo-check {
@@ -1277,7 +1279,7 @@
 /* 체크됨: 채워진 원 + 체크 표시 */
 .parent-mode-todo-checkbox:checked ~ .parent-mode-todo-check {
   background: #222222;
-  border-radius: 2px;
+  border-radius: 5px;
 }
 
 .parent-mode-todo-checkbox:checked ~ .parent-mode-todo-check::after {
@@ -1288,7 +1290,7 @@
 /* 체크 안 됨: 빈 사각형 테두리 */
 .parent-mode-todo-checkbox:not(:checked) ~ .parent-mode-todo-check {
   background: transparent;
-  border-radius: 2px;
+  border-radius: 5px;
 }
 
 .parent-mode-todo-checkbox:not(:checked) ~ .parent-mode-todo-check::after {
@@ -1455,10 +1457,19 @@
 /* 첫 화면 .bottom-nav-icon과 동일 크기 */
 .parent-mode-nav-icon {
   width: auto !important;
-  height: 24px !important;
+  height: 25px !important;
   max-width: none;
   display: block;
   object-fit: contain;
+}
+
+.parent-mode-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon,
+.my-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon,
+.community-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon,
+.mombti-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon,
+.parent-device-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon,
+.parent-device-routine-bottom-nav .parent-mode-nav-item:last-child .parent-mode-nav-icon {
+  height: 30px !important;
 }
 
 .parent-mode-nav-label {
@@ -1501,7 +1512,7 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: #feeeee;
+  background: #ebecef;
 }
 
 .parent-device-header {
@@ -1573,17 +1584,17 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
-  min-height: 116px;
+  gap: 14px;
+  min-height: 86px;
   padding: 18px 10px 18px 4px;
 }
 
 .parent-device-add-accent {
-  width: 13px;
-  height: 128px;
+  width: 5px;
+  height: 60px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff8284 0%, #ff6669 100%);
+  background: #8b85b5;
 }
 
 .parent-device-add-copy {
@@ -1597,7 +1608,7 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: #ff3336;
+  color: #8b85b5;
 }
 
 .parent-device-add-copy p {
@@ -1742,7 +1753,7 @@
 }
 
 .parent-device-info-card {
-  margin-top: 20px;
+  margin-top: 10px;
   min-height: 116px;
   padding: 26px 22px;
   background: #fcf9f8;
@@ -1773,12 +1784,12 @@
   right: 0;
   bottom: 0;
   height: 65px;
-  background: rgba(254, 238, 238, 0.78);
+  background: rgba(235, 236, 239, 0.78);
   pointer-events: none;
 }
 
 .parent-device-bottom-nav {
-  background: rgba(254, 238, 238, 0.92);
+  background: rgba(235, 236, 239, 0.92);
 }
 
 .parent-device-routine-screen {
@@ -1924,6 +1935,12 @@
   justify-content: center;
 }
 
+.parent-device-routine-card--first .parent-device-routine-card-image-wrap,
+.parent-device-routine-card--middle .parent-device-routine-card-image-wrap,
+.parent-device-routine-card--final .parent-device-routine-card-image-wrap {
+  top: 54px;
+}
+
 .parent-device-routine-card p {
   position: absolute;
   left: 50%;
@@ -1937,6 +1954,12 @@
   letter-spacing: 0;
   text-align: center;
   color: rgba(255, 255, 255, 0.94);
+}
+
+.parent-device-routine-card--first p,
+.parent-device-routine-card--middle p,
+.parent-device-routine-card--final p {
+  bottom: 18px;
 }
 
 .parent-device-routine-bottom-bar {
@@ -1976,7 +1999,7 @@
 
 .parent-device-routine-detail-content {
   position: absolute;
-  top: 122px;
+  top: 108px;
   left: 24px;
   right: 24px;
   bottom: 93px;
@@ -1995,7 +2018,7 @@
 
 .parent-device-routine-detail-copy h2 {
   margin: 0;
-  font-size: 2.25rem;
+  font-size: 1.4rem;
   font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.03em;
@@ -2003,7 +2026,7 @@
 
 .parent-device-routine-detail-copy p {
   margin: 4px 0 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 300;
   line-height: 1.2;
 }
@@ -2019,7 +2042,7 @@
 .parent-device-routine-detail-card {
   width: 313px;
   max-width: 100%;
-  margin-top: 70px;
+  margin-top: 20px;
   border-radius: 13px;
   background: #2d3134;
   box-shadow: 0 2px 4px rgba(255, 255, 255, 0.25);
@@ -2043,7 +2066,7 @@
 .parent-device-routine-detail-description {
   width: 302px;
   max-width: 100%;
-  margin-top: 38px;
+  margin-top: 28px;
   color: #ffffff;
 }
 
@@ -2061,11 +2084,12 @@
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.3334;
+  color: #ffffff;
 }
 
 .parent-device-routine-detail-description p {
-  margin: 0 0 16px;
-  font-size: 1rem;
+  margin: 0 0 5px;
+  font-size: 0.8rem;
   font-weight: 300;
   line-height: 1.35;
 }
@@ -2075,7 +2099,7 @@
   width: 313px;
   height: 35px;
   max-width: 100%;
-  margin-top: 50px;
+  margin-top: 25px;
   padding: 0;
   border: 1px solid rgba(216, 221, 255, 0.42);
   border-radius: 10px;
@@ -2129,7 +2153,7 @@
   }
 
   .parent-device-routine-detail-copy h2 {
-    font-size: 2rem;
+    font-size: 1.2rem;
   }
 
   .parent-device-routine-detail-card {
@@ -2176,8 +2200,18 @@
 }
 
 .chat-expert-page-header h1 {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
   font-size: var(--screen-header-title-font-size);
   font-weight: 700;
+  line-height: 1;
+}
+
+.chat-expert-page-header-subtitle {
+  font-size: 0.85em;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .chat-expert-content {
@@ -2220,7 +2254,7 @@
   position: relative;
   align-self: flex-start;
   width: fit-content;
-  max-width: calc(100% - 18px);
+  max-width: calc(100%);
   min-height: 0;
   padding: 10px 18px 12px;
   box-sizing: border-box;
@@ -2286,7 +2320,7 @@
 }
 
 .chat-expert-bubble-bot p {
-  font-size: 1.02rem;
+  font-size: 0.93rem;
 }
 
 .chat-expert-loading {
@@ -2927,8 +2961,8 @@
 
 .my-name-row h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: 1.1rem;
+  font-weight: 600;
   line-height: 1.15;
   color: #111111;
 }
@@ -2976,8 +3010,8 @@
 }
 
 .my-section-accent {
-  width: 4px;
-  height: 19px;
+  width: 3px;
+  height: 21px;
   border-radius: 999px;
   background: #ff4b4b;
   flex-shrink: 0;
@@ -3011,13 +3045,13 @@
 }
 
 .my-baby-card {
-  margin-top: 9px;
+  margin-top: 5px;
   min-height: 46px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   column-gap: 10px;
-  padding: 0 75px 0 0px;
+  padding: 0 40px 0 0px;
   border-radius: 13px;
   background: rgba(252, 249, 248, 0.9);
 }
@@ -3042,13 +3076,13 @@
 
 .my-baby-info strong,
 .my-baby-label {
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1.1875;
   letter-spacing: -0.02em;
 }
 
 .my-baby-label {
-  font-weight: 300;
+  font-weight: 600;
 }
 
 .my-baby-heart {
@@ -3071,7 +3105,7 @@
 
 .my-mombti-card {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 5px;
   display: grid;
   grid-template-columns: 151px 1fr;
   gap: 10px;
@@ -3126,7 +3160,7 @@
 }
 
 .my-diary-grid {
-  margin-top: 13px;
+  margin-top: 5px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
@@ -3206,7 +3240,7 @@
 
 .my-schedule-card,
 .my-todo-card {
-  margin-top: 13px;
+  margin-top: 5px;
   padding: 18px 18px 20px;
   border-radius: 13px;
   background: rgba(252, 249, 248, 0.9);
@@ -3260,8 +3294,8 @@
 }
 
 .my-schedule-month {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   line-height: 1.1875;
 }
 
@@ -3275,13 +3309,13 @@
 
 .my-schedule-day {
   font-size: 1.5rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1;
 }
 
 .my-schedule-weekday {
   font-size: 0.9rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.15;
   margin-top : 3px;
   align-self: flex-start;
@@ -3310,6 +3344,7 @@
 }
 
 .my-schedule-item strong {
+  color:#ffffff;
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: 0.15em;
@@ -3346,7 +3381,7 @@
 .my-todo-list {
   margin-top: 8px;
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 .child-screen-shell {
@@ -3569,6 +3604,11 @@
   background: #feeeee;
 }
 
+.cheer-message-screen .parent-mode-bottom-bar,
+.cheer-message-screen .parent-mode-bottom-nav {
+  background: #feeeee;
+}
+
 .parent-schedule-header {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 32px;
@@ -3776,6 +3816,8 @@
   cursor: pointer;
 }
 
+
+
 .parent-schedule-month-button:focus-visible {
   outline: 2px solid rgba(95, 81, 77, 0.22);
   outline-offset: 2px;
@@ -3915,9 +3957,9 @@
 }
 
 .parent-schedule-detail-date span {
-  padding-top: 2px;
-  font-size: 1rem;
-  font-weight: 300;
+  padding-top: 3px;
+  font-size: 0.85rem;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #000000;
@@ -3973,7 +4015,7 @@
 
 .parent-schedule-detail-title {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.4;
   letter-spacing: 0.05em;
 }
@@ -3997,7 +4039,7 @@
 .parent-schedule-detail-line span {
   align-self: baseline;
   font-size: 0.875rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: 0.05em;
 }
@@ -4189,7 +4231,7 @@
   align-items: center;
   gap: 14px;
   font-size: 0.875rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #000000;
@@ -4499,10 +4541,33 @@
   border-radius: 25px 25px 0 0;
   background: #ffffff;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(100%);
+  opacity: 0.98;
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease;
+  will-change: transform, opacity;
 }
 
 .parent-schedule-schedule-sheet::-webkit-scrollbar {
   display: none;
+}
+
+.parent-schedule-schedule-overlay {
+  padding-bottom: 0;
+  opacity: 0;
+  transition:
+    opacity 240ms ease,
+    background-color 240ms ease;
+}
+
+.parent-schedule-schedule-overlay.is-open {
+  opacity: 1;
+}
+
+.parent-schedule-schedule-sheet.is-open {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .parent-schedule-sheet-handle {
@@ -4736,7 +4801,7 @@
 }
 
 .community-tab-button {
-  height: 31px;
+  padding: 2px 0;
   border: 0;
   border-radius: 10px;
   background: transparent;
@@ -4748,6 +4813,8 @@
 }
 
 .community-tab-button.is-active {
+  width: calc(100% - 20px);
+  justify-self: center;
   background: rgba(250, 248, 240, 0.9);
   color: #575550;
 }
@@ -4889,8 +4956,8 @@
 
 .community-write-button svg,
 .community-write-button img {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
 }
 
 .community-keyword-menu {
@@ -4953,17 +5020,17 @@
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 14px;
+  gap: 8px;
 }
 
 .community-post-card,
 .community-empty-state {
-  border-radius: 18px;
+  border-radius: 8px;
   background: rgba(250, 248, 240, 0.9);
 }
 
 .community-post-card {
-  padding: 20px 23px 18px;
+  padding: 16px 23px 14px;
 }
 
 .community-post-card--button {
@@ -5014,6 +5081,8 @@
   font-size: 0.75rem;
   font-weight: 400;
   color: #f9f5ee;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .community-tag--mbti {
@@ -5022,10 +5091,16 @@
 
 .community-tag--board {
   background: #c599a5;
+  width: 48px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .community-tag--keyword {
   background: #c599a5;
+  width: 48px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .community-tag--outline {
@@ -5041,8 +5116,8 @@
 }
 
 .community-post-card h2 {
-  margin: 14px 0 8px;
-  font-size: 1.2rem;
+  margin: 10px 0 8px;
+  font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.2;
   color: #000000;
@@ -5052,28 +5127,19 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.4;
   color: #111111;
 }
 
 .community-post-meta {
   margin-top: 14px;
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 400;
   color: #111111;
 }
 
 .community-post-reactions {
   gap: 14px;
-}
-
-.community-post-author {
-  margin-left: 12px;
-  max-width: 42%;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .community-empty-state {
@@ -5085,7 +5151,7 @@
   display: block;
   margin-bottom: 6px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #111111;
 }
 
@@ -5116,15 +5182,15 @@
 
 .community-detail-card,
 .community-detail-meta-card {
-  border-radius: 24px;
+  border-radius: 8px;
 }
 .community-detail-card{
-  margin-bottom:30px;
+  margin-bottom:15px;
 }
 
 .community-detail-card {
   background: rgba(250, 248, 240, 0.9);
-  padding: 30px 20px 0;
+  padding: 20px 20px 0;
   margin-top: 30px;
 }
 
@@ -5136,8 +5202,8 @@
 }
 
 .community-detail-card-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
+  margin: 0 0 0 8px;
+  font-size: 1.1rem;
   font-weight: 700;
   line-height: 1.15;
   color: #000000;
@@ -5155,6 +5221,7 @@
 }
 
 .community-detail-author-name {
+  display: none;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.2;
@@ -5163,19 +5230,19 @@
 
 .community-detail-divider {
   height: 1px;
-  margin: 0 0 26px;
+  margin: 14px 0 15px;
   background: rgba(89, 84, 70, 0.55);
 }
 
 .community-detail-body {
-  min-height: 130px;
+  min-height: 0px;
 }
 
 .community-detail-body p {
-  margin: 0;
-  font-size: 1.0625rem;
+  margin: 0 0 0 5px;
+  font-size: 0.95rem;
   font-weight: 300;
-  line-height: 2.1;
+  line-height: 1.5;
   color: #000000;
   white-space: pre-wrap;
 }
@@ -5185,7 +5252,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   border-top: 10px solid transparent;
-  padding-bottom: 10px;
+  padding-bottom: 17px;
 }
 
 .community-detail-reaction-item {
@@ -5194,18 +5261,24 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 400;
+  background-color: #F3E8D6;
+  padding : 3px;
 }
 
 .community-detail-reaction-item strong {
   font-weight: 500;
 }
+.community-detail-reaction-item span,strong {
+  color: #4D4633;
+  
+}
 
 .community-detail-reaction-item img,
 .community-detail-reaction-item svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .community-detail-reaction-divider {
@@ -5216,7 +5289,7 @@
 
 .community-detail-meta-card {
   
-  padding: 18px 18px;
+  padding: 16px 18px;
   border: 1px solid #baad97;
   background: rgba(255, 255, 255, 0.52);
 }
@@ -5230,7 +5303,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 7px 16px;
   border-radius: 18px;
   border: 1px solid #d3c2ad;
   background: rgba(255, 255, 255, 0.7);
@@ -5267,7 +5340,7 @@
 
 .community-detail-comment-list {
   display: grid;
-  gap: 16px;
+  gap: 5px;
 }
 
 .community-detail-meta-top {
@@ -5287,6 +5360,11 @@
   gap: 6px;
 }
 
+.community-detail-comment-actions .pregnancy-diary-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .community-detail-meta-author {
   display: inline-flex;
   align-items: center;
@@ -5295,7 +5373,7 @@
 
 .community-detail-meta-author strong,
 .community-detail-time {
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1.2;
   color: #000000;
 }
@@ -5309,7 +5387,7 @@
 }
 
 .community-detail-meta-copy {
-  margin: 18px 0 0;
+  margin: 0 0 0 5px;
   font-size: 1rem;
   font-weight: 300;
   line-height: 1.6;
@@ -5373,8 +5451,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60px;
+  min-height: 44px;
   padding: 0;
+  text-align: center;
 }
 
 .community-detail-action-overlay {
@@ -5462,7 +5541,7 @@
 }
 
 .community-bottom-nav {
-  background: rgba(254, 238, 238, 0.96);
+  background:#edd5d8;
   z-index: 5;
 }
 
@@ -5773,7 +5852,7 @@
 .pregnancy-diary-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
