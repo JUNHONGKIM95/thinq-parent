@@ -44,7 +44,11 @@ async function completeMombtiAttempt(attemptId) {
     method: 'POST',
   })
 
-  return response.ok
+  if (!response.ok) {
+    return null
+  }
+
+  return response.json()
 }
 
 function MombtiQuestionCard({ question, selectedValue, onSelect }) {
@@ -131,13 +135,13 @@ function MombtiTestScreen({
       }
 
       if (isLastPage) {
-        const isCompleted = await completeMombtiAttempt(resolvedAttemptId)
+        const completedAttempt = await completeMombtiAttempt(resolvedAttemptId)
 
-        if (!isCompleted) {
+        if (!completedAttempt) {
           throw new Error(`Failed to complete attempt ${resolvedAttemptId}`)
         }
 
-        onComplete?.(answers)
+        onComplete?.(completedAttempt)
         return
       }
 

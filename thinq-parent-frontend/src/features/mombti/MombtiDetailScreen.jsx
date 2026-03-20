@@ -16,22 +16,6 @@ const NAV_ICONS = {
   my: parentModeMyIcon,
 }
 
-function highlightText(text, target) {
-  if (!target || !text.includes(target)) {
-    return text
-  }
-
-  const [before, after] = text.split(target)
-
-  return (
-    <>
-      {before}
-      <span className="mombti-highlight">{target}</span>
-      {after}
-    </>
-  )
-}
-
 function MombtiDetailScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, onOpenDevice, onOpenCommunity }) {
   return (
     <div className="mombti-screen-shell">
@@ -48,16 +32,8 @@ function MombtiDetailScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, onOpen
       <div className="mombti-content">
         <section className="mombti-panel">
           <div className="mombti-hero">
-            <div className="mombti-copy">
-              <span className="mombti-copy-accent" aria-hidden="true" />
-              <div>
-                <p className="mombti-type">{data.type}</p>
-                <p className="mombti-title">{data.title}</p>
-                <p className="mombti-subtitle">{highlightText(data.subtitle, data.subtitleHighlight)}</p>
-              </div>
-            </div>
-
-            <img src={data.image} alt={`${data.type} 유형 이미지`} className="mombti-hero-image" />
+            <img src={data.copyImage || data.image} alt={`${data.type} 왼쪽 이미지`} className="mombti-side-image" />
+            <img src={data.titleImage || data.image} alt={`${data.type} 결과 이미지`} className="mombti-hero-image" />
           </div>
 
           <section className="mombti-summary-box" aria-label="MomBTI 요약">
@@ -69,10 +45,11 @@ function MombtiDetailScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, onOpen
               <div className="mombti-bar-group" key={pair.leftKey}>
                 <div className="mombti-bar-labels">
                   <span>{pair.leftLabel}</span>
+                  <span>{`${Math.round(pair.activePercent)}%`}</span>
                   <span>{pair.rightLabel}</span>
                 </div>
                 <div
-                  className="mombti-bar-track"
+                  className={`mombti-bar-track ${pair.activeSide === 'right' ? 'is-right' : 'is-left'}`}
                   aria-label={`${pair.leftLabel} ${pair.leftValue}, ${pair.rightLabel} ${pair.rightValue}`}
                 >
                   <div className="mombti-bar-fill" style={{ width: `${pair.activePercent}%` }} />

@@ -53,7 +53,7 @@ import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
 import ParentDeviceRoutineScreen from './features/parent/ParentDeviceRoutineScreen'
 import ParentScheduleScreen from './features/parent/ParentScheduleScreen'
 import MyScreen from './features/my/MyScreen'
-import { buildMombtiViewModel } from './features/mombti/mombtiMapper'
+import { buildMombtiViewModel, buildMombtiViewModelFromAttempt } from './features/mombti/mombtiMapper'
 
 const HOME_NAME = '사용자 홈'
 
@@ -587,6 +587,18 @@ async function updateMyListCheckYn(myListId, checked) {
 }
 
 function getMombtiAttemptPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object') {
+    return payload.data
+  }
+
+  if (payload && typeof payload === 'object') {
+    return payload
+  }
+
+  return null
+}
+
+function getCompletedMombtiAttemptPayload(payload) {
   if (payload?.data && typeof payload.data === 'object') {
     return payload.data
   }
@@ -1279,6 +1291,9 @@ function App() {
   )
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
   const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
+  const [mombtiResultData, setMombtiResultData] = useState(() =>
+    buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
+  )
   const [isCreatingMombtiAttempt, setIsCreatingMombtiAttempt] = useState(false)
   const [childProfile, setChildProfile] = useState(mockChildProfile)
   const mombtiAttemptRequestRef = useRef(null)
@@ -1302,7 +1317,7 @@ function App() {
     },
   }
   const parentSchedule = mockParentSchedule
-  const mombti = buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
+  const mombti = mombtiResultData
 
   useEffect(() => {
     let isMounted = true
@@ -1612,6 +1627,17 @@ function App() {
     }
   }
 
+  const handleCompleteMombti = (completedAttemptPayload) => {
+    const completedAttempt = getCompletedMombtiAttemptPayload(completedAttemptPayload)
+
+    if (completedAttempt) {
+      setActiveMombtiAttempt(completedAttempt)
+      setMombtiResultData(buildMombtiViewModelFromAttempt(completedAttempt, mockMombtiMeta))
+    }
+
+    navigateToScreen('mombti')
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
@@ -1802,7 +1828,7 @@ function App() {
           <MombtiTestScreen
             onBack={goBack}
             onOpenMombtiMenu={openMombtiMenu}
-            onComplete={() => navigateToScreen('mombti')}
+            onComplete={handleCompleteMombti}
             attemptId={getMombtiAttemptId(activeMombtiAttempt)}
             onEnsureAttemptId={ensureMombtiAttemptId}
           />
