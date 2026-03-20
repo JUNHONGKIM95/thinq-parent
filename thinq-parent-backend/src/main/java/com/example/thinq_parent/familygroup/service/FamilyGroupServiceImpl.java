@@ -4,41 +4,38 @@ import com.example.thinq_parent.common.exception.DuplicateResourceException;
 import com.example.thinq_parent.common.exception.InvalidRequestException;
 import com.example.thinq_parent.common.exception.ResourceNotFoundException;
 import com.example.thinq_parent.familygroup.domain.FamilyGroup;
-import com.example.thinq_parent.familygroup.domain.FamilyGroupMember;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupCreateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupJoinRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupMemberResponse;
+import com.example.thinq_parent.familygroup.dto.FamilyGroupNameUpdateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupResponse;
-import com.example.thinq_parent.familygroup.repository.FamilyGroupMemberRepository;
 import com.example.thinq_parent.familygroup.repository.FamilyGroupRepository;
 import com.example.thinq_parent.user.domain.AppUser;
 import com.example.thinq_parent.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
 public class FamilyGroupServiceImpl implements FamilyGroupService {
 
 	private final FamilyGroupRepository familyGroupRepository;
-	private final FamilyGroupMemberRepository familyGroupMemberRepository;
 	private final UserRepository userRepository;
 	private final InviteCodeGenerator inviteCodeGenerator;
+	private final GroupPregnancySyncService groupPregnancySyncService;
 
 	public FamilyGroupServiceImpl(
 			FamilyGroupRepository familyGroupRepository,
-			FamilyGroupMemberRepository familyGroupMemberRepository,
 			UserRepository userRepository,
-			InviteCodeGenerator inviteCodeGenerator
+			InviteCodeGenerator inviteCodeGenerator,
+			GroupPregnancySyncService groupPregnancySyncService
 	) {
 		this.familyGroupRepository = familyGroupRepository;
-		this.familyGroupMemberRepository = familyGroupMemberRepository;
 		this.userRepository = userRepository;
 		this.inviteCodeGenerator = inviteCodeGenerator;
+		this.groupPregnancySyncService = groupPregnancySyncService;
 	}
 
 	@Override
@@ -54,8 +51,8 @@ public class FamilyGroupServiceImpl implements FamilyGroupService {
 		);
 
 		FamilyGroup savedGroup = familyGroupRepository.save(familyGroup);
-		addMemberIfNeeded(savedGroup.getGroupId(), request.userId());
-		syncGroupPregnancyInfo(savedGroup, owner);
+		owner.updateGroupId(savedGroup.getGroupId());
+		groupPregnancySyncService.syncGroupPregnancyInfo(savedGroup, owner);
 		return toResponse(savedGroup);
 	}
 
@@ -79,12 +76,23 @@ public class FamilyGroupServiceImpl implements FamilyGroupService {
 		FamilyGroup familyGroup = familyGroupRepository.findByInviteCode(request.inviteCode())
 				.orElseThrow(() -> new ResourceNotFoundException("Family group not found for inviteCode=" + request.inviteCode()));
 
-		if (familyGroupMemberRepository.existsByGroupIdAndUserId(familyGroup.getGroupId(), request.userId())) {
-			throw new DuplicateResourceException("User already joined this family group. userId=" + request.userId());
+		if (joinedUser.getGroupId() != null) {
+			if (joinedUser.getGroupId().equals(familyGroup.getGroupId())) {
+				throw new DuplicateResourceException("User already joined this family group. userId=" + request.userId());
+			}
+			throw new InvalidRequestException("User already belongs to another family group. userId=" + request.userId());
 		}
 
-		familyGroupMemberRepository.save(new FamilyGroupMember(familyGroup.getGroupId(), request.userId()));
-		syncGroupPregnancyInfo(familyGroup, joinedUser);
+		joinedUser.updateGroupId(familyGroup.getGroupId());
+		groupPregnancySyncService.syncGroupPregnancyInfo(familyGroup, joinedUser);
+		return toResponse(familyGroup);
+	}
+
+	@Override
+	@Transactional
+	public FamilyGroupResponse updateGroupName(Integer groupId, FamilyGroupNameUpdateRequest request) {
+		FamilyGroup familyGroup = getGroupById(groupId);
+		familyGroup.updateGroupName(request.groupName());
 		return toResponse(familyGroup);
 	}
 
@@ -99,18 +107,11 @@ public class FamilyGroupServiceImpl implements FamilyGroupService {
 	}
 
 	private String createUniqueInviteCode() {
-		// 초대코드는 공유 링크처럼 쓰이기 때문에 충돌이 나지 않도록 중복 검사를 통과할 때까지 새로 만든다.
 		String inviteCode = inviteCodeGenerator.generate();
 		while (familyGroupRepository.existsByInviteCode(inviteCode)) {
 			inviteCode = inviteCodeGenerator.generate();
 		}
 		return inviteCode;
-	}
-
-	private void addMemberIfNeeded(Integer groupId, Integer userId) {
-		if (!familyGroupMemberRepository.existsByGroupIdAndUserId(groupId, userId)) {
-			familyGroupMemberRepository.save(new FamilyGroupMember(groupId, userId));
-		}
 	}
 
 	private void validateOwnerCanCreateGroup(AppUser owner) {
@@ -120,58 +121,20 @@ public class FamilyGroupServiceImpl implements FamilyGroupService {
 		if (familyGroupRepository.existsByUserId(owner.getUserId())) {
 			throw new DuplicateResourceException("Each account can create only one family group. userId=" + owner.getUserId());
 		}
-	}
-
-	private void syncGroupPregnancyInfo(FamilyGroup familyGroup, AppUser fallbackUser) {
-		AppUser sourceUser = resolvePregnancyInfoSource(familyGroup, fallbackUser);
-		if (sourceUser == null) {
-			return;
+		if (owner.getGroupId() != null) {
+			throw new InvalidRequestException("User already belongs to a family group. userId=" + owner.getUserId());
 		}
-
-		List<Integer> memberUserIds = new ArrayList<>();
-		memberUserIds.add(familyGroup.getUserId());
-		familyGroupMemberRepository.findByGroupIdOrderByJoinedAtAsc(familyGroup.getGroupId())
-				.stream()
-				.map(FamilyGroupMember::getUserId)
-				.filter(userId -> !memberUserIds.contains(userId))
-				.forEach(memberUserIds::add);
-
-		for (Integer userId : memberUserIds) {
-			AppUser user = getUserById(userId);
-			user.updatePregnancyInfo(sourceUser.getBabyNickname(), sourceUser.getDueDate());
-		}
-	}
-
-	private AppUser resolvePregnancyInfoSource(FamilyGroup familyGroup, AppUser fallbackUser) {
-		AppUser owner = getUserById(familyGroup.getUserId());
-		if (hasPregnancyInfo(owner)) {
-			return owner;
-		}
-
-		AppUser memberSource = familyGroupMemberRepository.findByGroupIdOrderByJoinedAtAsc(familyGroup.getGroupId())
-				.stream()
-				.map(FamilyGroupMember::getUserId)
-				.filter(userId -> !Objects.equals(userId, familyGroup.getUserId()))
-				.map(this::getUserById)
-				.filter(this::hasPregnancyInfo)
-				.findFirst()
-				.orElse(null);
-
-		if (memberSource != null) {
-			return memberSource;
-		}
-
-		return hasPregnancyInfo(fallbackUser) ? fallbackUser : null;
-	}
-
-	private boolean hasPregnancyInfo(AppUser user) {
-		return user.getBabyNickname() != null || user.getDueDate() != null;
 	}
 
 	private FamilyGroupResponse toResponse(FamilyGroup familyGroup) {
-		List<FamilyGroupMemberResponse> members = familyGroupMemberRepository.findByGroupIdOrderByJoinedAtAsc(familyGroup.getGroupId())
+		List<FamilyGroupMemberResponse> members = userRepository.findByGroupIdOrderByCreatedAtAsc(familyGroup.getGroupId())
 				.stream()
-				.map(this::toMemberResponse)
+				.map(user -> new FamilyGroupMemberResponse(
+						user.getUserId(),
+						user.getUsername(),
+						user.getEmail(),
+						user.getCreatedAt()
+				))
 				.toList();
 
 		return new FamilyGroupResponse(
@@ -180,18 +143,8 @@ public class FamilyGroupServiceImpl implements FamilyGroupService {
 				familyGroup.getInviteCode(),
 				familyGroup.getUserId(),
 				familyGroup.getCreatedAt(),
-				familyGroupMemberRepository.countByGroupId(familyGroup.getGroupId()),
+				userRepository.countByGroupId(familyGroup.getGroupId()),
 				members
-		);
-	}
-
-	private FamilyGroupMemberResponse toMemberResponse(FamilyGroupMember member) {
-		AppUser user = getUserById(member.getUserId());
-		return new FamilyGroupMemberResponse(
-				user.getUserId(),
-				user.getUsername(),
-				user.getEmail(),
-				member.getJoinedAt()
 		);
 	}
 }

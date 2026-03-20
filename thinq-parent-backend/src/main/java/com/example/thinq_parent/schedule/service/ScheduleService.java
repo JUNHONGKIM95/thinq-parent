@@ -1,26 +1,26 @@
 package com.example.thinq_parent.schedule.service;
 
 import com.example.thinq_parent.schedule.dto.ScheduleCreateRequest;
+import com.example.thinq_parent.schedule.dto.SchedulePatchRequest;
 import com.example.thinq_parent.schedule.dto.ScheduleResponse;
-import com.example.thinq_parent.schedule.dto.ScheduleUpdateRequest;
+import com.example.thinq_parent.todo.dto.TodoScheduleCreateRequest;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ScheduleService {
 
 	ScheduleResponse create(ScheduleCreateRequest request);
 
-	List<ScheduleResponse> findAll();
-
 	ScheduleResponse findById(Integer scheduleId);
 
-	List<ScheduleResponse> findByUserId(Integer userId);
+	List<ScheduleResponse> findMonthlySchedules(Integer groupId, int year, int month);
 
-	List<ScheduleResponse> findByGroupId(Integer groupId);
+	List<ScheduleResponse> findDailySchedules(Integer groupId, LocalDate date);
 
-	ScheduleResponse findLatestDueDateByUserId(Integer userId);
+	ScheduleResponse createFromTodo(TodoScheduleCreateRequest request);
 
-	ScheduleResponse update(Integer scheduleId, ScheduleUpdateRequest request);
+	ScheduleResponse patch(Integer scheduleId, SchedulePatchRequest request);
 
 	void delete(Integer scheduleId);
 }

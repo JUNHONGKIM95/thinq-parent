@@ -11,7 +11,9 @@ public record UserResponse(
 		String username,
 		String babyNickname,
 		String role,
+		Integer groupId,
 		LocalDate dueDate,
+		Integer currentWeek,
 		LocalDateTime createdAt
 ) {
 
@@ -22,7 +24,9 @@ public record UserResponse(
 				user.getUsername(),
 				user.getBabyNickname(),
 				user.getRole(),
+				user.getGroupId(),
 				user.getDueDate(),
+				user.getCurrentWeek(),
 				user.getCreatedAt()
 		);
 	}

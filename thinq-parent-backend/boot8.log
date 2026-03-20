@@ -1,0 +1,27 @@
+
+C:\dev\thinq-parent\thinq-parent-backend>if "Windows_NT" == "Windows_NT" setlocal
+
+C:\dev\thinq-parent\thinq-parent-backend>set DIRNAME=C:\dev\thinq-parent\thinq-parent-backend\ 
+
+C:\dev\thinq-parent\thinq-parent-backend>if "C:\dev\thinq-parent\thinq-parent-backend\" == "" set DIRNAME=. 
+
+C:\dev\thinq-parent\thinq-parent-backend>set APP_BASE_NAME=gradlew 
+
+C:\dev\thinq-parent\thinq-parent-backend>set APP_HOME=C:\dev\thinq-parent\thinq-parent-backend\ 
+
+C:\dev\thinq-parent\thinq-parent-backend>for %i in ("C:\dev\thinq-parent\thinq-parent-backend\") do set APP_HOME=%~fi 
+
+C:\dev\thinq-parent\thinq-parent-backend>set APP_HOME=C:\dev\thinq-parent\thinq-parent-backend\ 
+
+C:\dev\thinq-parent\thinq-parent-backend>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+C:\dev\thinq-parent\thinq-parent-backend>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+C:\dev\thinq-parent\thinq-parent-backend>set JAVA_HOME=C:\Program Files\Java\jdk-25 
+
+C:\dev\thinq-parent\thinq-parent-backend>set JAVA_EXE=C:\Program Files\Java\jdk-25/bin/java.exe 
+
+C:\dev\thinq-parent\thinq-parent-backend>if exist "C:\Program Files\Java\jdk-25/bin/java.exe" goto execute 
+
+C:\dev\thinq-parent\thinq-parent-backend>"C:\Program Files\Java\jdk-25/bin/java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "C:\dev\thinq-parent\thinq-parent-backend\\gradle\wrapper\gradle-wrapper.jar" bootRun 
+^C

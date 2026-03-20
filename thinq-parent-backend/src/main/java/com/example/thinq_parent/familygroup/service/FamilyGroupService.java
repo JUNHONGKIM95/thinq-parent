@@ -2,6 +2,7 @@ package com.example.thinq_parent.familygroup.service;
 
 import com.example.thinq_parent.familygroup.dto.FamilyGroupCreateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupJoinRequest;
+import com.example.thinq_parent.familygroup.dto.FamilyGroupNameUpdateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupResponse;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface FamilyGroupService {
 	FamilyGroupResponse findById(Integer groupId);
 
 	FamilyGroupResponse join(FamilyGroupJoinRequest request);
+
+	FamilyGroupResponse updateGroupName(Integer groupId, FamilyGroupNameUpdateRequest request);
 }

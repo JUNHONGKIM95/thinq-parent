@@ -77,7 +77,7 @@ const settingCards = [
 
 const DEFAULT_PREGNANCY_SUMMARY = {
   meetingTitle: '틔움이 만나기',
-  daysUntilDueDate: 102,
+  daysUntilDueDate: 101,
   daysUntilDueDateText: '102일 전',
 }
 

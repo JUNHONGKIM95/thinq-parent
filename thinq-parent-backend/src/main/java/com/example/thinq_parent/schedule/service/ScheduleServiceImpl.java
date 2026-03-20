@@ -5,73 +5,77 @@ import com.example.thinq_parent.common.exception.ResourceNotFoundException;
 import com.example.thinq_parent.familygroup.repository.FamilyGroupRepository;
 import com.example.thinq_parent.schedule.domain.Schedule;
 import com.example.thinq_parent.schedule.dto.ScheduleCreateRequest;
-import com.example.thinq_parent.schedule.dto.ScheduleDdayInfo;
+import com.example.thinq_parent.schedule.dto.SchedulePatchRequest;
 import com.example.thinq_parent.schedule.dto.ScheduleResponse;
-import com.example.thinq_parent.schedule.dto.ScheduleUpdateRequest;
 import com.example.thinq_parent.schedule.repository.ScheduleRepository;
+import com.example.thinq_parent.todo.domain.Todo;
+import com.example.thinq_parent.todo.dto.TodoScheduleCreateRequest;
+import com.example.thinq_parent.todo.repository.TodoRepository;
 import com.example.thinq_parent.user.domain.AppUser;
 import com.example.thinq_parent.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
 public class ScheduleServiceImpl implements ScheduleService {
 
+	private static final String TYPE_BABY = "\uC544\uAE30";
+	private static final String TYPE_FAMILY = "\uAC00\uC871";
+	private static final String TYPE_WORK = "\uC77C";
+	private static final String TYPE_PERSONAL = "\uAC1C\uC778";
+	private static final String TYPE_IMPORTANT = "\uC911\uC694";
+	private static final String TYPE_ETC = "\uAE30\uD0C0";
+	private static final String DUE_DATE_TITLE = "\uCD9C\uC0B0 \uC608\uC815\uC77C";
+
+	private static final Set<String> SCHEDULE_TYPES = Set.of(
+			TYPE_BABY,
+			TYPE_FAMILY,
+			TYPE_WORK,
+			TYPE_PERSONAL,
+			TYPE_IMPORTANT,
+			TYPE_ETC
+	);
+
 	private final ScheduleRepository scheduleRepository;
 	private final FamilyGroupRepository familyGroupRepository;
 	private final UserRepository userRepository;
-	private final ScheduleDdayCalculator scheduleDdayCalculator;
-	private final Clock clock;
+	private final TodoRepository todoRepository;
 
 	public ScheduleServiceImpl(
 			ScheduleRepository scheduleRepository,
 			FamilyGroupRepository familyGroupRepository,
 			UserRepository userRepository,
-			ScheduleDdayCalculator scheduleDdayCalculator,
-			Clock clock
+			TodoRepository todoRepository
 	) {
 		this.scheduleRepository = scheduleRepository;
 		this.familyGroupRepository = familyGroupRepository;
 		this.userRepository = userRepository;
-		this.scheduleDdayCalculator = scheduleDdayCalculator;
-		this.clock = clock;
+		this.todoRepository = todoRepository;
 	}
 
 	@Override
 	@Transactional
 	public ScheduleResponse create(ScheduleCreateRequest request) {
-		validateScheduleDates(request.startDate(), request.endDate());
-		validateGroupId(request.groupId());
-		AppUser user = getUserById(request.userId());
+		AppUser user = validateGroupMember(request.groupId(), request.userId());
+		validateScheduleType(request.scheduleType());
 
-		LocalDateTime startDate = request.startDate() != null ? request.startDate() : LocalDateTime.now(clock);
-		// startDate가 비어 있으면 생성 시각을 시작 시각으로 저장해서 화면에서 바로 정렬 기준으로 쓸 수 있게 한다.
 		Schedule schedule = new Schedule(
 				request.groupId(),
-				request.userId(),
-				null,
+				user.getUserId(),
 				request.title(),
-				startDate,
-				request.endDate()
+				request.memo(),
+				normalizeValue(request.scheduleType()),
+				request.scheduleDate(),
+				request.time()
 		);
 
-		Schedule savedSchedule = scheduleRepository.save(schedule);
-		syncUserDueDate(user, request.endDate().toLocalDate());
-		return toResponse(savedSchedule);
-	}
-
-	@Override
-	public List<ScheduleResponse> findAll() {
-		return scheduleRepository.findAll()
-				.stream()
-				.map(this::toResponse)
-				.toList();
+		return toResponse(scheduleRepository.save(schedule));
 	}
 
 	@Override
@@ -80,47 +84,69 @@ public class ScheduleServiceImpl implements ScheduleService {
 	}
 
 	@Override
-	public List<ScheduleResponse> findByUserId(Integer userId) {
-		return scheduleRepository.findByUserIdOrderByCreatedAtDesc(userId)
+	public List<ScheduleResponse> findMonthlySchedules(Integer groupId, int year, int month) {
+		validateGroupId(groupId);
+		LocalDate startDate = LocalDate.of(year, month, 1);
+		LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+		return scheduleRepository.findByGroupIdAndScheduleDateBetweenOrderByScheduleDateAscTimeAsc(groupId, startDate, endDate)
 				.stream()
 				.map(this::toResponse)
 				.toList();
 	}
 
 	@Override
-	public List<ScheduleResponse> findByGroupId(Integer groupId) {
-		return scheduleRepository.findByGroupIdOrderByCreatedAtDesc(groupId)
+	public List<ScheduleResponse> findDailySchedules(Integer groupId, LocalDate date) {
+		validateGroupId(groupId);
+		return scheduleRepository.findByGroupIdAndScheduleDateOrderByTimeAsc(groupId, date)
 				.stream()
 				.map(this::toResponse)
 				.toList();
-	}
-
-	@Override
-	public ScheduleResponse findLatestDueDateByUserId(Integer userId) {
-		getUserById(userId);
-		Schedule schedule = scheduleRepository.findFirstByUserIdAndEndDateIsNotNullOrderByCreatedAtDesc(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("Schedule not found for userId=" + userId));
-		return toResponse(schedule);
 	}
 
 	@Override
 	@Transactional
-	public ScheduleResponse update(Integer scheduleId, ScheduleUpdateRequest request) {
-		validateScheduleDates(request.startDate(), request.endDate());
-		Schedule schedule = getScheduleById(scheduleId);
-		validateGroupId(request.groupId());
-		AppUser user = getUserById(request.userId());
+	public ScheduleResponse createFromTodo(TodoScheduleCreateRequest request) {
+		AppUser user = validateGroupMember(request.groupId(), request.userId());
+		Todo todo = todoRepository.findById(request.todoId())
+				.orElseThrow(() -> new ResourceNotFoundException("Todo not found. todoId=" + request.todoId()));
 
-		LocalDateTime startDate = request.startDate() != null ? request.startDate() : schedule.getStartDate();
-		schedule.update(
+		String memo = request.memo() != null && !request.memo().isBlank()
+				? request.memo()
+				: todo.getDescription();
+
+		Schedule schedule = new Schedule(
 				request.groupId(),
-				request.userId(),
-				request.title(),
-				startDate,
-				request.endDate()
+				user.getUserId(),
+				todo.getTodoName(),
+				memo,
+				TYPE_BABY,
+				request.scheduleDate(),
+				request.time()
 		);
 
-		syncUserDueDate(user, request.endDate().toLocalDate());
+		return toResponse(scheduleRepository.save(schedule));
+	}
+
+	@Override
+	@Transactional
+	public ScheduleResponse patch(Integer scheduleId, SchedulePatchRequest request) {
+		Schedule schedule = getScheduleById(scheduleId);
+		validateEditableSchedule(schedule);
+
+		String title = mergeString(request.title(), schedule.getTitle());
+		String memo = mergeNullableString(request.memo(), schedule.getMemo());
+		String scheduleType = mergeString(request.scheduleType(), schedule.getScheduleType());
+		LocalDate scheduleDate = request.scheduleDate() != null ? request.scheduleDate() : schedule.getScheduleDate();
+		LocalTime time = request.time() != null ? request.time() : schedule.getTime();
+		validateScheduleType(scheduleType);
+
+		schedule.updateTitle(title);
+		schedule.updateMemo(memo);
+		schedule.updateScheduleDate(scheduleDate);
+		schedule.updateTime(time);
+		schedule.updateScheduleType(scheduleType);
+
 		return toResponse(schedule);
 	}
 
@@ -128,10 +154,8 @@ public class ScheduleServiceImpl implements ScheduleService {
 	@Transactional
 	public void delete(Integer scheduleId) {
 		Schedule schedule = getScheduleById(scheduleId);
-		Integer userId = schedule.getUserId();
-
+		validateEditableSchedule(schedule);
 		scheduleRepository.delete(schedule);
-		refreshUserDueDate(userId);
 	}
 
 	private Schedule getScheduleById(Integer scheduleId) {
@@ -139,53 +163,65 @@ public class ScheduleServiceImpl implements ScheduleService {
 				.orElseThrow(() -> new ResourceNotFoundException("Schedule not found. scheduleId=" + scheduleId));
 	}
 
-	private AppUser getUserById(Integer userId) {
-		return userRepository.findById(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("User not found. userId=" + userId));
-	}
-
-	private void validateScheduleDates(LocalDateTime startDate, LocalDateTime endDate) {
-		if (startDate != null && endDate.isBefore(startDate)) {
-			throw new InvalidRequestException("endDate must be after startDate");
-		}
-	}
-
 	private void validateGroupId(Integer groupId) {
-		// DB 외래키 에러까지 가지 않도록 schedules 저장 전에 family_groups 존재 여부를 먼저 확인한다.
 		if (!familyGroupRepository.existsById(groupId)) {
 			throw new ResourceNotFoundException("Family group not found. groupId=" + groupId);
 		}
 	}
 
-	private ScheduleResponse toResponse(Schedule schedule) {
-		ScheduleDdayInfo ddayInfo = scheduleDdayCalculator.calculate(schedule.getEndDate());
-		LocalDate dueDate = schedule.getEndDate() == null ? null : schedule.getEndDate().toLocalDate();
+	private AppUser validateGroupMember(Integer groupId, Integer userId) {
+		validateGroupId(groupId);
+		AppUser user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("User not found. userId=" + userId));
+		if (user.getGroupId() == null || !user.getGroupId().equals(groupId)) {
+			throw new InvalidRequestException("User is not a member of the requested group. userId=" + userId);
+		}
+		return user;
+	}
 
+	private void validateEditableSchedule(Schedule schedule) {
+		if (isAutoDueDateSchedule(schedule)) {
+			throw new InvalidRequestException("Due date schedules are managed automatically and cannot be edited manually.");
+		}
+	}
+
+	private void validateScheduleType(String scheduleType) {
+		if (scheduleType == null || scheduleType.isBlank()) {
+			throw new InvalidRequestException("scheduleType is required");
+		}
+		if (!SCHEDULE_TYPES.contains(scheduleType)) {
+			throw new InvalidRequestException("scheduleType must be one of \uC544\uAE30, \uAC00\uC871, \uC77C, \uAC1C\uC778, \uC911\uC694, \uAE30\uD0C0");
+		}
+	}
+
+	private boolean isAutoDueDateSchedule(Schedule schedule) {
+		return DUE_DATE_TITLE.equals(schedule.getTitle())
+				&& TYPE_IMPORTANT.equals(schedule.getScheduleType());
+	}
+
+	private String normalizeValue(String value) {
+		return value == null || value.isBlank() ? null : value;
+	}
+
+	private String mergeString(String newValue, String currentValue) {
+		return newValue == null || newValue.isBlank() ? currentValue : newValue;
+	}
+
+	private String mergeNullableString(String newValue, String currentValue) {
+		return newValue == null ? currentValue : (newValue.isBlank() ? currentValue : newValue);
+	}
+
+	private ScheduleResponse toResponse(Schedule schedule) {
 		return new ScheduleResponse(
 				schedule.getScheduleId(),
 				schedule.getGroupId(),
 				schedule.getUserId(),
 				schedule.getTitle(),
-				schedule.getStartDate(),
-				schedule.getEndDate(),
-				schedule.getCreatedAt(),
-				dueDate,
-				ddayInfo.daysFromToday(),
-				ddayInfo.dDay()
+				schedule.getMemo(),
+				schedule.getScheduleType(),
+				schedule.getScheduleDate(),
+				schedule.getTime(),
+				schedule.getCreatedAt()
 		);
-	}
-
-	private void syncUserDueDate(AppUser user, LocalDate dueDate) {
-		// 사용자 테이블의 due_date도 같이 맞춰 두면 사용자 조회 API에서도 동일한 출산 예정일을 사용할 수 있다.
-		user.updateDueDate(dueDate);
-	}
-
-	private void refreshUserDueDate(Integer userId) {
-		AppUser user = getUserById(userId);
-		LocalDate dueDate = scheduleRepository.findFirstByUserIdAndEndDateIsNotNullOrderByCreatedAtDesc(userId)
-				.map(Schedule::getEndDate)
-				.map(LocalDateTime::toLocalDate)
-				.orElse(null);
-		user.updateDueDate(dueDate);
 	}
 }
