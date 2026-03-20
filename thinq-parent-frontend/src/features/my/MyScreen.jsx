@@ -52,25 +52,6 @@ function PlusIcon() {
   )
 }
 
-function CheckIcon({ checked }) {
-  return (
-    <span className={`my-todo-check ${checked ? 'is-checked' : 'is-unchecked'}`} aria-hidden="true">
-      {checked ? (
-        <svg viewBox="0 0 16 16">
-          <path
-            d="m4 8.3 2.2 2.2L12 4.8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ) : null}
-    </span>
-  )
-}
-
 const NAV_ITEMS = [
   { key: 'home', label: '홈', icon: parentModeHomeIcon },
   { key: 'device', label: '가전육아', icon: parentModeDeviceIcon },
@@ -91,6 +72,7 @@ function MyScreen({
   onOpenDiaryWrite,
   onOpenSchedule,
   onSaveBabyNickname,
+  onToggleTodayTodo,
 }) {
   const hasScheduleItems = data.schedule.items.length > 0
   const [isScheduleInputSheetOpen, setIsScheduleInputSheetOpen] = useState(false)
@@ -343,17 +325,23 @@ function MyScreen({
         </section>
 
         <section className="my-section my-section--todo">
-          <div className="my-todo-card">
-            <div className="my-todo-head">
-              <strong>TO DO</strong>
+          <div className="my-todo-card parent-mode-card parent-mode-todo">
+            <div className="parent-mode-todo-head">
+              <h3>TO DO</h3>
             </div>
 
             <div className="my-todo-list">
               {data.todo.items.map((item) => (
-                <div key={item.key} className="my-todo-item">
-                  <CheckIcon checked={item.checked} />
+                <label key={item.key} className="parent-mode-todo-item">
+                  <input
+                    type="checkbox"
+                    className="parent-mode-todo-checkbox"
+                    checked={Boolean(item.checked)}
+                    onChange={() => onToggleTodayTodo?.(item)}
+                  />
+                  <span className="parent-mode-todo-check" aria-hidden="true" />
                   <span>{item.text}</span>
-                </div>
+                </label>
               ))}
             </div>
           </div>

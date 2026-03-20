@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import commentReactionIcon from '@shared-assets/srg/fi-rr-comment.svg'
 import heartReactionIcon from '@shared-assets/srg/fi-rr-heart.svg'
@@ -12,6 +12,7 @@ import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
+import { API_BASE_URL } from '../../config/api'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -71,109 +72,185 @@ const NAV_ITEMS = [
 ]
 
 const TAB_ITEMS = [
-  { key: 'all', label: '전체' },
-  { key: 'pregnancy-talk', label: '임신 수다' },
-  { key: 'info-concern', label: '정보/고민' },
+  { key: 'all', label: '전체', boardId: null },
+  { key: 'pregnancy-talk', label: '임신 수다', boardId: 0 },
+  { key: 'info-concern', label: '정보/고민', boardId: 1 },
 ]
 
-const KEYWORD_ITEMS = ['증상기록', '아기상태', '진료정보', '건강관리', '출산준비', '사회지원', '감정기록']
-
-const BASE_POSTS = [
-  {
-    category: 'pregnancy-talk',
-    boardName: '임신 수다',
-    title: '입덧이 심한 날은 다들 어떻게 버티세요?',
-    excerpt: '오늘은 유난히 속이 울렁거려서 쉬엄쉬엄 보내고 있어요.',
-    keyword: '증상기록',
-    isMomBtiMatch: true,
-  },
-  {
-    category: 'pregnancy-talk',
-    boardName: '임신 수다',
-    title: '아기 태동 느껴진 날부터 기록하는 중이에요',
-    excerpt: '비슷한 시기 분들은 언제부터 자주 느끼셨어요?',
-    keyword: '아기상태',
-    isMomBtiMatch: false,
-  },
-  {
-    category: 'info-concern',
-    boardName: '정보/고민',
-    title: '정기 검진 전 준비하면 좋은 체크리스트 있을까요?',
-    excerpt: '질문 메모해두면 진료실에서 덜 긴장되더라고요.',
-    keyword: '진료정보',
-    isMomBtiMatch: true,
-  },
-  {
-    category: 'info-concern',
-    boardName: '정보/고민',
-    title: '철분제 먹는 시간대 다들 어떻게 잡으세요?',
-    excerpt: '속 불편함이 덜한 루틴이 있으면 참고하고 싶어요.',
-    keyword: '건강관리',
-    isMomBtiMatch: true,
-  },
-  {
-    category: 'info-concern',
-    boardName: '정보/고민',
-    title: '출산 가방은 몇 주차부터 챙기기 시작했나요?',
-    excerpt: '빠뜨리기 쉬운 준비물이 있으면 같이 알려주세요.',
-    keyword: '출산준비',
-    isMomBtiMatch: false,
-  },
+const KEYWORD_OPTIONS = [
+  { id: 1, label: '증상기록' },
+  { id: 2, label: '아기상태' },
+  { id: 3, label: '진료정보' },
+  { id: 4, label: '건강관리' },
+  { id: 5, label: '출산준비' },
+  { id: 6, label: '사회지원' },
+  { id: 7, label: '감정기록' },
 ]
-
-const COMMUNITY_POSTS = Array.from({ length: 25 }, (_, index) => {
-  const basePost = BASE_POSTS[index % BASE_POSTS.length]
-
-  return {
-    key: `community-post-${index + 1}`,
-    ...basePost,
-    likes: 3 + (index % 4),
-    comments: index % 3,
-    timeAgo: `${(index % 5) + 1}분전`,
-  }
-})
 
 const POSTS_PER_PAGE = 5
 
-function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWrite, canWrite = true }) {
+function normalizeString(value) {
+  return String(value ?? '').trim()
+}
+
+function normalizeNumber(value) {
+  const parsedValue = Number.parseInt(String(value ?? '').trim(), 10)
+  return Number.isFinite(parsedValue) ? parsedValue : null
+}
+
+function getCommunityPostsPayload(payload) {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items
+  }
+
+  if (Array.isArray(payload?.data?.items)) {
+    return payload.data.items
+  }
+
+  return []
+}
+
+function getBoardLabel(post) {
+  const boardId = normalizeNumber(post?.boardId ?? post?.board_id)
+
+  if (boardId === 0) {
+    return '임신 수다'
+  }
+
+  if (boardId === 1) {
+    return '정보/고민'
+  }
+
+  return normalizeString(post?.boardName ?? post?.board_name) || '임신 수다'
+}
+
+function getMombtiLabel(post) {
+  return normalizeString(post?.authorMombtiResultType ?? post?.author_mombti_result_type) || 'MBTI'
+}
+
+function mapCommunityPost(post, index) {
+  const postId = post?.postId ?? post?.post_id ?? index
+  const title = normalizeString(post?.title)
+  const content =
+    normalizeString(post?.contentPreview ?? post?.content_preview) || normalizeString(post?.content)
+
+  return {
+    key: `community-post-${postId}`,
+    postId,
+    mbtiLabel: getMombtiLabel(post),
+    boardLabel: getBoardLabel(post),
+    title,
+    content,
+    likeCount: normalizeNumber(post?.likeCount ?? post?.like_count) ?? 0,
+    commentCount: normalizeNumber(post?.commentCount ?? post?.comment_count) ?? 0,
+    elapsedTimeText: normalizeString(post?.elapsedTimeText ?? post?.elapsed_time_text),
+  }
+}
+
+async function fetchCommunityPosts({ boardId, keywordId, sameMombtiOnly, userId }) {
+  const query = new URLSearchParams()
+
+  if (boardId !== null && boardId !== undefined) {
+    query.set('boardId', String(boardId))
+  }
+
+  if (keywordId !== null && keywordId !== undefined) {
+    query.set('keywordId', String(keywordId))
+  }
+
+  if (sameMombtiOnly) {
+    query.set('sameMombtiOnly', 'true')
+
+    if (userId !== null && userId !== undefined) {
+      query.set('userId', String(userId))
+    }
+  }
+
+  const queryString = query.toString()
+  const url = `${API_BASE_URL}/api/v1/community/posts${queryString ? `?${queryString}` : ''}`
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch community posts: ${response.status}`)
+  }
+
+  const payload = await response.json()
+  return getCommunityPostsPayload(payload).map(mapCommunityPost)
+}
+
+function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWrite, canWrite = true }) {
   const [selectedTab, setSelectedTab] = useState('all')
-  const [isMomBtiOnly, setIsMomBtiOnly] = useState(true)
-  const [selectedKeyword, setSelectedKeyword] = useState('')
+  const [isMomBtiOnly, setIsMomBtiOnly] = useState(false)
+  const [selectedKeywordId, setSelectedKeywordId] = useState(null)
   const [isKeywordMenuOpen, setIsKeywordMenuOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [posts, setPosts] = useState([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false)
 
-  const filteredPosts = useMemo(() => {
-    return COMMUNITY_POSTS.filter((post) => {
-      if (selectedTab !== 'all' && post.category !== selectedTab) {
-        return false
-      }
+  const selectedKeywordOption = KEYWORD_OPTIONS.find((item) => item.id === selectedKeywordId) ?? null
+  const selectedBoardId = TAB_ITEMS.find((item) => item.key === selectedTab)?.boardId ?? null
 
-      if (isMomBtiOnly && !post.isMomBtiMatch) {
-        return false
-      }
+  useEffect(() => {
+    let isMounted = true
 
-      if (selectedTab === 'info-concern' && selectedKeyword && post.keyword !== selectedKeyword) {
-        return false
-      }
+    setIsLoadingPosts(true)
 
-      return true
+    fetchCommunityPosts({
+      boardId: selectedBoardId,
+      keywordId: selectedKeywordId,
+      sameMombtiOnly: isMomBtiOnly,
+      userId,
     })
-  }, [isMomBtiOnly, selectedKeyword, selectedTab])
+      .then((nextPosts) => {
+        if (!isMounted) {
+          return
+        }
 
-  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
-  const pagedPosts = filteredPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE)
+        setPosts(nextPosts)
+      })
+      .catch((error) => {
+        console.error(error)
+
+        if (!isMounted) {
+          return
+        }
+
+        setPosts([])
+      })
+      .finally(() => {
+        if (!isMounted) {
+          return
+        }
+
+        setIsLoadingPosts(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [isMomBtiOnly, selectedBoardId, selectedKeywordId, userId])
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [isMomBtiOnly, selectedKeyword, selectedTab])
+  }, [isMomBtiOnly, selectedKeywordId, selectedTab])
+
+  const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE))
+  const pagedPosts = posts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE)
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
 
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages)
     }
   }, [currentPage, totalPages])
-
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
 
   return (
     <div className="community-screen">
@@ -216,25 +293,25 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
                 aria-expanded={isKeywordMenuOpen}
                 aria-haspopup="listbox"
               >
-                <span>{selectedKeyword || '검색 키워드'}</span>
+                <span>{selectedKeywordOption?.label || '검색 키워드'}</span>
                 <SearchIcon />
               </button>
 
               {isKeywordMenuOpen ? (
                 <div className="community-keyword-menu" role="listbox" aria-label="검색 키워드 선택">
-                  {KEYWORD_ITEMS.map((item) => (
+                  {KEYWORD_OPTIONS.map((item) => (
                     <button
-                      key={item}
+                      key={item.id}
                       type="button"
                       role="option"
-                      aria-selected={selectedKeyword === item}
-                      className={`community-keyword-item ${selectedKeyword === item ? 'is-active' : ''}`}
+                      aria-selected={selectedKeywordId === item.id}
+                      className={`community-keyword-item ${selectedKeywordId === item.id ? 'is-active' : ''}`}
                       onClick={() => {
-                        setSelectedKeyword((currentKeyword) => (currentKeyword === item ? '' : item))
+                        setSelectedKeywordId((currentKeywordId) => (currentKeywordId === item.id ? null : item.id))
                         setIsKeywordMenuOpen(false)
                       }}
                     >
-                      {selectedKeyword === item ? (
+                      {selectedKeywordId === item.id ? (
                         <img
                           src={keywordActiveBackground}
                           alt=""
@@ -242,7 +319,7 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
                           aria-hidden="true"
                         />
                       ) : null}
-                      <span className="community-keyword-item-label">{item}</span>
+                      <span className="community-keyword-item-label">{item.label}</span>
                     </button>
                   ))}
                 </div>
@@ -255,7 +332,7 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
               aria-pressed={isMomBtiOnly}
               onClick={() => setIsMomBtiOnly((prev) => !prev)}
             >
-              <span>내 MomBTI만</span>
+              <span>같은 MomBTI만</span>
               <img
                 src={isMomBtiOnly ? toggleOnIcon : toggleOffIcon}
                 alt=""
@@ -283,37 +360,41 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
         ) : null}
 
         <div className="community-post-list">
-          {pagedPosts.length ? (
+          {isLoadingPosts ? (
+            <div className="community-empty-state">
+              <strong>게시글을 불러오는 중이에요.</strong>
+            </div>
+          ) : pagedPosts.length ? (
             pagedPosts.map((post) => (
-              <article className="community-post-card" key={post.key}>
+              <article className="community-post-card" key={post.key} data-post-id={post.postId}>
                 <div className="community-post-topline">
                   <div className="community-post-tags">
-                    <span className="community-tag community-tag--mbti">MBTI</span>
-                    <span className="community-tag community-tag--board">{post.boardName}</span>
+                    <span className="community-tag community-tag--mbti">{post.mbtiLabel}</span>
+                    <span className="community-tag community-tag--board">{post.boardLabel}</span>
                   </div>
                 </div>
 
                 <h2>{post.title}</h2>
-                <p>{post.excerpt}</p>
+                <p>{post.content}</p>
 
                 <div className="community-post-meta">
                   <div className="community-post-reactions">
                     <span>
                       <HeartIcon />
-                      {post.likes}
+                      {post.likeCount}
                     </span>
                     <span>
                       <CommentIcon />
-                      {post.comments}
+                      {post.commentCount}
                     </span>
                   </div>
-                  <span>{post.timeAgo}</span>
+                  <span>{post.elapsedTimeText}</span>
                 </div>
               </article>
             ))
           ) : (
             <div className="community-empty-state">
-              <strong>조건에 맞는 글이 아직 없어요.</strong>
+              <strong>조건에 맞는 게시글이 아직 없어요.</strong>
               <p>필터를 조금만 바꾸면 더 많은 게시글을 볼 수 있어요.</p>
             </div>
           )}
@@ -368,7 +449,13 @@ function CommunityScreen({ onBack, onOpenHome, onOpenDevice, onOpenMy, onOpenWri
       <nav className="parent-mode-bottom-nav community-bottom-nav" aria-label="커뮤니티 하단 메뉴">
         {NAV_ITEMS.map((item) => {
           const handleClick =
-            item.key === 'home' ? onOpenHome : item.key === 'device' ? onOpenDevice : item.key === 'my' ? onOpenMy : undefined
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'my'
+                  ? onOpenMy
+                  : undefined
 
           return (
             <button

@@ -47,6 +47,7 @@ import PregnancyDiaryScreen from './features/diary/PregnancyDiaryScreen'
 import PregnancyDiaryWriteScreen from './features/diary/PregnancyDiaryWriteScreen'
 import ChildProfileScreen from './features/my/ChildProfileScreen'
 import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
+import MombtiLatestResultScreen from './features/mombti/MombtiLatestResultScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
 import MombtiTestScreen from './features/mombti/MombtiTestScreen'
 import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
@@ -610,6 +611,39 @@ function getCompletedMombtiAttemptPayload(payload) {
   return null
 }
 
+function normalizeMombtiAttemptStatus(value) {
+  return String(value ?? '').trim().toUpperCase()
+}
+
+function getMombtiAttemptCompletedAt(attempt) {
+  return attempt?.completedAt ?? attempt?.completed_at ?? null
+}
+
+function isCompletedMombtiAttempt(attempt) {
+  return normalizeMombtiAttemptStatus(attempt?.status) === 'COMPLETED' && Boolean(getMombtiAttemptCompletedAt(attempt))
+}
+
+function getLatestCompletedMombtiAttemptFromPayload(payload) {
+  const rawValue = payload?.data ?? payload
+  const attempts = Array.isArray(rawValue)
+    ? rawValue
+    : Array.isArray(rawValue?.items)
+      ? rawValue.items
+      : Array.isArray(rawValue?.attempts)
+        ? rawValue.attempts
+        : rawValue
+          ? [rawValue]
+          : []
+
+  return attempts
+    .filter(isCompletedMombtiAttempt)
+    .sort((first, second) => {
+      const firstTime = new Date(getMombtiAttemptCompletedAt(first) ?? 0).getTime()
+      const secondTime = new Date(getMombtiAttemptCompletedAt(second) ?? 0).getTime()
+      return secondTime - firstTime
+    })[0] ?? null
+}
+
 function getMombtiAttemptId(attempt) {
   return attempt?.attemptId ?? attempt?.attempt_id ?? attempt?.id ?? null
 }
@@ -633,6 +667,24 @@ async function createMombtiAttempt(userId) {
 
     const payload = await response.json()
     return getMombtiAttemptPayload(payload)
+  } catch {
+    return null
+  }
+}
+
+async function fetchLatestCompletedMombtiAttempt(userId) {
+  try {
+    const query = new URLSearchParams({
+      userId: String(userId),
+    })
+    const response = await fetch(`${API_BASE_URL}/api/v1/mombti/attempts/latest?${query.toString()}`)
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    return getLatestCompletedMombtiAttemptFromPayload(payload)
   } catch {
     return null
   }
@@ -1294,6 +1346,7 @@ function App() {
   const [mombtiResultData, setMombtiResultData] = useState(() =>
     buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
   )
+  const [latestMombtiResultData, setLatestMombtiResultData] = useState(null)
   const [isCreatingMombtiAttempt, setIsCreatingMombtiAttempt] = useState(false)
   const [childProfile, setChildProfile] = useState(mockChildProfile)
   const mombtiAttemptRequestRef = useRef(null)
@@ -1318,6 +1371,7 @@ function App() {
   }
   const parentSchedule = mockParentSchedule
   const mombti = mombtiResultData
+  const latestMombti = latestMombtiResultData ?? mombtiResultData
 
   useEffect(() => {
     let isMounted = true
@@ -1507,8 +1561,16 @@ function App() {
     navigateToScreen('mombti-menu')
   }
 
-  const openMombtiResult = () => {
-    navigateToScreen('mombti')
+  const openMombtiResult = async () => {
+    const latestCompletedAttempt = await fetchLatestCompletedMombtiAttempt(currentUserId)
+
+    if (!latestCompletedAttempt) {
+      window.alert('완료된 최근 검사 결과가 없어요.')
+      return
+    }
+
+    setLatestMombtiResultData(buildMombtiViewModelFromAttempt(latestCompletedAttempt, mockMombtiMeta))
+    navigateToScreen('mombti-latest')
   }
 
   const beginMombtiAttempt = () => {
@@ -1655,7 +1717,10 @@ function App() {
           ? 'diary-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
-          : currentScreen === 'mombti' || currentScreen === 'mombti-menu' || currentScreen === 'mombti-test'
+          : currentScreen === 'mombti' ||
+              currentScreen === 'mombti-latest' ||
+              currentScreen === 'mombti-menu' ||
+              currentScreen === 'mombti-test'
             ? 'mombti-mode'
             : 'settings-mode'
 
@@ -1774,6 +1839,7 @@ function App() {
             onOpenDiaryWrite={openPregnancyDiaryWrite}
             onOpenSchedule={openParentSchedule}
             onSaveBabyNickname={handleSaveBabyNickname}
+            onToggleTodayTodo={handleToggleTodayTodo}
           />
         )}
 
@@ -1791,6 +1857,7 @@ function App() {
 
         {currentScreen === 'community' && (
           <CommunityScreen
+            userId={currentUserId}
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenDevice={openParentDevice}
@@ -1837,6 +1904,17 @@ function App() {
         {currentScreen === 'mombti' && (
           <MombtiDetailScreen
             data={mombti}
+            onBack={goBack}
+            onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
+          />
+        )}
+
+        {currentScreen === 'mombti-latest' && (
+          <MombtiLatestResultScreen
+            data={latestMombti}
             onBack={goBack}
             onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
             onOpenHome={() => navigateToScreen('parent-mode')}
