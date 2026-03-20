@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import nextArrowIcon from '@shared-assets/srg/Transfer_right_light.svg'
@@ -87,12 +87,20 @@ function MombtiTestScreen({
   const [currentPage, setCurrentPage] = useState(0)
   const [answers, setAnswers] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const contentRef = useRef(null)
 
   const pages = chunkQuestions(mockMombtiQuestions, QUESTIONS_PER_PAGE)
   const currentQuestions = pages[currentPage] ?? []
   const isFirstPage = currentPage === 0
   const isLastPage = currentPage === pages.length - 1
   const isCurrentPageComplete = currentQuestions.every((question) => Number.isFinite(answers[question.id]))
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({
+      top: 0,
+      behavior: 'auto',
+    })
+  }, [currentPage])
 
   const handleSelect = (questionId, value) => {
     setAnswers((current) => ({
@@ -166,7 +174,7 @@ function MombtiTestScreen({
         </button>
       </header>
 
-      <div className="mombti-test-content">
+      <div className="mombti-test-content" ref={contentRef}>
         {isFirstPage ? (
           <section className="mombti-test-intro">
             <div className="mombti-test-intro-title">

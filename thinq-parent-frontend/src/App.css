@@ -2497,6 +2497,8 @@
 
 .mombti-bar-labels span:nth-child(2) {
   text-align: center;
+  font-weight : 700 !important;
+  font-size : 0.8rem !important;
 }
 
 .mombti-bar-labels span:last-child {
