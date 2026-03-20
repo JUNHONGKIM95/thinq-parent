@@ -1,4 +1,3 @@
-
 import backIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import airPurifierIcon from '@shared-assets/srg/airpurifer.svg'
@@ -37,7 +36,7 @@ const ROUTINE_CARDS = [
   {
     key: 'final',
     title: '임신 후기 루틴',
-    description: "아기 옷 '먼지 철벽 방어' 루틴",
+    description: "막달 대비 '미세먼지 차단' 루틴",
     devices: [
       { key: 'dryer', src: dryerIcon, label: '건조기' },
       { key: 'air-purifier', src: airPurifierIcon, label: '공기청정기' },
@@ -45,7 +44,16 @@ const ROUTINE_CARDS = [
   },
 ]
 
-function ParentDeviceRoutineScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
+function ParentDeviceRoutineScreen({
+  onBack,
+  onOpenHome,
+  onOpenMy,
+  onOpenCommunity,
+  onOpenFirstRoutine,
+  onOpenMiddleRoutine,
+  onOpenFinalRoutine,
+  navIcons,
+}) {
   return (
     <div className="parent-device-routine-screen">
       <header className="parent-device-routine-header">
@@ -60,22 +68,42 @@ function ParentDeviceRoutineScreen({ onBack, onOpenHome, onOpenMy, onOpenCommuni
 
       <div className="parent-device-routine-content">
         <div className="parent-device-routine-list">
-          {ROUTINE_CARDS.map((card) => (
-            <article key={card.key} className={`parent-device-routine-card parent-device-routine-card--${card.key}`}>
-              <h2>{card.title}</h2>
-              <div className="parent-device-routine-card-image-wrap" aria-hidden="true">
-                {card.devices.map((device) => (
-                  <span
-                    key={device.key}
-                    className={`parent-device-routine-device-badge parent-device-routine-device-badge--${device.key}`}
-                  >
-                    <img src={device.src} alt="" className="parent-device-routine-device-image" />
-                  </span>
-                ))}
-              </div>
-              <p>{card.description}</p>
-            </article>
-          ))}
+          {ROUTINE_CARDS.map((card) => {
+            const isButtonCard = card.key === 'first' || card.key === 'middle' || card.key === 'final'
+            const CardTag = isButtonCard ? 'button' : 'article'
+            const handleClick =
+              card.key === 'first'
+                ? onOpenFirstRoutine
+                : card.key === 'middle'
+                  ? onOpenMiddleRoutine
+                  : card.key === 'final'
+                    ? onOpenFinalRoutine
+                    : undefined
+
+            return (
+              <CardTag
+                key={card.key}
+                type={isButtonCard ? 'button' : undefined}
+                className={`parent-device-routine-card parent-device-routine-card--${card.key} ${
+                  isButtonCard ? 'parent-device-routine-card--button' : ''
+                }`}
+                onClick={handleClick}
+              >
+                <h2>{card.title}</h2>
+                <div className="parent-device-routine-card-image-wrap" aria-hidden="true">
+                  {card.devices.map((device) => (
+                    <span
+                      key={device.key}
+                      className={`parent-device-routine-device-badge parent-device-routine-device-badge--${device.key}`}
+                    >
+                      <img src={device.src} alt="" className="parent-device-routine-device-image" />
+                    </span>
+                  ))}
+                </div>
+                <p>{card.description}</p>
+              </CardTag>
+            )
+          })}
         </div>
       </div>
 

@@ -52,6 +52,9 @@ import MombtiLatestResultScreen from './features/mombti/MombtiLatestResultScreen
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
 import MombtiTestScreen from './features/mombti/MombtiTestScreen'
 import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
+import ParentDeviceRoutineFirstScreen from './features/parent/ParentDeviceRoutineFirstScreen'
+import ParentDeviceRoutineFinalScreen from './features/parent/ParentDeviceRoutineFinalScreen'
+import ParentDeviceRoutineMiddleScreen from './features/parent/ParentDeviceRoutineMiddleScreen'
 import ParentDeviceRoutineScreen from './features/parent/ParentDeviceRoutineScreen'
 import ParentScheduleScreen from './features/parent/ParentScheduleScreen'
 import MyScreen from './features/my/MyScreen'
@@ -1512,6 +1515,18 @@ function App() {
     navigateToScreen('parent-mode-device-routine')
   }
 
+  const openParentDeviceRoutineFirst = () => {
+    navigateToScreen('parent-mode-device-routine-first')
+  }
+
+  const openParentDeviceRoutineMiddle = () => {
+    navigateToScreen('parent-mode-device-routine-middle')
+  }
+
+  const openParentDeviceRoutineFinal = () => {
+    navigateToScreen('parent-mode-device-routine-final')
+  }
+
   const openMyScreen = () => {
     navigateToScreen('my')
   }
@@ -1717,6 +1732,9 @@ function App() {
       : currentScreen === 'parent-mode' ||
         currentScreen === 'parent-mode-device' ||
         currentScreen === 'parent-mode-device-routine' ||
+        currentScreen === 'parent-mode-device-routine-first' ||
+        currentScreen === 'parent-mode-device-routine-middle' ||
+        currentScreen === 'parent-mode-device-routine-final' ||
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
@@ -1799,6 +1817,54 @@ function App() {
 
         {currentScreen === 'parent-mode-device-routine' && (
           <ParentDeviceRoutineScreen
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            onOpenCommunity={openCommunity}
+            onOpenFirstRoutine={openParentDeviceRoutineFirst}
+            onOpenMiddleRoutine={openParentDeviceRoutineMiddle}
+            onOpenFinalRoutine={openParentDeviceRoutineFinal}
+            navIcons={{
+              home: whiteHomeIcon,
+              device: whiteBabyIcon,
+              community: whiteCommunityIcon,
+              my: whiteMyIcon,
+            }}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-device-routine-first' && (
+          <ParentDeviceRoutineFirstScreen
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            onOpenCommunity={openCommunity}
+            navIcons={{
+              home: whiteHomeIcon,
+              device: whiteBabyIcon,
+              community: whiteCommunityIcon,
+              my: whiteMyIcon,
+            }}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-device-routine-middle' && (
+          <ParentDeviceRoutineMiddleScreen
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenMy={openMyScreen}
+            onOpenCommunity={openCommunity}
+            navIcons={{
+              home: whiteHomeIcon,
+              device: whiteBabyIcon,
+              community: whiteCommunityIcon,
+              my: whiteMyIcon,
+            }}
+          />
+        )}
+
+        {currentScreen === 'parent-mode-device-routine-final' && (
+          <ParentDeviceRoutineFinalScreen
             onBack={goBack}
             onOpenHome={() => navigateToScreen('parent-mode')}
             onOpenMy={openMyScreen}
