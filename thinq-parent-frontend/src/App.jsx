@@ -598,6 +598,10 @@ function getMombtiAttemptPayload(payload) {
   return null
 }
 
+function getMombtiAttemptId(attempt) {
+  return attempt?.attemptId ?? attempt?.attempt_id ?? attempt?.id ?? null
+}
+
 async function createMombtiAttempt(userId) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/mombti/attempts`, {
@@ -1277,6 +1281,7 @@ function App() {
   const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
   const [isCreatingMombtiAttempt, setIsCreatingMombtiAttempt] = useState(false)
   const [childProfile, setChildProfile] = useState(mockChildProfile)
+  const mombtiAttemptRequestRef = useRef(null)
   const today = new Date()
   const myPage = {
     ...mockMyPage,
@@ -1491,24 +1496,48 @@ function App() {
     navigateToScreen('mombti')
   }
 
-  const openMombtiTest = async () => {
-    if (isCreatingMombtiAttempt) {
-      navigateToScreen('mombti-test')
-      return
+  const beginMombtiAttempt = () => {
+    if (mombtiAttemptRequestRef.current) {
+      return mombtiAttemptRequestRef.current
     }
 
+    setActiveMombtiAttempt(null)
     setIsCreatingMombtiAttempt(true)
-    navigateToScreen('mombti-test')
 
-    try {
-      const attempt = await createMombtiAttempt(currentUserId)
+    const request = createMombtiAttempt(currentUserId)
+      .then((attempt) => {
+        if (attempt) {
+          setActiveMombtiAttempt(attempt)
+        }
 
-      if (attempt) {
-        setActiveMombtiAttempt(attempt)
-      }
-    } finally {
-      setIsCreatingMombtiAttempt(false)
+        return attempt
+      })
+      .finally(() => {
+        mombtiAttemptRequestRef.current = null
+        setIsCreatingMombtiAttempt(false)
+      })
+
+    mombtiAttemptRequestRef.current = request
+    return request
+  }
+
+  const ensureMombtiAttemptId = async () => {
+    const existingAttemptId = getMombtiAttemptId(activeMombtiAttempt)
+
+    if (existingAttemptId) {
+      return existingAttemptId
     }
+
+    const attempt = mombtiAttemptRequestRef.current
+      ? await mombtiAttemptRequestRef.current
+      : await beginMombtiAttempt()
+
+    return getMombtiAttemptId(attempt)
+  }
+
+  const openMombtiTest = () => {
+    beginMombtiAttempt()
+    navigateToScreen('mombti-test')
   }
 
   const handleMombtiMenuBack = () => {
@@ -1774,6 +1803,8 @@ function App() {
             onBack={goBack}
             onOpenMombtiMenu={openMombtiMenu}
             onComplete={() => navigateToScreen('mombti')}
+            attemptId={getMombtiAttemptId(activeMombtiAttempt)}
+            onEnsureAttemptId={ensureMombtiAttemptId}
           />
         )}
 
