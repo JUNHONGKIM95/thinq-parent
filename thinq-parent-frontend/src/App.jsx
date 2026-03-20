@@ -51,6 +51,7 @@ import MombtiDetailScreen from './features/mombti/MombtiDetailScreen'
 import MombtiLatestResultScreen from './features/mombti/MombtiLatestResultScreen'
 import MombtiMenuScreen from './features/mombti/MombtiMenuScreen'
 import MombtiTestScreen from './features/mombti/MombtiTestScreen'
+import CheerMessageScreen from './features/parent/CheerMessageScreen'
 import ParentDeviceScreen from './features/parent/ParentDeviceScreen'
 import ParentDeviceRoutineFirstScreen from './features/parent/ParentDeviceRoutineFirstScreen'
 import ParentDeviceRoutineFinalScreen from './features/parent/ParentDeviceRoutineFinalScreen'
@@ -94,6 +95,7 @@ const DEFAULT_PREGNANCY_SUMMARY = {
   babyNickname: '틔움이',
   daysUntilDueDate: 102,
   dueDate: mockMyPage.dueDate,
+  groupId: null,
   role: '',
 }
 const DEFAULT_CHEER_MESSAGE = ''
@@ -1114,6 +1116,7 @@ function ParentModeScreen({
   dailyScheduleItems,
   todayTodoItems,
   onToggleTodayTodo,
+  onOpenCheerMessage,
 }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
   const today = new Date()
@@ -1160,7 +1163,12 @@ function ParentModeScreen({
 
           <div className="parent-mode-input-row">
             {pregnancySummary.role === 'FAMILY' ? (
-              <button type="button" className="parent-mode-input-icon-button" aria-label="응원 글쓰기">
+              <button
+                type="button"
+                className="parent-mode-input-icon-button"
+                aria-label="응원 글쓰기"
+                onClick={onOpenCheerMessage}
+              >
                 <img src={messageOpenIcon} alt="" className="parent-mode-input-icon" aria-hidden="true" />
               </button>
             ) : (
@@ -1400,6 +1408,7 @@ function App() {
         meetingTitle: data.meetingTitle,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
         dueDate: data.dueDate ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
+        groupId: data.groupId ?? DEFAULT_PREGNANCY_SUMMARY.groupId,
         role: data.role ?? DEFAULT_PREGNANCY_SUMMARY.role,
       })
 
@@ -1525,6 +1534,14 @@ function App() {
 
   const openParentDeviceRoutineFinal = () => {
     navigateToScreen('parent-mode-device-routine-final')
+  }
+
+  const openCheerMessage = () => {
+    if (pregnancySummary.role !== 'FAMILY') {
+      return
+    }
+
+    navigateToScreen('cheer-message')
   }
 
   const openMyScreen = () => {
@@ -1726,6 +1743,10 @@ function App() {
     navigateToScreen('mombti')
   }
 
+  const handleCheerMessageSubmitSuccess = (nextCheerMessageText) => {
+    setCheerMessageText(nextCheerMessageText || DEFAULT_CHEER_MESSAGE)
+  }
+
   const phoneShellClass =
     currentScreen === 'home'
       ? 'home-mode'
@@ -1735,6 +1756,7 @@ function App() {
         currentScreen === 'parent-mode-device-routine-first' ||
         currentScreen === 'parent-mode-device-routine-middle' ||
         currentScreen === 'parent-mode-device-routine-final' ||
+        currentScreen === 'cheer-message' ||
         currentScreen === 'parent-mode-chat' ||
         currentScreen === 'parent-mode-schedule'
         ? 'parent-mode'
@@ -1796,6 +1818,26 @@ function App() {
             dailyScheduleItems={dailyScheduleItems}
             todayTodoItems={todayTodoCard.items}
             onToggleTodayTodo={handleToggleTodayTodo}
+            onOpenCheerMessage={openCheerMessage}
+          />
+        )}
+
+        {currentScreen === 'cheer-message' && (
+          <CheerMessageScreen
+            userId={currentUserId}
+            groupId={pregnancySummary.groupId}
+            onBack={goBack}
+            onOpenHome={() => navigateToScreen('parent-mode')}
+            onOpenDevice={openParentDevice}
+            onOpenCommunity={openCommunity}
+            onOpenMy={openMyScreen}
+            onSubmitSuccess={handleCheerMessageSubmitSuccess}
+            navIcons={{
+              home: parentModeHomeIcon,
+              device: parentModeBabyIcon,
+              community: parentModeCommunityIcon,
+              my: parentModeMyIcon,
+            }}
           />
         )}
 

@@ -892,6 +892,218 @@
   text-align: right;
 }
 
+.cheer-message-screen {
+  position: absolute;
+  inset: 0;
+  background: #feeeee;
+  overflow: hidden;
+}
+
+.cheer-message-header {
+  position: absolute;
+  top: 18px;
+  left: 15px;
+  right: 13px;
+  height: 32px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 11px;
+  z-index: 3;
+}
+
+.cheer-message-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #000000;
+}
+
+.cheer-message-content {
+  position: absolute;
+  top: 86px;
+  left: 0;
+  right: 0;
+  bottom: 65px;
+  padding: 0 32px 28px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.cheer-message-content::-webkit-scrollbar {
+  display: none;
+}
+
+.cheer-message-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cheer-message-status-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.cheer-message-status-arrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cheer-message-status-motion {
+  opacity: 0;
+  transform: translate3d(-4px, 4px, 0) scale(0.88) rotate(var(--cheer-rotate, 0deg));
+  transform-origin: center;
+  transition:
+    opacity 180ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cheer-message-status-motion.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1) rotate(var(--cheer-rotate, 0deg));
+}
+
+.cheer-message-status-icon--rotate {
+  --cheer-rotate: 45deg;
+  width: 18px;
+  height: 18px;
+  padding-bottom: 4px;
+}
+
+.cheer-message-status-heart {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.cheer-message-card {
+  margin: 48px auto 0;
+  width: 328px;
+  max-width: 100%;
+  min-height: 270px;
+  padding: 28px 22px 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
+}
+
+.cheer-message-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cheer-message-card-title-row h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: #000000;
+}
+
+.cheer-message-card-heart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #e75a5f;
+}
+
+.cheer-message-card-heart svg {
+  width: 24px;
+  height: 24px;
+}
+
+.cheer-message-progress {
+  margin-top: 30px;
+}
+
+.cheer-message-progress-track {
+  width: 100%;
+  height: 11px;
+  overflow: hidden;
+  border-radius: 5.5px;
+  background: #d9d9d9;
+}
+
+.cheer-message-progress-fill {
+  height: 100%;
+  border-radius: 5.5px;
+  background: #e75a5f;
+  transition: width 260ms ease;
+}
+
+.cheer-message-progress-label {
+  margin: 8px 0 0;
+  font-size: 0.625rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  color: #666666;
+}
+
+.cheer-message-textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  resize: none;
+  outline: none;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: #000000;
+}
+
+.cheer-message-input-box {
+  width: 100%;
+  margin-top: 34px;
+  min-height: 120px;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cheer-message-textarea::placeholder {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.82);
+}
+
+.cheer-message-submit-button {
+  min-width: 92px;
+  height: 31px;
+  margin-top: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #e75a5f;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.cheer-message-submit-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .parent-mode-cards-row {
   margin-top: 8px;
   display: grid;
@@ -3337,6 +3549,12 @@
   cursor: pointer;
 }
 
+.parent-mode-calendar.parent-mode-card-button {
+  padding-top: 16px;
+  padding-left: 13px;
+  padding-right: 13px;
+}
+
 .parent-schedule-screen {
   position: relative;
   min-height: 100%;
@@ -3632,10 +3850,10 @@
 }
 
 .parent-schedule-marker {
-  width: 49.58px;
-  min-width: 49.58px;
+  width: 47.58px;
+  min-width: 47.58px;
   padding: 1px 0;
-  border-radius: 0;
+  border-radius: 5px;
   font-size: 0.62rem;
   font-weight: 600;
   line-height: 1.5;
@@ -3824,8 +4042,8 @@
 
 .parent-schedule-recommend-title strong,
 .parent-schedule-todo-title strong {
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: 1.1rem;
+  font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #000000;
@@ -3833,8 +4051,8 @@
 
 .parent-schedule-recommend-title span,
 .parent-schedule-todo-title span {
-  font-size: 1rem;
-  font-weight: 300;
+  font-size: 0.8rem;
+  font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #000000;
@@ -4315,8 +4533,8 @@
   border: 0;
   background: transparent;
   font: inherit;
-  font-size: 1.55rem;
-  font-weight: 400;
+  font-size: 1.4rem;
+  font-weight: 600;
   line-height: 1.18;
   letter-spacing: 0.1em;
   color: #111111;
@@ -4334,7 +4552,7 @@
   background: transparent;
   font: inherit;
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.05em;
   color: #3337a5;
@@ -4365,11 +4583,11 @@
 .parent-schedule-type-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px 9px;
+  gap: 5px 9px;
 }
 
 .parent-schedule-type-button {
-  min-height: 24px;
+  min-height: 27px;
   border: 0;
   border-radius: 8px;
   font: inherit;
@@ -4405,8 +4623,8 @@
   border: 0;
   background: transparent;
   font: inherit;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.1em;
   text-align: center;
@@ -4433,8 +4651,8 @@
   border-radius: 9px;
   background: #ededed;
   font: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   line-height: 1.1875;
   letter-spacing: 0.05em;
   color: #414141;
@@ -5372,16 +5590,48 @@
   margin: 0;
 }
 
-.community-write-rules-intro {
+.community-write-rule-block {
+  max-height: 430px;
   margin-top: 18px;
+  padding: 16px 14px;
+  overflow-y: auto;
+  border: 1px solid rgba(204, 195, 195, 0.9);
+  border-radius: 10px;
+  background: rgba(250, 248, 240, 0.65);
+  scrollbar-width: thin;
 }
 
-.community-write-rule-block {
-  margin-top: 10px;
+.community-write-rules-intro {
+  margin-bottom: 14px;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.community-write-rule-section + .community-write-rule-section {
+  margin-top: 14px;
+}
+
+.community-write-rule-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.72);
 }
 
 .community-write-rule-bullet {
-  margin-top: 4px;
+  margin-top: 5px;
+  padding-left: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.community-write-rule-block::-webkit-scrollbar {
+  width: 6px;
+}
+
+.community-write-rule-block::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(169, 158, 158, 0.8);
 }
 
 .community-write-footer {
