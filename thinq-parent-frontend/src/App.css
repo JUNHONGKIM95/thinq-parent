@@ -8,12 +8,25 @@
 }
 
 :root {
-  --screen-header-min-height: 56px;
-  --screen-header-padding-top: 24px;
-  --screen-header-padding-bottom: 5px;
-  --screen-header-title-font-size: 1.28rem;
+  --app-fluid-font-size: clamp(13px, 0.45vw + 11.4px, 16px);
+  --screen-header-min-height: clamp(52px, 0.65vw + 49.5px, 56px);
+  --screen-header-padding-top: clamp(18px, 0.95vw + 14.2px, 24px);
+  --screen-header-padding-bottom: clamp(4px, 0.18vw + 3.3px, 5px);
+  --screen-header-title-font-size: clamp(1.12rem, 0.98rem + 0.45vw, 1.28rem);
   --screen-header-title-line-height: 1;
   --screen-header-title-letter-spacing: -0.04em;
+}
+
+html {
+  font-size: var(--app-fluid-font-size);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 .phone-shell {
@@ -634,18 +647,18 @@
 
 .life-agent-card-title {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
-  line-height: 19px;
+  line-height: 1.1875;
   letter-spacing: -0.02em;
   color: #000000;
 }
 
 .life-agent-card-subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
-  line-height: 15px;
+  line-height: 1.1539;
   letter-spacing: -0.02em;
   color: #000000;
 }
@@ -2890,8 +2903,8 @@
   gap: 0;
   border: 1px solid #808080;
   border-radius: 16.5px;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 0.8125rem;
+  line-height: 1.5385;
   color: #404040;
 }
 
