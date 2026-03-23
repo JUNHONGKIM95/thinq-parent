@@ -8,7 +8,7 @@
 }
 
 :root {
-  --app-fluid-font-size: clamp(13px, 0.45vw + 11.4px, 16px);
+  --app-fluid-font-size: clamp(14px, 0.45vw + 12.4px, 17px);
   --screen-header-min-height: clamp(52px, 0.65vw + 49.5px, 56px);
   --screen-header-padding-top: clamp(18px, 0.95vw + 14.2px, 24px);
   --screen-header-padding-bottom: clamp(4px, 0.18vw + 3.3px, 5px);
@@ -773,7 +773,7 @@ select {
   border-radius: 16px;
   background: #ffffff;
   color: #111111;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .sheet-check {
@@ -788,7 +788,7 @@ select {
   align-items: center;
   gap: 6px;
   color: #3f51b5;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -1292,7 +1292,7 @@ select {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 1px;
   margin-top: 6px;
   font-size: 0.8125rem;
   font-weight: 400;
@@ -1380,6 +1380,7 @@ select {
   padding: 19px;
   column-gap: 12px;
   align-items: start;
+  overflow: visible;
 }
 
 .parent-mode-diary-copy {
@@ -1388,6 +1389,7 @@ select {
   align-items: flex-start;
   gap: 3px;
   min-width: 0;
+  overflow: visible;
 }
 
 .parent-mode-diary-button h3 {
@@ -1401,6 +1403,11 @@ select {
   line-height: 15px;
   letter-spacing: -0.02em;
   color: #000000;
+  width: calc(100% + 92px);
+  max-width: none;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
 }
 
 /* 임신 일기: 사진 하나(일기보기)만, 디자인 기준 209px 오른쪽 배치 */
@@ -1787,7 +1794,7 @@ select {
 
 .parent-device-info-card {
   margin-top: 10px;
-  min-height: 116px;
+  min-height: 70px;
   padding: 26px 22px;
   background: #fcf9f8;
   border-radius: 13px;
@@ -3191,9 +3198,9 @@ select {
   margin-top: 5px;
   display: grid;
   grid-template-columns: 151px 1fr;
-  gap: 10px;
+  gap: 0px;
   align-items: center;
-  padding: 6px 15px;
+  padding: 6px 10px;
   border: 0;
   min-height: 116px;
   border-radius: 13px;
@@ -4849,7 +4856,7 @@ select {
 .community-content {
   position: relative;
   overflow: auto;
-  padding: 0 19px 110px;
+  padding: 0 13px 110px;
 }
 
 .community-controls {
@@ -5579,12 +5586,12 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   padding: 22px 0 8px;
 }
 
 .community-pagination button {
-  min-width: 28px;
+  min-width: 20px;
   height: 28px;
   border: 0;
   background: transparent;
