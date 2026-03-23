@@ -758,7 +758,7 @@ function HomeSelectionSheet({ onClose, onOpenSettings }) {
 
 function HomeScreen({ activeTab, onChangeTab, onOpenSheet, isHomeSheetOpen }) {
   return (
-    <>
+    <div className="home-screen">
       <header className="home-header">
         <button type="button" className="home-selector" onClick={onOpenSheet} aria-label="홈 선택">
           <strong>{HOME_NAME}</strong>
@@ -855,7 +855,7 @@ function HomeScreen({ activeTab, onChangeTab, onOpenSheet, isHomeSheetOpen }) {
           </button>
         ))}
       </nav>
-    </>
+    </div>
   )
 }
 
@@ -873,7 +873,7 @@ function SettingCard({ title, description, image, className, onClick }) {
 
 function HomeSettingsScreen({ onBack, onOpenLifeAgent }) {
   return (
-    <>
+    <div className="settings-screen">
       <header className="settings-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
           <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -914,13 +914,13 @@ function HomeSettingsScreen({ onBack, onOpenLifeAgent }) {
           />
         </section>
       </div>
-    </>
+    </div>
   )
 }
 
 function LifeAgentScreen({ onBack, onOpenParentMode }) {
   return (
-    <>
+    <div className="settings-screen">
       <header className="settings-header life-agent-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
           <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -969,7 +969,7 @@ function LifeAgentScreen({ onBack, onOpenParentMode }) {
           </button>
         </section>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -1078,8 +1078,15 @@ function ParentModeScreen({
     return () => window.clearInterval(intervalId)
   }, [])
 
+  const parentModeNavItems = [
+    { key: 'home', label: '홈', icon: parentModeHomeIcon, onClick: onOpenHome, isActive: true },
+    { key: 'device', label: '가전육아', icon: parentModeBabyIcon, onClick: onOpenDevice, isActive: false },
+    { key: 'community', label: '커뮤니티', icon: parentModeCommunityIcon, onClick: onOpenCommunity, isActive: false },
+    { key: 'my', label: 'MY', icon: parentModeMyIcon, onClick: onOpenMy, isActive: false },
+  ]
+
   return (
-    <>
+    <div className="parent-mode-screen">
       <header className="parent-mode-header">
         <button type="button" className="back-button" onClick={onBack} aria-label="뒤로가기">
           <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -1230,35 +1237,21 @@ function ParentModeScreen({
         <div className="parent-mode-bottom-bar" />
 
         <nav className="parent-mode-bottom-nav" aria-label="부모 모드 메뉴">
-          <button type="button" className="parent-mode-nav-item" aria-label="홈" onClick={onOpenHome}>
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={parentModeHomeIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">홈</span>
-          </button>
-          <button
-            type="button"
-            className="parent-mode-nav-item parent-mode-nav-item--active"
-            aria-label="가전육아"
-            onClick={onOpenDevice}
-          >
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={parentModeBabyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">가전육아</span>
-          </button>
-          <button type="button" className="parent-mode-nav-item" aria-label="커뮤니티" onClick={onOpenCommunity}>
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={parentModeCommunityIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">커뮤니티</span>
-          </button>
-          <button type="button" className="parent-mode-nav-item" aria-label="MY" onClick={onOpenMy}>
-            <span className="parent-mode-nav-icon-frame" aria-hidden="true">
-              <img src={parentModeMyIcon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
-            </span>
-            <span className="parent-mode-nav-label">MY</span>
-          </button>
+          {parentModeNavItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={`parent-mode-nav-item ${item.isActive ? 'parent-mode-nav-item--active' : ''}`}
+              aria-current={item.isActive ? 'page' : undefined}
+              aria-label={item.label}
+              onClick={item.onClick}
+            >
+              <span className="parent-mode-nav-icon-frame" aria-hidden="true">
+                <img src={item.icon} alt="" className="parent-mode-nav-icon" aria-hidden="true" />
+              </span>
+              <span className="parent-mode-nav-label">{item.label}</span>
+            </button>
+          ))}
         </nav>
 
         <button type="button" className="parent-mode-fab" aria-label="채팅" onClick={onOpenChat}>
@@ -1284,7 +1277,7 @@ function ParentModeScreen({
           </div>
         ) : null}
       </div>
-    </>
+    </div>
   )
 }
 
@@ -1459,6 +1452,15 @@ function App() {
       setCurrentScreen(previousScreen)
       return nextHistory
     })
+  }
+
+  const handleParentModeBack = () => {
+    if (!screenHistory.length) {
+      setCurrentScreen('home')
+      return
+    }
+
+    goBack()
   }
 
   const openSettings = () => {
@@ -1817,314 +1819,316 @@ function App() {
   return (
     <main className="app-shell">
       <section className={`phone-shell ${phoneShellClass}`}>
-        {currentScreen === 'home' && (
-          <HomeScreen
-            activeTab={activeTab}
-            onChangeTab={setActiveTab}
-            onOpenSheet={() => setIsHomeSheetOpen(true)}
-            isHomeSheetOpen={isHomeSheetOpen}
-          />
-        )}
+        <div key={currentScreen} className="screen-transition-layer">
+          {currentScreen === 'home' && (
+            <HomeScreen
+              activeTab={activeTab}
+              onChangeTab={setActiveTab}
+              onOpenSheet={() => setIsHomeSheetOpen(true)}
+              isHomeSheetOpen={isHomeSheetOpen}
+            />
+          )}
 
-        {currentScreen === 'settings' && (
-          <HomeSettingsScreen onBack={goBack} onOpenLifeAgent={openLifeAgent} />
-        )}
+          {currentScreen === 'settings' && (
+            <HomeSettingsScreen onBack={goBack} onOpenLifeAgent={openLifeAgent} />
+          )}
 
-        {currentScreen === 'life-agent' && (
-          <LifeAgentScreen
-            onBack={goBack}
-            onOpenParentMode={openParentMode}
-          />
-        )}
+          {currentScreen === 'life-agent' && (
+            <LifeAgentScreen
+              onBack={goBack}
+              onOpenParentMode={openParentMode}
+            />
+          )}
 
         {currentScreen === 'parent-mode' && (
           <ParentModeScreen
-            onBack={goBack}
+            onBack={handleParentModeBack}
             onOpenChat={openParentModeChat}
             onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onOpenMy={openMyScreen}
-            onOpenDiary={openPregnancyDiary}
-            onOpenSchedule={openParentSchedule}
-            onOpenAccountSwitch={handleOpenAccountSwitch}
-            onCloseAccountSwitch={handleCloseAccountSwitch}
-            onSelectMomAccount={() => handleSelectAccount(3)}
-            onSelectDadAccount={() => handleSelectAccount(4)}
-            isAccountSwitchPopupOpen={isAccountSwitchPopupOpen}
-            pregnancySummary={pregnancySummary}
-            cheerMessageText={cheerMessageText}
-            dailyScheduleItems={dailyScheduleItems}
-            todayTodoItems={todayTodoCard.items}
-            onToggleTodayTodo={handleToggleTodayTodo}
-            onOpenCheerMessage={openCheerMessage}
-          />
-        )}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onOpenMy={openMyScreen}
+              onOpenDiary={openPregnancyDiary}
+              onOpenSchedule={openParentSchedule}
+              onOpenAccountSwitch={handleOpenAccountSwitch}
+              onCloseAccountSwitch={handleCloseAccountSwitch}
+              onSelectMomAccount={() => handleSelectAccount(3)}
+              onSelectDadAccount={() => handleSelectAccount(4)}
+              isAccountSwitchPopupOpen={isAccountSwitchPopupOpen}
+              pregnancySummary={pregnancySummary}
+              cheerMessageText={cheerMessageText}
+              dailyScheduleItems={dailyScheduleItems}
+              todayTodoItems={todayTodoCard.items}
+              onToggleTodayTodo={handleToggleTodayTodo}
+              onOpenCheerMessage={openCheerMessage}
+            />
+          )}
 
-        {currentScreen === 'cheer-message' && (
-          <CheerMessageScreen
-            userId={currentUserId}
-            groupId={pregnancySummary.groupId}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onOpenMy={openMyScreen}
-            onSubmitSuccess={handleCheerMessageSubmitSuccess}
-            navIcons={{
-              home: parentModeHomeIcon,
-              device: parentModeBabyIcon,
-              community: parentModeCommunityIcon,
-              my: parentModeMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'cheer-message' && (
+            <CheerMessageScreen
+              userId={currentUserId}
+              groupId={pregnancySummary.groupId}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onOpenMy={openMyScreen}
+              onSubmitSuccess={handleCheerMessageSubmitSuccess}
+              navIcons={{
+                home: parentModeHomeIcon,
+                device: parentModeBabyIcon,
+                community: parentModeCommunityIcon,
+                my: parentModeMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-device' && (
-          <ParentDeviceScreen
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenMy={openMyScreen}
-            onOpenCommunity={openCommunity}
-            onOpenRoutine={openParentDeviceRoutine}
-            navIcons={{
-              home: parentModeHomeIcon,
-              device: parentModeBabyIcon,
-              community: parentModeCommunityIcon,
-              my: parentModeMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-device' && (
+            <ParentDeviceScreen
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenMy={openMyScreen}
+              onOpenCommunity={openCommunity}
+              onOpenRoutine={openParentDeviceRoutine}
+              navIcons={{
+                home: parentModeHomeIcon,
+                device: parentModeBabyIcon,
+                community: parentModeCommunityIcon,
+                my: parentModeMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-device-routine' && (
-          <ParentDeviceRoutineScreen
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenMy={openMyScreen}
-            onOpenCommunity={openCommunity}
-            onOpenFirstRoutine={openParentDeviceRoutineFirst}
-            onOpenMiddleRoutine={openParentDeviceRoutineMiddle}
-            onOpenFinalRoutine={openParentDeviceRoutineFinal}
-            navIcons={{
-              home: whiteHomeIcon,
-              device: whiteBabyIcon,
-              community: whiteCommunityIcon,
-              my: whiteMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-device-routine' && (
+            <ParentDeviceRoutineScreen
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenMy={openMyScreen}
+              onOpenCommunity={openCommunity}
+              onOpenFirstRoutine={openParentDeviceRoutineFirst}
+              onOpenMiddleRoutine={openParentDeviceRoutineMiddle}
+              onOpenFinalRoutine={openParentDeviceRoutineFinal}
+              navIcons={{
+                home: whiteHomeIcon,
+                device: whiteBabyIcon,
+                community: whiteCommunityIcon,
+                my: whiteMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-device-routine-first' && (
-          <ParentDeviceRoutineFirstScreen
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenMy={openMyScreen}
-            onOpenCommunity={openCommunity}
-            navIcons={{
-              home: whiteHomeIcon,
-              device: whiteBabyIcon,
-              community: whiteCommunityIcon,
-              my: whiteMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-device-routine-first' && (
+            <ParentDeviceRoutineFirstScreen
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenMy={openMyScreen}
+              onOpenCommunity={openCommunity}
+              navIcons={{
+                home: whiteHomeIcon,
+                device: whiteBabyIcon,
+                community: whiteCommunityIcon,
+                my: whiteMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-device-routine-middle' && (
-          <ParentDeviceRoutineMiddleScreen
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenMy={openMyScreen}
-            onOpenCommunity={openCommunity}
-            navIcons={{
-              home: whiteHomeIcon,
-              device: whiteBabyIcon,
-              community: whiteCommunityIcon,
-              my: whiteMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-device-routine-middle' && (
+            <ParentDeviceRoutineMiddleScreen
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenMy={openMyScreen}
+              onOpenCommunity={openCommunity}
+              navIcons={{
+                home: whiteHomeIcon,
+                device: whiteBabyIcon,
+                community: whiteCommunityIcon,
+                my: whiteMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-device-routine-final' && (
-          <ParentDeviceRoutineFinalScreen
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenMy={openMyScreen}
-            onOpenCommunity={openCommunity}
-            navIcons={{
-              home: whiteHomeIcon,
-              device: whiteBabyIcon,
-              community: whiteCommunityIcon,
-              my: whiteMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-device-routine-final' && (
+            <ParentDeviceRoutineFinalScreen
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenMy={openMyScreen}
+              onOpenCommunity={openCommunity}
+              navIcons={{
+                home: whiteHomeIcon,
+                device: whiteBabyIcon,
+                community: whiteCommunityIcon,
+                my: whiteMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-chat' && (
-          <ChatExpertScreen
-            onBack={goBack}
-            message={chatExpertDraft}
-            messages={chatExpertMessages}
-            isSending={isChatExpertSending}
-            onMessageChange={setChatExpertDraft}
-            onSendMessage={handleSendChatExpertMessage}
-          />
-        )}
+          {currentScreen === 'parent-mode-chat' && (
+            <ChatExpertScreen
+              onBack={goBack}
+              message={chatExpertDraft}
+              messages={chatExpertMessages}
+              isSending={isChatExpertSending}
+              onMessageChange={setChatExpertDraft}
+              onSendMessage={handleSendChatExpertMessage}
+            />
+          )}
 
-        {currentScreen === 'parent-mode-schedule' && (
-          <ParentScheduleScreen
-            data={parentSchedule}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onOpenMy={openMyScreen}
-            initialDetailOpen={isScheduleDetailInitiallyOpen}
-            initialScheduleInputOpen={isScheduleInputInitiallyOpen}
-            userId={currentUserId}
-            navIcons={{
-              home: parentModeHomeIcon,
-              device: parentModeBabyIcon,
-              community: parentModeCommunityIcon,
-              my: parentModeMyIcon,
-            }}
-          />
-        )}
+          {currentScreen === 'parent-mode-schedule' && (
+            <ParentScheduleScreen
+              data={parentSchedule}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onOpenMy={openMyScreen}
+              initialDetailOpen={isScheduleDetailInitiallyOpen}
+              initialScheduleInputOpen={isScheduleInputInitiallyOpen}
+              userId={currentUserId}
+              navIcons={{
+                home: parentModeHomeIcon,
+                device: parentModeBabyIcon,
+                community: parentModeCommunityIcon,
+                my: parentModeMyIcon,
+              }}
+            />
+          )}
 
-        {currentScreen === 'my' && (
-          <MyScreen
-            data={myPage}
-            userId={currentUserId}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onOpenChildProfile={openChildProfile}
-            onOpenMombti={openMombti}
-            onOpenDiary={openPregnancyDiary}
-            onOpenDiaryWrite={openPregnancyDiaryWrite}
-            onOpenSchedule={openParentSchedule}
-            onSaveBabyNickname={handleSaveBabyNickname}
-            onToggleTodayTodo={handleToggleTodayTodo}
-          />
-        )}
+          {currentScreen === 'my' && (
+            <MyScreen
+              data={myPage}
+              userId={currentUserId}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onOpenChildProfile={openChildProfile}
+              onOpenMombti={openMombti}
+              onOpenDiary={openPregnancyDiary}
+              onOpenDiaryWrite={openPregnancyDiaryWrite}
+              onOpenSchedule={openParentSchedule}
+              onSaveBabyNickname={handleSaveBabyNickname}
+              onToggleTodayTodo={handleToggleTodayTodo}
+            />
+          )}
 
-        {currentScreen === 'child-profile' && (
-          <ChildProfileScreen
-            data={childProfile}
-            userId={currentUserId}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onSaveDueDate={handleSaveChildDueDate}
-          />
-        )}
+          {currentScreen === 'child-profile' && (
+            <ChildProfileScreen
+              data={childProfile}
+              userId={currentUserId}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onSaveDueDate={handleSaveChildDueDate}
+            />
+          )}
 
-        {currentScreen === 'community' && (
-          <CommunityScreen
-            userId={currentUserId}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenMy={openMyScreen}
-            onOpenWrite={openCommunityWrite}
-            onOpenPost={openCommunityDetail}
-            canWrite={pregnancySummary.role === 'USER'}
-          />
-        )}
+          {currentScreen === 'community' && (
+            <CommunityScreen
+              userId={currentUserId}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenMy={openMyScreen}
+              onOpenWrite={openCommunityWrite}
+              onOpenPost={openCommunityDetail}
+              canWrite={pregnancySummary.role === 'USER'}
+            />
+          )}
 
-        {currentScreen === 'community-detail' && (
-          <CommunityDetailScreen
-            postId={selectedCommunityPostId}
-            userId={currentUserId}
-            onBack={goBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenMy={openMyScreen}
-          />
-        )}
+          {currentScreen === 'community-detail' && (
+            <CommunityDetailScreen
+              postId={selectedCommunityPostId}
+              userId={currentUserId}
+              onBack={goBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenMy={openMyScreen}
+            />
+          )}
 
-        {currentScreen === 'community-write' && (
-          <CommunityWriteScreen
-            userId={currentUserId}
-            onBack={goBack}
-            onSuccess={goBack}
-          />
-        )}
+          {currentScreen === 'community-write' && (
+            <CommunityWriteScreen
+              userId={currentUserId}
+              onBack={goBack}
+              onSuccess={goBack}
+            />
+          )}
 
-        {currentScreen === 'pregnancy-diary' && (
-          <PregnancyDiaryScreen
-            userId={currentUserId}
-            onBack={goPregnancyDiaryHome}
-            onOpenWrite={openPregnancyDiaryWrite}
-            onEdit={openPregnancyDiaryEdit}
-            onOpenDetail={openPregnancyDiaryDetail}
-          />
-        )}
+          {currentScreen === 'pregnancy-diary' && (
+            <PregnancyDiaryScreen
+              userId={currentUserId}
+              onBack={goPregnancyDiaryHome}
+              onOpenWrite={openPregnancyDiaryWrite}
+              onEdit={openPregnancyDiaryEdit}
+              onOpenDetail={openPregnancyDiaryDetail}
+            />
+          )}
 
-        {currentScreen === 'pregnancy-diary-detail' && (
-          <PregnancyDiaryDetailScreen
-            diaryId={selectedPregnancyDiaryId}
-            userId={currentUserId}
-            onBack={goBack}
-            onEdit={openPregnancyDiaryEdit}
-            onDeleted={goBack}
-          />
-        )}
+          {currentScreen === 'pregnancy-diary-detail' && (
+            <PregnancyDiaryDetailScreen
+              diaryId={selectedPregnancyDiaryId}
+              userId={currentUserId}
+              onBack={goBack}
+              onEdit={openPregnancyDiaryEdit}
+              onDeleted={goBack}
+            />
+          )}
 
-        {currentScreen === 'pregnancy-diary-write' && (
-          <PregnancyDiaryWriteScreen
-            userId={currentUserId}
-            onBack={goBack}
-            onSuccess={goBack}
-            babyNickname={pregnancySummary.babyNickname}
-            initialDiary={editingPregnancyDiary}
-          />
-        )}
+          {currentScreen === 'pregnancy-diary-write' && (
+            <PregnancyDiaryWriteScreen
+              userId={currentUserId}
+              onBack={goBack}
+              onSuccess={goBack}
+              babyNickname={pregnancySummary.babyNickname}
+              initialDiary={editingPregnancyDiary}
+            />
+          )}
 
-        {currentScreen === 'mombti-menu' && (
-          <MombtiMenuScreen
-            onBack={handleMombtiMenuBack}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-            onOpenResult={openMombtiResult}
-            onOpenTest={openMombtiTest}
-            isCreatingAttempt={isCreatingMombtiAttempt}
-          />
-        )}
+          {currentScreen === 'mombti-menu' && (
+            <MombtiMenuScreen
+              onBack={handleMombtiMenuBack}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+              onOpenResult={openMombtiResult}
+              onOpenTest={openMombtiTest}
+              isCreatingAttempt={isCreatingMombtiAttempt}
+            />
+          )}
 
-        {currentScreen === 'mombti-test' && (
-          <MombtiTestScreen
-            onBack={goBack}
-            onOpenMombtiMenu={openMombtiMenu}
-            onComplete={handleCompleteMombti}
-            attemptId={getMombtiAttemptId(activeMombtiAttempt)}
-            onEnsureAttemptId={ensureMombtiAttemptId}
-          />
-        )}
+          {currentScreen === 'mombti-test' && (
+            <MombtiTestScreen
+              onBack={goBack}
+              onOpenMombtiMenu={openMombtiMenu}
+              onComplete={handleCompleteMombti}
+              attemptId={getMombtiAttemptId(activeMombtiAttempt)}
+              onEnsureAttemptId={ensureMombtiAttemptId}
+            />
+          )}
 
-        {currentScreen === 'mombti' && (
-          <MombtiDetailScreen
-            data={mombti}
-            onBack={goBack}
-            onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-          />
-        )}
+          {currentScreen === 'mombti' && (
+            <MombtiDetailScreen
+              data={mombti}
+              onBack={goBack}
+              onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+            />
+          )}
 
-        {currentScreen === 'mombti-latest' && (
-          <MombtiLatestResultScreen
-            data={latestMombti}
-            onBack={goBack}
-            onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
-            onOpenHome={() => navigateToScreen('parent-mode')}
-            onOpenDevice={openParentDevice}
-            onOpenCommunity={openCommunity}
-          />
-        )}
+          {currentScreen === 'mombti-latest' && (
+            <MombtiLatestResultScreen
+              data={latestMombti}
+              onBack={goBack}
+              onOpenMombtiMenu={() => navigateToScreen('mombti-menu')}
+              onOpenHome={() => navigateToScreen('parent-mode')}
+              onOpenDevice={openParentDevice}
+              onOpenCommunity={openCommunity}
+            />
+          )}
+        </div>
 
         {currentScreen === 'home' && isHomeSheetOpen ? (
           <HomeSelectionSheet

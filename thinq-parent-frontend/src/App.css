@@ -28,6 +28,50 @@
   box-shadow: 0 28px 70px rgba(27, 49, 67, 0.18);
 }
 
+.screen-transition-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  animation: screen-enter 210ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(10px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-transition-layer {
+    animation: none;
+  }
+}
+
+.home-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.settings-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
 .phone-shell.home-mode {
   background: linear-gradient(90deg, #c3d1e0 0%, #c9dfe4 58%, #c4dddd 100%);
 }
@@ -143,6 +187,7 @@
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
+  color: #000000;
 }
 
 .header-actions {
@@ -735,6 +780,14 @@
 }
 
 /* ----- Parent Mode (부모 모드) ----- */
+.parent-mode-screen {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
 .parent-mode-header {
   display: flex;
   align-items: center;
