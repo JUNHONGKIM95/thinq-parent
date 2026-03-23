@@ -1791,6 +1791,14 @@ function App() {
       dueDate,
       daysUntilDueDate: calculateDaysUntilDueDate(dueDate),
     }))
+
+    setScreenHistory((prevHistory) => {
+      const nextHistory =
+        prevHistory[prevHistory.length - 1] === 'my' ? prevHistory.slice(0, -1) : prevHistory
+
+      setCurrentScreen('my')
+      return nextHistory
+    })
   }
 
   const handleSaveBabyNickname = (babyNickname) => {
