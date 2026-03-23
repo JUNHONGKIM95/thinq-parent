@@ -158,6 +158,8 @@ function mapCommunityPost(post, index) {
   return {
     key: `community-post-${postId}`,
     postId,
+    boardId: normalizeNumber(post?.boardId ?? post?.board_id),
+    keywordId: normalizeNumber(post?.keywordId ?? post?.keyword_id),
     authorUserId: normalizeNumber(post?.authorUserId ?? post?.author_user_id),
     authorUsername: normalizeString(post?.authorUsername ?? post?.author_username) || '',
     mbtiLabel: getMombtiLabel(post),
@@ -178,6 +180,8 @@ function buildCommunityDetailCacheValue(post) {
   return {
     detail: {
       postId: post.postId,
+      boardId: post.boardId,
+      keywordId: post.keywordId,
       title: post.title,
       content: post.content,
       mbtiLabel: post.mbtiLabel,

@@ -80,6 +80,18 @@ export function writeCachedCommunityDetail(postId, value) {
   writeCache(getDetailKey(postId), value)
 }
 
+export function removeCachedCommunityDetail(postId) {
+  if (!canUseStorage() || !postId) {
+    return
+  }
+
+  try {
+    window.localStorage.removeItem(getDetailKey(postId))
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
 export function upsertCommunityPostInCachedLists(post) {
   if (!post?.postId) {
     return
@@ -102,6 +114,26 @@ export function upsertCommunityPostInCachedLists(post) {
 
       writeCache(key, {
         posts: payload.posts.map((item) => (String(item.postId) === String(post.postId) ? { ...item, ...post } : item)),
+      })
+    })
+}
+
+export function removeCommunityPostFromCachedLists(postId) {
+  if (!postId) {
+    return
+  }
+
+  getAllKeys()
+    .filter((key) => key.startsWith(LIST_PREFIX))
+    .forEach((key) => {
+      const payload = readCache(key)
+
+      if (!Array.isArray(payload?.posts)) {
+        return
+      }
+
+      writeCache(key, {
+        posts: payload.posts.filter((item) => String(item.postId) !== String(postId)),
       })
     })
 }

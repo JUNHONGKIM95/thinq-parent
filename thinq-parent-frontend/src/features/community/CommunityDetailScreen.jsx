@@ -12,6 +12,8 @@ import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import { API_BASE_URL } from '../../config/api'
 import {
   readCachedCommunityDetail,
+  removeCachedCommunityDetail,
+  removeCommunityPostFromCachedLists,
   upsertCommunityPostInCachedLists,
   writeCachedCommunityDetail,
 } from './communityCache'
@@ -182,8 +184,11 @@ function getArrayPayload(payload) {
 function mapCommunityDetail(post) {
   return {
     postId: post?.postId ?? post?.post_id ?? null,
+    boardId: normalizeNumber(post?.boardId ?? post?.board_id),
+    keywordId: normalizeNumber(post?.keywordId ?? post?.keyword_id),
     title: normalizeString(post?.title),
     content: normalizeString(post?.content),
+    isAnonymous: typeof post?.isAnonymous === 'boolean' ? post.isAnonymous : Boolean(post?.is_anonymous),
     mbtiLabel: normalizeString(post?.authorMombtiResultType ?? post?.author_mombti_result_type) || 'MBTI',
     keywordLabel: normalizeString(post?.keywordName ?? post?.keyword_name) || '키워드',
     likeCount: normalizeNumber(post?.likeCount ?? post?.like_count) ?? 0,
@@ -218,6 +223,8 @@ function buildCommunityListUpdate(detail) {
 
   return {
     postId: detail.postId,
+    boardId: detail.boardId,
+    keywordId: detail.keywordId,
     title: detail.title,
     content: detail.content,
     authorUserId: detail.authorUserId,
@@ -374,7 +381,22 @@ async function deleteCommunityComment(commentId) {
   }
 }
 
-function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevice, onOpenMy }) {
+async function deleteCommunityPost(postId, authorUserId) {
+  const query = new URLSearchParams({
+    authorUserId: String(authorUserId),
+  })
+  const response = await fetch(`${API_BASE_URL}/api/v1/community/posts/${postId}?${query.toString()}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => null)
+    const errorMessage = errorPayload?.message ?? `Failed to delete community post: ${response.status}`
+    throw new Error(errorMessage)
+  }
+}
+
+function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevice, onOpenMy, onEdit, onDeleted }) {
   const [detail, setDetail] = useState(null)
   const [comments, setComments] = useState([])
   const [commentInput, setCommentInput] = useState('')
@@ -553,6 +575,46 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
       window.alert(error instanceof Error ? error.message : '댓글 삭제 중 문제가 생겼어요.')
     } finally {
       setDeletingCommentId(null)
+    }
+  }
+
+  const handleEditPost = () => {
+    if (!detail) {
+      return
+    }
+
+    setIsActionMenuOpen(false)
+    onEdit?.({
+      postId: detail.postId,
+      boardId: detail.boardId,
+      keywordId: detail.keywordId,
+      title: detail.title,
+      content: detail.content,
+      isAnonymous: detail.isAnonymous,
+      authorUserId: detail.authorUserId,
+    })
+  }
+
+  const handleDeletePost = async () => {
+    if (!detail?.postId || !detail?.authorUserId) {
+      return
+    }
+
+    const shouldDelete = window.confirm('게시글을 삭제할까요?')
+
+    if (!shouldDelete) {
+      return
+    }
+
+    try {
+      await deleteCommunityPost(detail.postId, detail.authorUserId)
+      removeCachedCommunityDetail(detail.postId)
+      removeCommunityPostFromCachedLists(detail.postId)
+      setIsActionMenuOpen(false)
+      onDeleted?.()
+    } catch (error) {
+      console.error(error)
+      window.alert(error instanceof Error ? error.message : '게시글 삭제 중 문제가 생겼어요.')
     }
   }
 
@@ -766,10 +828,10 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
             onClick={() => setIsActionMenuOpen(false)}
           />
           <section className="community-detail-action-sheet" role="dialog" aria-modal="true" aria-label="게시글 관리">
-            <button type="button" className="community-detail-action-button" onClick={() => setIsActionMenuOpen(false)}>
+            <button type="button" className="community-detail-action-button" onClick={handleEditPost}>
               수정하기
             </button>
-            <button type="button" className="community-detail-action-button" onClick={() => setIsActionMenuOpen(false)}>
+            <button type="button" className="community-detail-action-button" onClick={handleDeletePost}>
               삭제하기
             </button>
           </section>

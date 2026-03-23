@@ -1471,6 +1471,7 @@ function App() {
   const [dailyScheduleItems, setDailyScheduleItems] = useState([])
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
   const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(null)
+  const [editingCommunityPost, setEditingCommunityPost] = useState(null)
   const [selectedPregnancyDiaryId, setSelectedPregnancyDiaryId] = useState(null)
   const [editingPregnancyDiary, setEditingPregnancyDiary] = useState(null)
   const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
@@ -1784,6 +1785,7 @@ function App() {
       return
     }
 
+    setEditingCommunityPost(null)
     navigateToScreen('community-write')
   }
 
@@ -1794,6 +1796,34 @@ function App() {
 
     setSelectedCommunityPostId(postId)
     navigateToScreen('community-detail')
+  }
+
+  const openCommunityEdit = (post) => {
+    if (!post?.postId) {
+      return
+    }
+
+    setEditingCommunityPost(post)
+    navigateToScreen('community-write')
+  }
+
+  const handleCommunityWriteBack = () => {
+    if (currentScreen === 'community-write') {
+      setEditingCommunityPost(null)
+    }
+
+    goBack()
+  }
+
+  const handleCommunityWriteSuccess = () => {
+    setEditingCommunityPost(null)
+    goBack()
+  }
+
+  const handleCommunityPostDeleted = () => {
+    setEditingCommunityPost(null)
+    setSelectedCommunityPostId(null)
+    navigateToScreen('community')
   }
 
   const openPregnancyDiary = () => {
@@ -2386,14 +2416,17 @@ function App() {
               onOpenHome={() => navigateToScreen('parent-mode')}
               onOpenDevice={openParentDevice}
               onOpenMy={openMyScreen}
+              onEdit={openCommunityEdit}
+              onDeleted={handleCommunityPostDeleted}
             />
           )}
 
           {currentScreen === 'community-write' && (
             <CommunityWriteScreen
               userId={currentUserId}
-              onBack={goBack}
-              onSuccess={goBack}
+              onBack={handleCommunityWriteBack}
+              onSuccess={handleCommunityWriteSuccess}
+              initialPost={editingCommunityPost}
             />
           )}
 

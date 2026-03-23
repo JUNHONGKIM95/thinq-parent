@@ -858,7 +858,9 @@ function ParentScheduleScreen({
 
       setScheduleUserContext(userContext)
       const resolvedCurrentWeek =
-        userContext?.currentWeek ?? calculatePregnancyWeek(DEFAULT_ACTIVE_DATE_KEY, userContext?.dueDate)
+        calculatePregnancyWeek(activeDateKey, userContext?.dueDate) ??
+        userContext?.currentWeek ??
+        calculatePregnancyWeek(DEFAULT_ACTIVE_DATE_KEY, userContext?.dueDate)
 
       setCurrentWeekNumber(resolvedCurrentWeek)
       setRecommendedWeekNumber(resolvedCurrentWeek)
@@ -868,7 +870,19 @@ function ParentScheduleScreen({
     return () => {
       isMounted = false
     }
-  }, [userId])
+  }, [userId, activeDateKey])
+
+  useEffect(() => {
+    const resolvedWeekNumber =
+      calculatePregnancyWeek(activeDateKey, scheduleUserContext?.dueDate) ??
+      scheduleUserContext?.currentWeek ??
+      null
+
+    setCurrentWeekNumber(resolvedWeekNumber)
+    setRecommendedWeekNumber(resolvedWeekNumber)
+    setWeekInputValue(resolvedWeekNumber ? String(resolvedWeekNumber) : '')
+    setIsWeekEditing(false)
+  }, [activeDateKey, scheduleUserContext?.currentWeek, scheduleUserContext?.dueDate])
 
   useEffect(() => {
     let isMounted = true

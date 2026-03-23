@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import keywordActiveBackground from '@shared-assets/srg/bold.svg'
 import { API_BASE_URL } from '../../config/api'
@@ -133,16 +133,25 @@ const COMMUNITY_RULE_SECTIONS = [
   },
 ]
 
-function CommunityWriteScreen({ userId, onBack, onSuccess }) {
+function CommunityWriteScreen({ userId, onBack, onSuccess, initialPost = null }) {
   const [openMenu, setOpenMenu] = useState(null)
-  const [selectedBoardId, setSelectedBoardId] = useState(null)
-  const [selectedKeywordId, setSelectedKeywordId] = useState(null)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [selectedBoardId, setSelectedBoardId] = useState(initialPost?.boardId ?? null)
+  const [selectedKeywordId, setSelectedKeywordId] = useState(initialPost?.keywordId ?? null)
+  const [title, setTitle] = useState(initialPost?.title ?? '')
+  const [content, setContent] = useState(initialPost?.content ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditMode = Boolean(initialPost?.postId)
 
   const selectedBoard = BOARD_OPTIONS.find((item) => item.id === selectedBoardId) ?? null
   const selectedKeyword = KEYWORD_OPTIONS.find((item) => item.id === selectedKeywordId) ?? null
+
+  useEffect(() => {
+    setOpenMenu(null)
+    setSelectedBoardId(initialPost?.boardId ?? null)
+    setSelectedKeywordId(initialPost?.keywordId ?? null)
+    setTitle(initialPost?.title ?? '')
+    setContent(initialPost?.content ?? '')
+  }, [initialPost])
 
   const selectOption = (type, value) => {
     if (type === 'board') {
@@ -169,28 +178,38 @@ function CommunityWriteScreen({ userId, onBack, onSuccess }) {
     try {
       setIsSubmitting(true)
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/community/posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        isEditMode ? `${API_BASE_URL}/api/v1/community/posts/${initialPost.postId}` : `${API_BASE_URL}/api/v1/community/posts`,
+        {
+          method: isEditMode ? 'PATCH' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            authorUserId: userId,
+            boardId: selectedBoardId,
+            keywordId: selectedKeywordId,
+            title: title.trim(),
+            content: content.trim(),
+            isAnonymous: initialPost?.isAnonymous ?? false,
+          }),
         },
-        body: JSON.stringify({
-          authorUserId: userId,
-          boardId: selectedBoardId,
-          keywordId: selectedKeywordId,
-          title: title.trim(),
-          content: content.trim(),
-          isAnonymous: false,
-        }),
-      })
+      )
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => null)
-        const errorMessage = errorPayload?.message ?? `Failed to create community post: ${response.status}`
+        const errorMessage = errorPayload?.message ?? `${isEditMode ? 'Failed to update' : 'Failed to create'} community post: ${response.status}`
         throw new Error(errorMessage)
       }
 
-      onSuccess?.()
+      onSuccess?.({
+        postId: initialPost?.postId ?? null,
+        boardId: selectedBoardId,
+        keywordId: selectedKeywordId,
+        title: title.trim(),
+        content: content.trim(),
+        isAnonymous: initialPost?.isAnonymous ?? false,
+      })
     } catch (error) {
       console.error(error)
       window.alert(error instanceof Error ? error.message : '게시글 저장 중 문제가 생겼어요. 다시 시도해주세요.')
