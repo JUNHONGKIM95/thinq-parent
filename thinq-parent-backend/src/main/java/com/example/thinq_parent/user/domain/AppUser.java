@@ -35,6 +35,9 @@ public class AppUser {
 	@Column(length = 20)
 	private String role;
 
+	@Column(name = "group_id")
+	private Integer groupId;
+
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
 	private LocalDateTime createdAt;
@@ -94,6 +97,10 @@ public class AppUser {
 
 	public String getRole() {
 		return role;
+	}
+
+	public Integer getGroupId() {
+		return groupId;
 	}
 
 	public LocalDateTime getCreatedAt() {

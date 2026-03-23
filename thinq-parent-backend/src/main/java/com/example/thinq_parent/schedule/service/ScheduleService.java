@@ -4,6 +4,7 @@ import com.example.thinq_parent.schedule.dto.ScheduleCreateRequest;
 import com.example.thinq_parent.schedule.dto.ScheduleResponse;
 import com.example.thinq_parent.schedule.dto.ScheduleUpdateRequest;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ScheduleService {
@@ -15,6 +16,8 @@ public interface ScheduleService {
 	ScheduleResponse findById(Integer scheduleId);
 
 	List<ScheduleResponse> findByUserId(Integer userId);
+
+	List<ScheduleResponse> findDailyByUserId(Integer userId, LocalDate date);
 
 	List<ScheduleResponse> findByGroupId(Integer groupId);
 

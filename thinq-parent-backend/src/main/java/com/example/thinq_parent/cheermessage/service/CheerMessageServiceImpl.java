@@ -70,6 +70,26 @@ public class CheerMessageServiceImpl implements CheerMessageService {
 				));
 	}
 
+	@Override
+	public CheerMessageResponse findLatestByUserId(Integer userId) {
+		AppUser user = getUserById(userId);
+		Integer groupId = user.getGroupId();
+
+		if (groupId == null) {
+			return new CheerMessageResponse(
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
+		}
+
+		return findLatestContentByGroupId(groupId);
+	}
+
 	private CheerMessage expireIfNeeded(CheerMessage message) {
 		if (message.getCreatedAt() == null || message.getContent() == null) {
 			return message;
@@ -86,6 +106,22 @@ public class CheerMessageServiceImpl implements CheerMessageService {
 		if (!familyGroupRepository.existsById(groupId)) {
 			throw new ResourceNotFoundException("Family group not found. groupId=" + groupId);
 		}
+	}
+
+	private CheerMessageResponse findLatestContentByGroupId(Integer groupId) {
+		validateGroup(groupId);
+
+		return cheerMessageRepository.findFirstByGroupIdOrderByCreatedAtDesc(groupId)
+				.map(this::toResponseOrEmpty)
+				.orElseGet(() -> new CheerMessageResponse(
+						null,
+						groupId,
+						null,
+						null,
+						null,
+						null,
+						null
+				));
 	}
 
 	private AppUser getUserById(Integer userId) {
