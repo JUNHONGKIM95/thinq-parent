@@ -13,6 +13,7 @@ import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_�
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import { API_BASE_URL } from '../../config/api'
+import { readCachedCommunityDetail, readCachedCommunityList, writeCachedCommunityDetail, writeCachedCommunityList } from './communityCache'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -169,6 +170,28 @@ function mapCommunityPost(post, index) {
   }
 }
 
+function buildCommunityDetailCacheValue(post) {
+  if (!post?.postId) {
+    return null
+  }
+
+  return {
+    detail: {
+      postId: post.postId,
+      title: post.title,
+      content: post.content,
+      mbtiLabel: post.mbtiLabel,
+      keywordLabel: post.boardLabel || '키워드',
+      likeCount: post.likeCount,
+      commentCount: post.commentCount,
+      elapsedTimeText: post.elapsedTimeText,
+      authorUserId: post.authorUserId,
+      authorUsername: post.authorUsername,
+    },
+    comments: readCachedCommunityDetail(post.postId)?.comments ?? [],
+  }
+}
+
 async function fetchCommunityPosts({ boardId, keywordId, sameMombtiOnly, userId }) {
   const query = new URLSearchParams()
 
@@ -238,8 +261,19 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
 
   useEffect(() => {
     let isMounted = true
+    const cacheFilters = {
+      boardId: selectedBoardId,
+      keywordId: selectedKeywordId,
+      sameMombtiOnly: isMomBtiOnly,
+      userId,
+    }
+    const cachedValue = readCachedCommunityList(cacheFilters)
 
-    setIsLoadingPosts(true)
+    if (Array.isArray(cachedValue?.posts) && cachedValue.posts.length) {
+      setPosts(cachedValue.posts)
+    }
+
+    setIsLoadingPosts(!(Array.isArray(cachedValue?.posts) && cachedValue.posts.length))
 
     fetchCommunityPosts({
       boardId: selectedBoardId,
@@ -253,6 +287,7 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
         }
 
         setPosts(nextPosts)
+        writeCachedCommunityList(cacheFilters, nextPosts)
       })
       .catch((error) => {
         console.error(error)
@@ -261,7 +296,9 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
           return
         }
 
-        setPosts([])
+        if (!(Array.isArray(cachedValue?.posts) && cachedValue.posts.length)) {
+          setPosts([])
+        }
       })
       .finally(() => {
         if (!isMounted) {
@@ -409,7 +446,15 @@ function CommunityScreen({ userId, onBack, onOpenHome, onOpenDevice, onOpenMy, o
                 className="community-post-card community-post-card--button"
                 key={post.key}
                 data-post-id={post.postId}
-                onClick={() => onOpenPost?.(post.postId)}
+                onClick={() => {
+                  const detailCacheValue = buildCommunityDetailCacheValue(post)
+
+                  if (detailCacheValue) {
+                    writeCachedCommunityDetail(post.postId, detailCacheValue)
+                  }
+
+                  onOpenPost?.(post.postId)
+                }}
               >
                 <div className="community-post-topline">
                   <div className="community-post-tags">

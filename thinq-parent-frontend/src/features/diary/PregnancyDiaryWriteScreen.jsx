@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
+import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
 import diaryHeartIcon from '@shared-assets/srg/diary_heart.svg'
 import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
 import { API_BASE_URL } from '../../config/api'
+import {
+  readCachedDiaryDetail,
+  updateCachedDiaryDetail,
+  upsertDiaryInCachedLists,
+  writeCachedDiaryDetail,
+} from './diaryCache'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -135,6 +142,83 @@ function normalizeDiaryDetail(payload) {
   }
 }
 
+function extractDiaryId(payload, fallbackId = null) {
+  const item = payload?.data?.item ?? payload?.data ?? payload
+
+  if (!item || typeof item !== 'object') {
+    return fallbackId
+  }
+
+  return item.diaryId ?? item.id ?? item.diary_id ?? fallbackId
+}
+
+function normalizeImageForCache(image) {
+  const url = getImageUrl(image)
+
+  if (!url) {
+    return null
+  }
+
+  return {
+    id: getImageId(image),
+    url,
+  }
+}
+
+function buildDiaryCacheValue({
+  diaryId,
+  title,
+  content,
+  diaryDate,
+  authorName,
+  authorUserId,
+  images,
+  isMine = true,
+}) {
+  if (!diaryId) {
+    return null
+  }
+
+  const normalizedImages = (Array.isArray(images) ? images : [])
+    .map((image) => normalizeImageForCache(image) ?? image)
+    .filter((image) => image?.url)
+
+  const primaryImage = normalizedImages[0]?.url ?? ''
+
+  return {
+    id: diaryId,
+    title,
+    content,
+    diaryDate,
+    authorName: authorName || '',
+    authorUserId: authorUserId ?? null,
+    isMine: Boolean(isMine),
+    thumbnailImageUrl: primaryImage,
+    imageUrl: primaryImage,
+    thumbnailDiaryImageId: normalizedImages[0]?.id ?? null,
+    images: normalizedImages,
+  }
+}
+
+function buildDiaryListItem(detail) {
+  if (!detail?.id) {
+    return null
+  }
+
+  return {
+    id: detail.id,
+    image: detail.thumbnailImageUrl || diaryExampleImage,
+    imageUrl: detail.thumbnailImageUrl || '',
+    date: detail.diaryDate ? detail.diaryDate.replaceAll('-', '/') : '-',
+    diaryDate: detail.diaryDate || '',
+    author: detail.authorName || '',
+    title: detail.title || '',
+    content: detail.content || '',
+    isMine: Boolean(detail.isMine),
+    thumbnailDiaryImageId: detail.thumbnailDiaryImageId ?? null,
+  }
+}
+
 function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, initialDiary }) {
   const isEditMode = Boolean(initialDiary?.id)
   const initialDiaryDate = initialDiary?.diaryDate || getDateKey(new Date())
@@ -152,15 +236,18 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
   const isSubmitDisabled = isSubmitting || !title.trim() || !content.trim() || !userId
 
   useEffect(() => {
-    setTitle(initialDiary?.title || '')
-    setContent(initialDiary?.content || '')
+    const cachedDetail = isEditMode && initialDiary?.id ? readCachedDiaryDetail(userId, initialDiary.id) : null
+    const sourceDiary = cachedDetail || initialDiary
+
+    setTitle(sourceDiary?.title || '')
+    setContent(sourceDiary?.content || '')
     setSelectedFile(null)
     setStatusMessage('')
-    setExistingImages(Array.isArray(initialDiary?.images) ? initialDiary.images.map((image) => ({
+    setExistingImages(Array.isArray(sourceDiary?.images) ? sourceDiary.images.map((image) => ({
       id: image?.id ?? image?.diaryImageId ?? image?.imageId ?? null,
       url: image?.url ?? image?.imageUrl ?? '',
     })).filter((image) => image.url) : [])
-  }, [initialDiary])
+  }, [initialDiary, isEditMode, userId])
 
   useEffect(() => {
     if (!isEditMode || !initialDiary?.id) {
@@ -193,6 +280,13 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
         setTitle(detail.title || '')
         setContent(detail.content || '')
         setExistingImages(detail.images)
+        writeCachedDiaryDetail(userId, initialDiary.id, {
+          id: initialDiary.id,
+          ...detail,
+          authorName: initialDiary?.authorName ?? initialDiary?.author ?? '',
+          authorUserId: userId,
+          isMine: true,
+        })
       } catch (error) {
         if (error.name !== 'AbortError') {
           console.error(error)
@@ -270,7 +364,46 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
     try {
       await deleteDiaryImageById(diaryImageId)
 
-      setExistingImages((prev) => prev.filter((image) => String(image.id) !== String(diaryImageId)))
+      let nextImagesSnapshot = []
+
+      setExistingImages((prev) => {
+        nextImagesSnapshot = prev.filter((image) => String(image.id) !== String(diaryImageId))
+        return nextImagesSnapshot
+      })
+
+      if (initialDiary?.id) {
+        updateCachedDiaryDetail(userId, initialDiary.id, (prev) => {
+          if (!prev) {
+            return prev
+          }
+
+          const nextPrimaryImage = nextImagesSnapshot[0]?.url ?? ''
+
+          return {
+            ...prev,
+            images: nextImagesSnapshot,
+            thumbnailImageUrl: nextPrimaryImage,
+            imageUrl: nextPrimaryImage,
+            thumbnailDiaryImageId: nextImagesSnapshot[0]?.id ?? null,
+          }
+        })
+
+        const nextDetail = buildDiaryCacheValue({
+          diaryId: initialDiary.id,
+          title: initialDiary?.title || '',
+          content: initialDiary?.content || '',
+          diaryDate: initialDiary?.diaryDate || diaryDate,
+          authorName: initialDiary?.authorName ?? initialDiary?.author ?? '',
+          authorUserId: userId,
+          images: nextImagesSnapshot,
+        })
+
+        const listItem = buildDiaryListItem(nextDetail)
+
+        if (listItem) {
+          upsertDiaryInCachedLists(userId, listItem)
+        }
+      }
       setStatusMessage('이미지를 삭제했어요.')
     } catch (error) {
       console.error(error)
@@ -316,10 +449,13 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
         uploadedImage = normalizeUploadedImage(uploadPayload)
       }
 
+      const committedTitle = title.trim()
+      const committedContent = content.trim()
+      const persistedAuthorName = initialDiary?.authorName ?? initialDiary?.author ?? ''
       const basePayload = {
         authorUserId: userId,
-        title: title.trim(),
-        content: content.trim(),
+        title: committedTitle,
+        content: committedContent,
         diaryDate,
       }
 
@@ -367,6 +503,30 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
         for (const diaryImageId of existingImageIdsToReplace) {
           await deleteDiaryImageById(diaryImageId)
         }
+
+        const nextImages = uploadedImage
+          ? [uploadedImage]
+          : existingImages
+
+        const nextDetail = buildDiaryCacheValue({
+          diaryId: initialDiary.id,
+          title: committedTitle,
+          content: committedContent,
+          diaryDate,
+          authorName: persistedAuthorName,
+          authorUserId: userId,
+          images: nextImages,
+        })
+
+        if (nextDetail) {
+          writeCachedDiaryDetail(userId, initialDiary.id, nextDetail)
+
+          const listItem = buildDiaryListItem(nextDetail)
+
+          if (listItem) {
+            upsertDiaryInCachedLists(userId, listItem)
+          }
+        }
       } else {
         const createPayload = { ...basePayload }
 
@@ -390,6 +550,28 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
 
         if (createPayloadResult?.success === false) {
           throw new Error(createPayloadResult?.message || 'Pregnancy diary create failed')
+        }
+
+        const createdDiaryId = extractDiaryId(createPayloadResult)
+        const nextImages = uploadedImage ? [uploadedImage] : []
+        const nextDetail = buildDiaryCacheValue({
+          diaryId: createdDiaryId,
+          title: committedTitle,
+          content: committedContent,
+          diaryDate,
+          authorName: persistedAuthorName,
+          authorUserId: userId,
+          images: nextImages,
+        })
+
+        if (nextDetail) {
+          writeCachedDiaryDetail(userId, createdDiaryId, nextDetail)
+
+          const listItem = buildDiaryListItem(nextDetail)
+
+          if (listItem) {
+            upsertDiaryInCachedLists(userId, listItem, { prepend: true })
+          }
         }
       }
 

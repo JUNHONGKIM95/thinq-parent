@@ -5,6 +5,7 @@ import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
 import diaryEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
 import { API_BASE_URL } from '../../config/api'
+import { readCachedDiaryList, removeDiaryFromCache, writeCachedDiaryDetail, writeCachedDiaryList } from './diaryCache'
 
 const DIARY_PAGE_SIZE = 10
 
@@ -88,6 +89,35 @@ function mapDiaryItem(item) {
   }
 }
 
+function buildDetailCacheValue(item, userId) {
+  if (!item?.id) {
+    return null
+  }
+
+  const images = item.imageUrl
+    ? [
+        {
+          id: item.thumbnailDiaryImageId ?? null,
+          url: item.imageUrl,
+        },
+      ]
+    : []
+
+  return {
+    id: item.id,
+    title: item.title,
+    content: item.content,
+    diaryDate: item.diaryDate,
+    authorName: item.author,
+    authorUserId: item.isMine ? userId : null,
+    isMine: item.isMine,
+    thumbnailImageUrl: item.imageUrl,
+    imageUrl: item.imageUrl,
+    thumbnailDiaryImageId: item.thumbnailDiaryImageId ?? null,
+    images,
+  }
+}
+
 function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetail }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [diaryItems, setDiaryItems] = useState([])
@@ -105,9 +135,15 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
 
     let isMounted = true
     const controller = new AbortController()
+    const cachedValue = readCachedDiaryList(userId, currentPage, DIARY_PAGE_SIZE)
+
+    if (cachedValue?.items?.length) {
+      setDiaryItems(cachedValue.items)
+      setTotalPages(Math.max(1, Number(cachedValue?.pagination?.totalPages) || 1))
+    }
 
     const fetchDiaries = async () => {
-      setIsLoading(true)
+      setIsLoading(!cachedValue?.items?.length)
       setErrorMessage('')
 
       try {
@@ -133,8 +169,21 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
           return
         }
 
-        setDiaryItems(items.map(mapDiaryItem))
-        setTotalPages(Math.max(1, Number(pagination?.totalPages) || 1))
+        const mappedItems = items.map(mapDiaryItem)
+        const nextTotalPages = Math.max(1, Number(pagination?.totalPages) || 1)
+
+        setDiaryItems(mappedItems)
+        setTotalPages(nextTotalPages)
+
+        writeCachedDiaryList(userId, currentPage, DIARY_PAGE_SIZE, {
+          items: mappedItems,
+          pagination: {
+            page: Number(pagination?.page) || currentPage,
+            limit: Number(pagination?.limit) || DIARY_PAGE_SIZE,
+            totalCount: Number(pagination?.totalCount) || mappedItems.length,
+            totalPages: nextTotalPages,
+          },
+        })
       } catch (error) {
         if (error.name === 'AbortError') {
           return
@@ -146,9 +195,11 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
           return
         }
 
-        setDiaryItems([])
-        setTotalPages(1)
-        setErrorMessage('임신일기 목록을 불러오지 못했어요.')
+        if (!cachedValue?.items?.length) {
+          setDiaryItems([])
+          setTotalPages(1)
+          setErrorMessage('임신일기 목록을 불러오지 못했어요.')
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false)
@@ -195,6 +246,7 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
         throw new Error(payload?.message || 'Pregnancy diary delete failed')
       }
 
+      removeDiaryFromCache(userId, diaryId)
       setReloadToken((prev) => prev + 1)
     } catch (error) {
       console.error(error)
@@ -231,7 +283,15 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
                 type="button"
                 className="pregnancy-diary-card-link"
                 aria-label={`${item.title} 상세 보기`}
-                onClick={() => onOpenDetail?.(item.id)}
+                onClick={() => {
+                  const detailCacheValue = buildDetailCacheValue(item, userId)
+
+                  if (detailCacheValue) {
+                    writeCachedDiaryDetail(userId, item.id, detailCacheValue)
+                  }
+
+                  onOpenDetail?.(item.id)
+                }}
               />
               <div className="pregnancy-diary-image-frame">
                 <img src={item.image} alt="" className="pregnancy-diary-image" />
@@ -252,6 +312,12 @@ function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetai
                       aria-label="일기 수정"
                       onClick={(event) => {
                         event.stopPropagation()
+                        const detailCacheValue = buildDetailCacheValue(item, userId)
+
+                        if (detailCacheValue) {
+                          writeCachedDiaryDetail(userId, item.id, detailCacheValue)
+                        }
+
                         onEdit?.(item)
                       }}
                     >

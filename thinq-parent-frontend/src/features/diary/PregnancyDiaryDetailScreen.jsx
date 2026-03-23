@@ -5,6 +5,13 @@ import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
 import diaryEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
 import { API_BASE_URL } from '../../config/api'
+import {
+  readCachedDiaryDetail,
+  removeDiaryFromCache,
+  updateCachedDiaryDetail,
+  upsertDiaryInCachedLists,
+  writeCachedDiaryDetail,
+} from './diaryCache'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -94,6 +101,25 @@ function normalizeDiaryDetail(payload) {
   }
 }
 
+function buildDiaryListItem(detail) {
+  if (!detail?.id) {
+    return null
+  }
+
+  return {
+    id: detail.id,
+    image: detail.thumbnailImageUrl || diaryExampleImage,
+    imageUrl: detail.thumbnailImageUrl || '',
+    date: formatDiaryDate(detail.diaryDate),
+    diaryDate: detail.diaryDate || '',
+    author: detail.authorName || '',
+    title: detail.title || '',
+    content: detail.content || '',
+    isMine: Boolean(detail.isMine),
+    thumbnailDiaryImageId: detail.thumbnailDiaryImageId ?? null,
+  }
+}
+
 function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted }) {
   const [detail, setDetail] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -109,9 +135,15 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
 
     let isMounted = true
     const controller = new AbortController()
+    const cachedValue = readCachedDiaryDetail(userId, diaryId)
+
+    if (cachedValue) {
+      setDetail(cachedValue)
+      setErrorMessage('')
+    }
 
     const fetchDiaryDetail = async () => {
-      setIsLoading(true)
+      setIsLoading(!cachedValue)
       setErrorMessage('')
 
       try {
@@ -135,8 +167,10 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
         }
 
         if (!nextDetail) {
-          setDetail(null)
-          setErrorMessage('임신일기 상세 정보를 불러오지 못했어요.')
+          if (!cachedValue) {
+            setDetail(null)
+            setErrorMessage('임신일기 상세 정보를 불러오지 못했어요.')
+          }
           return
         }
 
@@ -145,6 +179,13 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
         }
 
         setDetail(nextDetail)
+        writeCachedDiaryDetail(userId, diaryId, nextDetail)
+
+        const listItem = buildDiaryListItem(nextDetail)
+
+        if (listItem) {
+          upsertDiaryInCachedLists(userId, listItem)
+        }
       } catch (error) {
         if (error.name === 'AbortError') {
           return
@@ -156,8 +197,10 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
           return
         }
 
-        setDetail(null)
-        setErrorMessage('임신일기 상세 정보를 불러오지 못했어요.')
+        if (!cachedValue) {
+          setDetail(null)
+          setErrorMessage('임신일기 상세 정보를 불러오지 못했어요.')
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false)
@@ -202,6 +245,7 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
         throw new Error(payload?.message || 'Pregnancy diary delete failed')
       }
 
+      removeDiaryFromCache(userId, detail.id)
       onDeleted?.()
     } catch (error) {
       console.error(error)
@@ -240,6 +284,8 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
         throw new Error(payload?.message || 'Pregnancy diary image delete failed')
       }
 
+      let nextDetailSnapshot = null
+
       setDetail((prev) => {
         if (!prev) {
           return prev
@@ -248,14 +294,26 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
         const nextImages = prev.images.filter((image) => String(image.id) !== String(diaryImageId))
         const nextPrimaryImage = nextImages[0]?.url ?? ''
 
-        return {
+        nextDetailSnapshot = {
           ...prev,
           images: nextImages,
           thumbnailImageUrl: nextPrimaryImage,
           imageUrl: nextPrimaryImage,
           thumbnailDiaryImageId: nextImages[0]?.id ?? null,
         }
+
+        return nextDetailSnapshot
       })
+
+      if (nextDetailSnapshot) {
+        updateCachedDiaryDetail(userId, detail.id, nextDetailSnapshot)
+
+        const listItem = buildDiaryListItem(nextDetailSnapshot)
+
+        if (listItem) {
+          upsertDiaryInCachedLists(userId, listItem)
+        }
+      }
     } catch (error) {
       console.error(error)
       window.alert(error instanceof Error ? error.message : '이미지 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
@@ -317,7 +375,10 @@ function PregnancyDiaryDetailScreen({ diaryId, userId, onBack, onEdit, onDeleted
                     type="button"
                     className="pregnancy-diary-action pregnancy-diary-action--edit"
                     aria-label="일기 수정"
-                    onClick={() => onEdit?.(detail)}
+                    onClick={() => {
+                      writeCachedDiaryDetail(userId, detail.id, detail)
+                      onEdit?.(detail)
+                    }}
                   >
                     <img src={diaryEditActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
                   </button>

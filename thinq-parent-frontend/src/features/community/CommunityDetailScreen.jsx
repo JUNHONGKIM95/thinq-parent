@@ -10,6 +10,11 @@ import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_�
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import { API_BASE_URL } from '../../config/api'
+import {
+  readCachedCommunityDetail,
+  upsertCommunityPostInCachedLists,
+  writeCachedCommunityDetail,
+} from './communityCache'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -206,6 +211,24 @@ function mapCommunityComment(comment) {
   }
 }
 
+function buildCommunityListUpdate(detail) {
+  if (!detail?.postId) {
+    return null
+  }
+
+  return {
+    postId: detail.postId,
+    title: detail.title,
+    content: detail.content,
+    authorUserId: detail.authorUserId,
+    authorUsername: detail.authorUsername,
+    mbtiLabel: detail.mbtiLabel,
+    likeCount: detail.likeCount,
+    commentCount: detail.commentCount,
+    elapsedTimeText: detail.elapsedTimeText,
+  }
+}
+
 async function fetchCommunityPostDetail(postId) {
   const response = await fetch(`${API_BASE_URL}/api/v1/community/posts/${postId}`)
 
@@ -374,8 +397,20 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
       fetchCommunityPostComments(postId),
     ])
 
+    const nextCommentsWithMombti = await enrichCommentMombtiLabels(nextComments)
+
     setDetail(nextDetail)
-    setComments(await enrichCommentMombtiLabels(nextComments))
+    setComments(nextCommentsWithMombti)
+    writeCachedCommunityDetail(postId, {
+      detail: nextDetail,
+      comments: nextCommentsWithMombti,
+    })
+
+    const listUpdate = buildCommunityListUpdate(nextDetail)
+
+    if (listUpdate) {
+      upsertCommunityPostInCachedLists(listUpdate)
+    }
   }
 
   useEffect(() => {
@@ -387,8 +422,15 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     }
 
     let isMounted = true
+    const cachedValue = readCachedCommunityDetail(postId)
 
-    setIsLoading(true)
+    if (cachedValue?.detail) {
+      setDetail(cachedValue.detail)
+      setComments(Array.isArray(cachedValue.comments) ? cachedValue.comments : [])
+      setErrorMessage('')
+    }
+
+    setIsLoading(!cachedValue?.detail)
     setErrorMessage('')
     setIsActionMenuOpen(false)
     setEditingCommentId(null)
@@ -408,6 +450,16 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
 
         setDetail(nextDetail)
         setComments(nextCommentsWithMombti)
+        writeCachedCommunityDetail(postId, {
+          detail: nextDetail,
+          comments: nextCommentsWithMombti,
+        })
+
+        const listUpdate = buildCommunityListUpdate(nextDetail)
+
+        if (listUpdate) {
+          upsertCommunityPostInCachedLists(listUpdate)
+        }
       })
       .catch((error) => {
         console.error(error)
@@ -416,9 +468,11 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
           return
         }
 
-        setDetail(null)
-        setComments([])
-        setErrorMessage(error instanceof Error ? error.message : '게시글을 불러오지 못했어요.')
+        if (!cachedValue?.detail) {
+          setDetail(null)
+          setComments([])
+          setErrorMessage(error instanceof Error ? error.message : '게시글을 불러오지 못했어요.')
+        }
       })
       .finally(() => {
         if (!isMounted) {

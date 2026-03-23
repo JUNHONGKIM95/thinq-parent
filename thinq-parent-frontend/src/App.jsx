@@ -2066,7 +2066,7 @@ function App() {
           <PregnancyDiaryDetailScreen
             diaryId={selectedPregnancyDiaryId}
             userId={currentUserId}
-            onBack={goPregnancyDiaryHome}
+            onBack={goBack}
             onEdit={openPregnancyDiaryEdit}
             onDeleted={goBack}
           />
@@ -2075,7 +2075,7 @@ function App() {
         {currentScreen === 'pregnancy-diary-write' && (
           <PregnancyDiaryWriteScreen
             userId={currentUserId}
-            onBack={goPregnancyDiaryHome}
+            onBack={goBack}
             onSuccess={goBack}
             babyNickname={pregnancySummary.babyNickname}
             initialDiary={editingPregnancyDiary}
