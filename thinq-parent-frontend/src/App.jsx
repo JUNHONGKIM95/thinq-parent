@@ -1668,12 +1668,8 @@ function App() {
   }
 
   const handleParentModeBack = () => {
-    if (!screenHistory.length) {
-      setCurrentScreen('home')
-      return
-    }
-
-    goBack()
+    setCurrentScreen('home')
+    setScreenHistory([])
   }
 
   const openSettings = () => {
