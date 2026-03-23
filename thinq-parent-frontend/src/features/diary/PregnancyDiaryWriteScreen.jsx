@@ -3,6 +3,7 @@ import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
 import diaryHeartIcon from '@shared-assets/srg/diary_heart.svg'
 import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
+import diaryMediaIcon from '@shared-assets/srg/in_image.svg'
 import { API_BASE_URL } from '../../config/api'
 import {
   readCachedDiaryDetail,
@@ -13,29 +14,6 @@ import {
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
-}
-
-function MediaIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M4.5 7.5A2 2 0 0 1 6.5 5.5h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <circle cx="9" cy="10" r="1.4" fill="currentColor" />
-      <path
-        d="m7.5 16 3.3-3 2.6 2.2 2.1-1.9 2 2.7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
 }
 
 function getDateKey(date = new Date()) {
@@ -601,12 +579,12 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
             <span className="pregnancy-diary-write-dot" aria-hidden="true" />
           </div>
 
-          <label className="pregnancy-diary-write-media pregnancy-diary-write-media-button">
+          <label className="pregnancy-diary-write-media">
             {previewUrl ? (
               <img src={previewUrl} alt="" className="pregnancy-diary-write-preview" />
             ) : (
               <>
-                <MediaIcon />
+                <img src={diaryMediaIcon} alt="" className="pregnancy-diary-write-media-icon" aria-hidden="true" />
                 <span className="pregnancy-diary-write-media-text">이미지 추가</span>
               </>
             )}

@@ -6183,6 +6183,8 @@
 }
 
 .pregnancy-diary-write-media {
+  position: relative;
+  cursor: pointer;
   display: grid;
   place-items: center;
   background: rgba(154, 141, 141, 0.8);
@@ -6190,15 +6192,10 @@
   overflow: hidden;
 }
 
-.pregnancy-diary-write-media svg {
+.pregnancy-diary-write-media-icon {
   width: 32px;
   height: 32px;
   display: block;
-}
-
-.pregnancy-diary-write-media-button {
-  position: relative;
-  cursor: pointer;
 }
 
 .pregnancy-diary-write-media-input {
@@ -6214,10 +6211,7 @@
 }
 
 .pregnancy-diary-write-media-text {
-  margin-top: 10px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  display: none;
 }
 
 .pregnancy-diary-write-preview {
