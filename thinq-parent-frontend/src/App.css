@@ -1665,6 +1665,7 @@ select {
   display: flex;
   height: 30px;
   align-items: center;
+  
   justify-content: space-between;
   gap: 18px;
 }
@@ -1679,10 +1680,10 @@ select {
 }
 
 .parent-device-control-copy p {
-  margin: 10px 0 0;
+  margin : 1px 0 0 0;
   font-size: 0.8125rem;
   font-weight: 300;
-  line-height: 1.35;
+  line-height: 1;
   letter-spacing: -0.02em;
   color: #000000;
 }
@@ -1797,7 +1798,7 @@ select {
 }
 
 .parent-device-info-card h3 {
-  margin: 0 0 8px;
+  margin: 0 7px 8px;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.2;
@@ -1806,7 +1807,7 @@ select {
 }
 
 .parent-device-info-card p {
-  margin: 0;
+  margin: 0 7px;
   font-size: 0.8125rem;
   font-weight: 400;
   line-height: 1.35;

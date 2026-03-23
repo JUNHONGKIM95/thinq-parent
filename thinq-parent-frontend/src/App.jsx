@@ -2209,7 +2209,7 @@ function App() {
 
           {currentScreen === 'parent-mode-device' && (
             <ParentDeviceScreen
-              onBack={goBack}
+              onBack={() => navigateToScreen('parent-mode')}
               onOpenHome={() => navigateToScreen('parent-mode')}
               onOpenMy={openMyScreen}
               onOpenCommunity={openCommunity}
