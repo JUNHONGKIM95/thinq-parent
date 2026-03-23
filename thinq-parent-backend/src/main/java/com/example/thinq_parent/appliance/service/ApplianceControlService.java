@@ -22,5 +22,7 @@ public interface ApplianceControlService {
 
 	List<ApplianceControlResponse> updateRoutineActivation(Integer userId, RoutineActivationRequest request);
 
+	List<ApplianceControlResponse> changeRoutine(Integer userId, ApplianceControlSetupRequest request);
+
 	List<RoutineResponse> getRoutines();
 }

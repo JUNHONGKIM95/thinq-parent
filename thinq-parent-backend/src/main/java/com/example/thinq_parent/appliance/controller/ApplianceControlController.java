@@ -35,10 +35,10 @@ public class ApplianceControlController {
 
 	@PostMapping
 	@Operation(
-			summary = "가전 제어 초기 설정 (시작하기)",
-			description = "루틴(초기/중기/후기)을 선택하여 4개 가전의 제어 상태를 등록합니다. "
-					+ "이미 등록된 경우 선택된 루틴만 변경되고 routineActivated=true로 활성화됩니다. "
-					+ "화면: 루틴 상세 페이지의 '시작하기' 버튼 클릭 시 호출"
+			summary = "가전 제어 초기 설정 (최초 시작하기)",
+			description = "루틴(초기/중기/후기)을 선택하여 4개 가전의 제어 상태를 최초 등록합니다. "
+					+ "이미 등록된 사용자는 PATCH /routine으로 루틴을 변경해주세요. "
+					+ "화면: 루틴 상세 페이지의 '시작하기' 버튼 (최초 1회)"
 	)
 	public ApiResponse<List<ApplianceControlResponse>> setupControls(
 			@Parameter(description = "사용자 ID", required = true)
@@ -48,6 +48,24 @@ public class ApplianceControlController {
 		return ApiResponse.success(
 				"가전 제어 설정이 완료되었습니다.",
 				applianceControlService.setupControls(userId, request)
+		);
+	}
+
+	@PatchMapping("/routine")
+	@Operation(
+			summary = "루틴 변경 (초기→중기→후기)",
+			description = "현재 선택된 루틴을 다른 루틴으로 변경합니다. "
+					+ "변경 시 routineActivated=true로 자동 활성화됩니다. "
+					+ "화면: 루틴 상세 페이지의 '시작하기' 버튼 (이미 등록된 사용자)"
+	)
+	public ApiResponse<List<ApplianceControlResponse>> changeRoutine(
+			@Parameter(description = "사용자 ID", required = true)
+			@RequestHeader("X-USER-ID") Integer userId,
+			@Valid @RequestBody ApplianceControlSetupRequest request
+	) {
+		return ApiResponse.success(
+				"루틴이 변경되었습니다.",
+				applianceControlService.changeRoutine(userId, request)
 		);
 	}
 

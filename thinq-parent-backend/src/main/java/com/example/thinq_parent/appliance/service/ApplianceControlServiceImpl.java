@@ -54,14 +54,10 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 			throw new IllegalStateException("등록된 가전 마스터가 없습니다.");
 		}
 
-		// 기존 데이터가 있으면 루틴 변경 + 활성화
+		// 이미 등록된 사용자면 에러 (루틴 변경은 PATCH /routine 사용)
 		List<UserApplianceControl> existing = userApplianceControlRepository.findByUserIdOrderByApplianceMasterIdAsc(userId);
 		if (!existing.isEmpty()) {
-			for (UserApplianceControl control : existing) {
-				control.updateRoutine(routine.getRoutineId());
-				control.updateRoutineActivated(true);
-			}
-			return buildResponses(existing);
+			throw new IllegalStateException("이미 가전 제어가 등록되어 있습니다. 루틴 변경은 PATCH /routine을 사용하세요.");
 		}
 
 		// 신규: 4개 가전에 대해 제어 레코드 생성 (루틴 활성화 상태로)
@@ -73,6 +69,25 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 			controls.add(control);
 		}
 		userApplianceControlRepository.saveAll(controls);
+
+		return buildResponses(controls);
+	}
+
+	@Override
+	@Transactional
+	public List<ApplianceControlResponse> changeRoutine(Integer userId, ApplianceControlSetupRequest request) {
+		RoutineMaster routine = routineMasterRepository.findById(request.routineId())
+				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 루틴입니다: " + request.routineId()));
+
+		List<UserApplianceControl> controls = userApplianceControlRepository.findByUserIdOrderByApplianceMasterIdAsc(userId);
+		if (controls.isEmpty()) {
+			throw new IllegalArgumentException("등록된 가전 제어 정보가 없습니다. 먼저 POST로 초기 설정을 해주세요.");
+		}
+
+		for (UserApplianceControl control : controls) {
+			control.updateRoutine(routine.getRoutineId());
+			control.updateRoutineActivated(true);
+		}
 
 		return buildResponses(controls);
 	}

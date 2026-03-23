@@ -42,7 +42,7 @@ public class PregnancyDiaryStorageServiceImpl implements PregnancyDiaryStorageSe
 	public PregnancyDiaryStorageServiceImpl(
 			JdbcTemplate jdbcTemplate,
 			@Value("${supabase.project-url:https://tvaxyqnthesqpeeifgbe.supabase.co}") String projectUrl,
-			@Value("${supabase.service-role-key:}") String serviceRoleKey,
+			@Value("${supabase.service-role-key}") String serviceRoleKey,
 			@Value("${supabase.storage.pregnancy-diary-bucket:pregnancy-diary-images}") String defaultBucketName,
 			@Value("${supabase.storage.max-image-size-bytes:10485760}") long maxImageSizeBytes,
 			@Value("${supabase.storage.signed-url-duration-seconds:3600}") int signedUrlDurationSeconds

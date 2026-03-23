@@ -27,10 +27,10 @@ public class OpenApiConfig {
 	}
 
 	@Bean
-	public GroupedOpenApi publicApi() {
+	public GroupedOpenApi allApi() {
 		return GroupedOpenApi.builder()
-				.group("v1")
-				.pathsToMatch("/api/v1/**")
+				.group("all")
+				.pathsToMatch("/api/**")
 				.build();
 	}
 
