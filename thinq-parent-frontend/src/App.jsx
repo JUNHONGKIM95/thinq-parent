@@ -662,6 +662,14 @@ function isApplianceAlertSoundEnabled(control) {
   )
 }
 
+function applyApplianceAlertSoundEnabled(controls, enabled) {
+  return controls.map((control) => ({
+    ...control,
+    alertSoundEnabled: enabled,
+    alert_sound_enabled: enabled,
+  }))
+}
+
 async function fetchApplianceControls(userId) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/appliance-controls`, {
@@ -718,7 +726,8 @@ async function patchApplianceAlertSoundAll(userId, enabled) {
     throw new Error(payload?.message || '가전 알림음 제어 저장에 실패했어요.')
   }
 
-  return response.json().catch(() => null)
+  const payload = await response.json().catch(() => null)
+  return getApplianceControlsPayload(payload)
 }
 
 async function patchApplianceRoutine(userId, routineId) {
@@ -1875,13 +1884,19 @@ function App() {
     }
 
     const nextEnabled = !applianceControls.every(isApplianceAlertSoundEnabled)
+    const previousControls = applianceControls
 
     setIsApplianceAlertSaving(true)
+    setApplianceControls(applyApplianceAlertSoundEnabled(previousControls, nextEnabled))
 
     try {
-      await patchApplianceAlertSoundAll(currentUserId, nextEnabled)
-      await refreshApplianceControls(currentUserId)
+      const updatedControls = await patchApplianceAlertSoundAll(currentUserId, nextEnabled)
+
+      if (updatedControls.length) {
+        setApplianceControls(updatedControls)
+      }
     } catch (error) {
+      setApplianceControls(previousControls)
       window.alert(error instanceof Error ? error.message : '가전 알림음 제어 저장에 실패했어요.')
     } finally {
       setIsApplianceAlertSaving(false)
