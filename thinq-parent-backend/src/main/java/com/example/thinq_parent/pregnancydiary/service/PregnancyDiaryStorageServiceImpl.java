@@ -215,7 +215,10 @@ public class PregnancyDiaryStorageServiceImpl implements PregnancyDiaryStorageSe
 
 	private void requireServiceRoleKey() {
 		if (!StringUtils.hasText(serviceRoleKey)) {
-			throw new InvalidRequestException("Supabase service role key is not configured for storage operations.");
+			throw new InvalidRequestException(
+					"Supabase service role key is not configured for storage operations. "
+							+ "Set SUPABASE_SERVICE_ROLE_KEY or supabase.service-role-key."
+			);
 		}
 	}
 

@@ -33,4 +33,17 @@ public class OpenApiConfig {
 				.pathsToMatch("/api/v1/**")
 				.build();
 	}
+
+	@Bean
+	public GroupedOpenApi applianceMvpApi() {
+		return GroupedOpenApi.builder()
+				.group("appliance-mvp")
+				.pathsToMatch(
+						"/api/life-mode-settings/**",
+						"/api/user-appliances/**",
+						"/api/routines/**",
+						"/api/routine-executions/**"
+				)
+				.build();
+	}
 }
