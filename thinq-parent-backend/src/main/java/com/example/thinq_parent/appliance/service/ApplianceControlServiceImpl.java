@@ -7,6 +7,7 @@ import com.example.thinq_parent.appliance.domain.UserApplianceControl;
 import com.example.thinq_parent.appliance.dto.AlertSoundUpdateRequest;
 import com.example.thinq_parent.appliance.dto.ApplianceControlResponse;
 import com.example.thinq_parent.appliance.dto.ApplianceControlSetupRequest;
+import com.example.thinq_parent.appliance.dto.RoutineActivationRequest;
 import com.example.thinq_parent.appliance.dto.RoutineResponse;
 import com.example.thinq_parent.appliance.repository.ApplianceMasterRepository;
 import com.example.thinq_parent.appliance.repository.RoutineActionRepository;
@@ -53,16 +54,17 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 			throw new IllegalStateException("등록된 가전 마스터가 없습니다.");
 		}
 
-		// 기존 데이터가 있으면 루틴만 업데이트
+		// 기존 데이터가 있으면 루틴 변경 + 활성화
 		List<UserApplianceControl> existing = userApplianceControlRepository.findByUserIdOrderByApplianceMasterIdAsc(userId);
 		if (!existing.isEmpty()) {
 			for (UserApplianceControl control : existing) {
 				control.updateRoutine(routine.getRoutineId());
+				control.updateRoutineActivated(true);
 			}
 			return buildResponses(existing);
 		}
 
-		// 신규: 4개 가전에 대해 제어 레코드 생성
+		// 신규: 4개 가전에 대해 제어 레코드 생성 (루틴 활성화 상태로)
 		List<UserApplianceControl> controls = new ArrayList<>();
 		for (ApplianceMaster appliance : appliances) {
 			UserApplianceControl control = new UserApplianceControl(
@@ -106,6 +108,36 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 	}
 
 	@Override
+	@Transactional
+	public List<ApplianceControlResponse> updateAlertSoundAll(Integer userId, AlertSoundUpdateRequest request) {
+		List<UserApplianceControl> controls = userApplianceControlRepository.findByUserIdOrderByApplianceMasterIdAsc(userId);
+		if (controls.isEmpty()) {
+			throw new IllegalArgumentException("등록된 가전 제어 정보가 없습니다. 먼저 루틴을 선택해주세요.");
+		}
+
+		for (UserApplianceControl control : controls) {
+			control.updateAlertSound(request.enabled());
+		}
+
+		return buildResponses(controls);
+	}
+
+	@Override
+	@Transactional
+	public List<ApplianceControlResponse> updateRoutineActivation(Integer userId, RoutineActivationRequest request) {
+		List<UserApplianceControl> controls = userApplianceControlRepository.findByUserIdOrderByApplianceMasterIdAsc(userId);
+		if (controls.isEmpty()) {
+			throw new IllegalArgumentException("등록된 가전 제어 정보가 없습니다. 먼저 루틴을 선택해주세요.");
+		}
+
+		for (UserApplianceControl control : controls) {
+			control.updateRoutineActivated(request.activated());
+		}
+
+		return buildResponses(controls);
+	}
+
+	@Override
 	public List<RoutineResponse> getRoutines() {
 		List<RoutineMaster> routines = routineMasterRepository.findAllByOrderByRoutineIdAsc();
 		Map<Long, ApplianceMaster> applianceMap = applianceMasterRepository.findAll().stream()
@@ -134,7 +166,9 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 					routine.getRoutineCode(),
 					routine.getPregnancyStage(),
 					routine.getRoutineName(),
+					routine.getRoutineSubtitle(),
 					routine.getRoutineDescription(),
+					routine.getRoutineDetailDescription(),
 					actionItems
 			);
 		}).toList();
@@ -150,7 +184,6 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 		RoutineMaster routine = routineMasterRepository.findById(control.getRoutineId())
 				.orElse(null);
 
-		// 해당 루틴 + 가전에 대한 액션 찾기
 		ApplianceControlResponse.RoutineActionInfo actionInfo = null;
 		if (routine != null) {
 			List<RoutineAction> actions = routineActionRepository.findByRoutineIdOrderBySequenceNoAsc(routine.getRoutineId());
@@ -182,6 +215,7 @@ public class ApplianceControlServiceImpl implements ApplianceControlService {
 				routine != null ? routine.getRoutineCode() : null,
 				routine != null ? routine.getPregnancyStage() : null,
 				routine != null ? routine.getRoutineName() : null,
+				control.getRoutineActivated(),
 				control.getAlertSoundEnabled(),
 				actionInfo,
 				control.getCreatedAt(),

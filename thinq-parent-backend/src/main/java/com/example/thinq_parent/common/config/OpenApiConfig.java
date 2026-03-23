@@ -35,15 +35,10 @@ public class OpenApiConfig {
 	}
 
 	@Bean
-	public GroupedOpenApi applianceMvpApi() {
+	public GroupedOpenApi applianceControlApi() {
 		return GroupedOpenApi.builder()
-				.group("appliance-mvp")
-				.pathsToMatch(
-						"/api/life-mode-settings/**",
-						"/api/user-appliances/**",
-						"/api/routines/**",
-						"/api/routine-executions/**"
-				)
+				.group("appliance-control")
+				.pathsToMatch("/api/appliance-controls/**")
 				.build();
 	}
 }

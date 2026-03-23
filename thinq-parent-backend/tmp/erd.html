@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>thinq-parent E-R Diagram</title>
+<style>
+  body{margin:0;padding:20px;background:#f5f5f5;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+  h2{text-align:center;color:#555;margin:10px 0}
+  .wrap{overflow:auto;border:1px solid #ccc;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+</style>
+</head>
+<body>
+<h2>thinq-parent E-R Diagram (Chen Notation) - 23 Tables</h2>
+<div class="wrap">
+<svg id="erd" width="3300" height="1950" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<script>
+const S=document.getElementById('erd');
+const ns='http://www.w3.org/2000/svg';
+function $(t,a){const e=document.createElementNS(ns,t);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e}
+function txt(x,y,s,sz=11,w='normal',c='#444',anc='middle',dec=''){
+  const t=$('text',{x,y:y+4,'text-anchor':anc,'font-size':sz,'font-weight':w,fill:c});
+  if(dec)t.setAttribute('text-decoration',dec);
+  t.textContent=s;S.appendChild(t);
+}
+function line(x1,y1,x2,y2,c='#aaa',w=1.2){S.appendChild($('line',{x1,y1,x2,y2,stroke:c,'stroke-width':w}))}
+function ent(x,y,label,w=130,h=36){
+  S.appendChild($('rect',{x:x-w/2,y:y-h/2,width:w,height:h,rx:4,fill:'#F2B6B6',stroke:'#D49A9A','stroke-width':1.8}));
+  txt(x,y,label,12,'bold','#333');
+}
+function attr(ex,ey,dx,dy,label,pk=false){
+  const cx=ex+dx,cy=ey+dy,rx=Math.max(48,label.length*6.5),ry=17;
+  line(ex,ey,cx,cy);
+  S.appendChild($('ellipse',{cx,cy,rx,ry,fill:'#FCE4E4',stroke:'#E0C0C0','stroke-width':1.3}));
+  txt(cx,cy,label,10,'normal','#555','middle',pk?'underline':'');
+}
+function rel(x,y,label,w=42,h=24){
+  const pts=`${x},${y-h} ${x+w},${y} ${x},${y+h} ${x-w},${y}`;
+  S.appendChild($('polygon',{points:pts,fill:'#E8E8E8',stroke:'#C0C0C0','stroke-width':1.3}));
+  txt(x,y,label,10,'normal','#555');
+}
+function card(x1,y1,x2,y2,c1,c2){
+  if(c1){const px=x1+(x2-x1)*0.15,py=y1+(y2-y1)*0.15;txt(px,py-10,c1,11,'bold','#888');}
+  if(c2){const px=x1+(x2-x1)*0.85,py=y1+(y2-y1)*0.85;txt(px,py-10,c2,11,'bold','#888');}
+}
+function domBg(x,y,w,h,label,fill){
+  S.appendChild($('rect',{x,y,width:w,height:h,rx:14,fill,stroke:'#ddd','stroke-width':1,opacity:.45}));
+  txt(x+12,y+16,label,11,'bold','#999','start');
+}
+function relLine(x1,y1,x2,y2,name,c1,c2){
+  const mx=(x1+x2)/2,my=(y1+y2)/2;
+  line(x1,y1,mx,my);line(mx,my,x2,y2);
+  rel(mx,my,name);
+  card(x1,y1,mx,my,c1,'');card(mx,my,x2,y2,'',c2);
+}
+function fkLine(x1,y1,x2,y2,c1,c2){
+  line(x1,y1,x2,y2,'#bbb',1);
+  card(x1,y1,x2,y2,c1,c2);
+}
+
+// ========== Domain Backgrounds ==========
+domBg(1020,270,780,250,'[ Core ]','#FFF8E1');
+domBg(80,60,620,340,'[ 임신일기 ]','#E8F5E9');
+domBg(60,500,580,480,'[ 할일 ]','#E3F2FD');
+domBg(60,1080,680,620,'[ 맘BTI ]','#F3E5F5');
+domBg(2250,80,700,630,'[ 커뮤니티 ]','#FFF3E0');
+domBg(870,620,640,300,'[ 일정 / 응원 ]','#E0F7FA');
+domBg(1850,1080,850,620,'[ 가전제어 ]','#F1F8E9');
+domBg(1120,1020,350,250,'[ AI ]','#ECEFF1');
+
+// ========== CORE ==========
+ent(1250,400,'사용자(users)',140);
+attr(1250,400, -130,-60,'user_id',true);
+attr(1250,400, 0,-70,'email');
+attr(1250,400, 130,-60,'username');
+
+ent(1650,400,'가족그룹(family_groups)',170);
+attr(1650,400, 0,-65,'group_id',true);
+attr(1650,400, 140,-55,'group_name');
+attr(1650,400, 140,55,'invite_code');
+
+relLine(1320,400,1565,400,'소속','n','1');
+
+// ========== 임신일기 ==========
+ent(350,280,'임신일기(pregnancy_diaries)',200);
+attr(350,280, -170,-55,'diary_id',true);
+attr(350,280, -170,55,'title');
+attr(350,280, 170,-55,'diary_date');
+attr(350,280, 170,55,'status');
+
+ent(350,120,'일기이미지(diary_images)',180);
+attr(350,120, -160,-50,'diary_image_id',true);
+attr(350,120, 0,-60,'file_path');
+attr(350,120, 160,-50,'is_thumbnail');
+
+relLine(350,156,350,262,'첨부','1','n');
+fkLine(550,280,1180,400,'','n');
+txt(850,330,'작성',10,'bold','#888');
+
+// ========== 할일 ==========
+ent(200,650,'추천할일(todos)',150);
+attr(200,650, -130,-50,'todo_id',true);
+attr(200,650, -130,50,'target_week');
+attr(200,650, 0,-60,'todo_name');
+
+ent(460,650,'나의할일(my_list)',150);
+attr(460,650, 130,-50,'my_list_id',true);
+attr(460,650, 130,50,'title');
+attr(460,650, 0,-60,'check_yn');
+
+ent(330,860,'추천목록(recommand_list)',190);
+attr(330,860, -150,-50,'recommand_list_id',true);
+attr(330,860, -150,50,'current_week');
+attr(330,860, 150,50,'check_yn');
+
+relLine(200,686,330,824,'추천','1','n');
+fkLine(460,614,1250,436,'','n');
+txt(800,510,'등록',10,'bold','#888');
+fkLine(330,824,1250,436,'','n');
+
+// ========== 맘BTI ==========
+ent(200,1230,'맘BTI문항(mombti_question)',200);
+attr(200,1230, -150,-55,'question_id',true);
+attr(200,1230, -150,55,'question_text');
+attr(200,1230, 0,-65,'dimension');
+
+ent(200,1440,'맘BTI선택지(mombti_choice)',190);
+attr(200,1440, -150,-50,'choice_id',true);
+attr(200,1440, -150,50,'choice_text');
+attr(200,1440, 0,60,'score_value');
+
+ent(560,1230,'결과프로필(result_profile)',190);
+attr(560,1230, 150,-50,'result_type',true);
+attr(560,1230, 150,50,'title');
+attr(560,1230, 0,-65,'summary');
+
+ent(560,1440,'테스트시도(test_attempt)',185);
+attr(560,1440, 150,-50,'attempt_id',true);
+attr(560,1440, 150,50,'status');
+attr(560,1440, 0,60,'result_type');
+
+ent(380,1610,'맘BTI답변(mombti_answer)',185);
+attr(380,1610, -150,50,'answer_id',true);
+attr(380,1610, 0,65,'target_trait');
+attr(380,1610, 150,50,'score_value');
+
+relLine(200,1266,200,1404,'포함','1','n');
+relLine(560,1266,560,1404,'판정','1','n');
+relLine(560,1476,480,1574,'기록','1','n');
+relLine(200,1476,280,1574,'선택','1','n');
+fkLine(560,1404,1250,436,'','n');
+txt(900,900,'응시',10,'bold','#888');
+
+// ========== 커뮤니티 ==========
+ent(2430,220,'게시판(boards)',140);
+attr(2430,220, 0,-60,'board_id',true);
+attr(2430,220, -120,-45,'board_code');
+attr(2430,220, -120,45,'board_name');
+
+ent(2770,220,'키워드(keywords)',140);
+attr(2770,220, 0,-60,'keyword_id',true);
+attr(2770,220, 120,-45,'keyword_code');
+attr(2770,220, 120,45,'keyword_name');
+
+ent(2600,430,'게시글(community_posts)',190);
+attr(2600,430, 170,-50,'post_id',true);
+attr(2600,430, 170,50,'title');
+attr(2600,430, 0,-65,'status');
+
+ent(2430,630,'댓글(comments)',140);
+attr(2430,630, -120,-45,'comment_id',true);
+attr(2430,630, -120,45,'content');
+
+ent(2770,630,'좋아요(post_likes)',150);
+attr(2770,630, 120,-45,'post_like_id',true);
+attr(2770,630, 120,45,'user_id');
+
+relLine(2430,256,2530,394,'분류','1','n');
+relLine(2770,256,2670,394,'태그','1','n');
+relLine(2540,466,2430,594,'댓글','1','n');
+relLine(2660,466,2770,594,'좋아요','1','n');
+fkLine(2500,430,1320,400,'','n');
+txt(1900,405,'작성',10,'bold','#888');
+
+// ========== 일정 / 응원 ==========
+ent(1050,760,'일정(schedules)',140);
+attr(1050,760, -120,55,'schedule_id',true);
+attr(1050,760, 0,68,'title');
+attr(1050,760, 120,55,'schedule_date');
+
+ent(1450,760,'응원메시지(cheer_messages)',190);
+attr(1450,760, 0,68,'message_id',true);
+attr(1450,760, -140,55,'content');
+attr(1450,760, 140,55,'reaction_emoji');
+
+fkLine(1050,724,1250,436,'','n');
+txt(1130,580,'등록',10,'bold','#888');
+fkLine(1450,724,1650,436,'','n');
+txt(1580,580,'공유',10,'bold','#888');
+
+// ========== AI ==========
+ent(1300,1160,'AI채팅(ai_chat_logs)',170);
+attr(1300,1160, -130,55,'chat_id',true);
+attr(1300,1160, 0,65,'question');
+attr(1300,1160, 130,55,'ai_answer');
+
+fkLine(1300,1124,1250,436,'','n');
+txt(1240,780,'대화',10,'bold','#888');
+
+// ========== 가전제어 ==========
+ent(2250,1250,'가전마스터(appliance_master)',210);
+attr(2250,1250, 0,-65,'appliance_master_id',true);
+attr(2250,1250, -150,-50,'appliance_code');
+attr(2250,1250, 150,-50,'appliance_name');
+
+ent(2650,1250,'루틴마스터(routine_master)',200);
+attr(2650,1250, 0,-65,'routine_id',true);
+attr(2650,1250, 140,-50,'routine_code');
+attr(2650,1250, 140,50,'pregnancy_stage');
+
+ent(2450,1460,'루틴액션(routine_action)',180);
+attr(2450,1460, 0,65,'routine_action_id',true);
+attr(2450,1460, -145,50,'action_title');
+attr(2450,1460, 145,50,'sequence_no');
+
+ent(2050,1520,'가전제어(user_appliance_control)',230);
+attr(2050,1520, 0,65,'control_id',true);
+attr(2050,1520, -160,50,'alert_sound_enabled');
+attr(2050,1520, 160,50,'routine_id');
+
+relLine(2650,1286,2530,1424,'정의','1','n');
+relLine(2250,1286,2370,1424,'대상','1','n');
+fkLine(2050,1484,1250,436,'','n');
+txt(1600,960,'제어',10,'bold','#888');
+fkLine(2050,1520,2250,1286,'','n');
+fkLine(2050,1520,2650,1286,'','n');
+
+// ========== Legend ==========
+S.appendChild($('rect',{x:20,y:1830,width:500,height:100,rx:8,fill:'#fafafa',stroke:'#ddd','stroke-width':1}));
+txt(40,1858,'[ 범례 ]',11,'bold','#666','start');
+
+S.appendChild($('rect',{x:40,y:1870,width:50,height:20,rx:3,fill:'#F2B6B6',stroke:'#D49A9A','stroke-width':1.3}));
+txt(100,1880,'엔티티(테이블)',10,'normal','#555','start');
+
+S.appendChild($('ellipse',{cx:250,cy:1880,rx:30,ry:13,fill:'#FCE4E4',stroke:'#E0C0C0','stroke-width':1.3}));
+txt(290,1880,'속성(컬럼)',10,'normal','#555','start');
+
+const dp=`${400},${1867} ${420},${1880} ${400},${1893} ${380},${1880}`;
+S.appendChild($('polygon',{points:dp,fill:'#E8E8E8',stroke:'#C0C0C0','stroke-width':1.3}));
+txt(430,1880,'관계',10,'normal','#555','start');
+
+txt(40,1915,'밑줄 = PK(기본키)     n = 다수     1 = 하나',10,'normal','#888','start');
+</script>
+</body>
+</html>

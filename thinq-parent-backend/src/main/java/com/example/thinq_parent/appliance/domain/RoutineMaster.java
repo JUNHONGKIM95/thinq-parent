@@ -28,8 +28,14 @@ public class RoutineMaster {
 	@Column(name = "routine_name", nullable = false, length = 100)
 	private String routineName;
 
+	@Column(name = "routine_subtitle", length = 200)
+	private String routineSubtitle;
+
 	@Column(name = "routine_description")
 	private String routineDescription;
+
+	@Column(name = "routine_detail_description")
+	private String routineDetailDescription;
 
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
@@ -54,8 +60,16 @@ public class RoutineMaster {
 		return routineName;
 	}
 
+	public String getRoutineSubtitle() {
+		return routineSubtitle;
+	}
+
 	public String getRoutineDescription() {
 		return routineDescription;
+	}
+
+	public String getRoutineDetailDescription() {
+		return routineDetailDescription;
 	}
 
 	public LocalDateTime getCreatedAt() {

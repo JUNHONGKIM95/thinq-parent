@@ -12,6 +12,7 @@ public record ApplianceControlResponse(
 		String routineCode,
 		String pregnancyStage,
 		String routineName,
+		Boolean routineActivated,
 		Boolean alertSoundEnabled,
 		RoutineActionInfo action,
 		LocalDateTime createdAt,

@@ -29,6 +29,9 @@ public class UserApplianceControl {
 	@Column(name = "routine_id", nullable = false)
 	private Long routineId;
 
+	@Column(name = "routine_activated", nullable = false)
+	private Boolean routineActivated = false;
+
 	@Column(name = "alert_sound_enabled", nullable = false)
 	private Boolean alertSoundEnabled = true;
 
@@ -47,6 +50,7 @@ public class UserApplianceControl {
 		this.userId = userId;
 		this.applianceMasterId = applianceMasterId;
 		this.routineId = routineId;
+		this.routineActivated = true;
 		this.alertSoundEnabled = true;
 	}
 
@@ -56,6 +60,10 @@ public class UserApplianceControl {
 
 	public void updateRoutine(Long routineId) {
 		this.routineId = routineId;
+	}
+
+	public void updateRoutineActivated(Boolean activated) {
+		this.routineActivated = activated;
 	}
 
 	public Long getUserApplianceControlId() {
@@ -72,6 +80,10 @@ public class UserApplianceControl {
 
 	public Long getRoutineId() {
 		return routineId;
+	}
+
+	public Boolean getRoutineActivated() {
+		return routineActivated;
 	}
 
 	public Boolean getAlertSoundEnabled() {

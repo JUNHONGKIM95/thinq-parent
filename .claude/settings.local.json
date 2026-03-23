@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node check_schema.cjs)",
+      "Bash(./gradlew compileJava)",
+      "Bash(node migrate3.cjs)"
+    ]
+  }
+}

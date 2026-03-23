@@ -7,7 +7,9 @@ public record RoutineResponse(
 		String routineCode,
 		String pregnancyStage,
 		String routineName,
+		String routineSubtitle,
 		String routineDescription,
+		String routineDetailDescription,
 		List<ActionItem> actions
 ) {
 

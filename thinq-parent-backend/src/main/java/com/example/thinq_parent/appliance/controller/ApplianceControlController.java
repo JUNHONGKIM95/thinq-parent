@@ -3,6 +3,7 @@ package com.example.thinq_parent.appliance.controller;
 import com.example.thinq_parent.appliance.dto.AlertSoundUpdateRequest;
 import com.example.thinq_parent.appliance.dto.ApplianceControlResponse;
 import com.example.thinq_parent.appliance.dto.ApplianceControlSetupRequest;
+import com.example.thinq_parent.appliance.dto.RoutineActivationRequest;
 import com.example.thinq_parent.appliance.dto.RoutineResponse;
 import com.example.thinq_parent.appliance.service.ApplianceControlService;
 import com.example.thinq_parent.common.api.ApiResponse;
@@ -33,7 +34,12 @@ public class ApplianceControlController {
 	}
 
 	@PostMapping
-	@Operation(summary = "가전 제어 초기 설정", description = "루틴(초기/중기/후기)을 선택하여 4개 가전의 제어 상태를 등록합니다. 이미 등록된 경우 루틴만 변경됩니다.")
+	@Operation(
+			summary = "가전 제어 초기 설정 (시작하기)",
+			description = "루틴(초기/중기/후기)을 선택하여 4개 가전의 제어 상태를 등록합니다. "
+					+ "이미 등록된 경우 선택된 루틴만 변경되고 routineActivated=true로 활성화됩니다. "
+					+ "화면: 루틴 상세 페이지의 '시작하기' 버튼 클릭 시 호출"
+	)
 	public ApiResponse<List<ApplianceControlResponse>> setupControls(
 			@Parameter(description = "사용자 ID", required = true)
 			@RequestHeader("X-USER-ID") Integer userId,
@@ -46,7 +52,12 @@ public class ApplianceControlController {
 	}
 
 	@GetMapping
-	@Operation(summary = "내 가전 제어 목록 조회", description = "사용자의 4개 가전 제어 상태와 선택된 루틴 정보, 각 가전의 동작 방식을 조회합니다.")
+	@Operation(
+			summary = "내 가전 제어 목록 조회",
+			description = "사용자의 4개 가전 제어 상태와 선택된 루틴 정보, 각 가전의 동작 방식을 조회합니다. "
+					+ "routineActivated: 가전제품 자동제어 토글 상태, alertSoundEnabled: 알림음 제어 토글 상태. "
+					+ "화면: 가전육아 메인 페이지 진입 시 호출"
+	)
 	public ApiResponse<List<ApplianceControlResponse>> getControls(
 			@Parameter(description = "사용자 ID", required = true)
 			@RequestHeader("X-USER-ID") Integer userId
@@ -58,7 +69,10 @@ public class ApplianceControlController {
 	}
 
 	@GetMapping("/{id}")
-	@Operation(summary = "개별 가전 제어 상세 조회", description = "특정 가전의 제어 상태와 해당 루틴에서의 동작 정보를 조회합니다.")
+	@Operation(
+			summary = "개별 가전 제어 상세 조회",
+			description = "특정 가전의 제어 상태와 해당 루틴에서의 동작 정보를 조회합니다."
+	)
 	public ApiResponse<ApplianceControlResponse> getControl(
 			@Parameter(description = "사용자 ID", required = true)
 			@RequestHeader("X-USER-ID") Integer userId,
@@ -72,7 +86,10 @@ public class ApplianceControlController {
 	}
 
 	@PatchMapping("/{id}/alert-sound")
-	@Operation(summary = "알림음 제어", description = "특정 가전의 알림음을 ON/OFF 합니다.")
+	@Operation(
+			summary = "개별 가전 알림음 제어",
+			description = "특정 가전의 알림음을 ON/OFF 합니다."
+	)
 	public ApiResponse<ApplianceControlResponse> updateAlertSound(
 			@Parameter(description = "사용자 ID", required = true)
 			@RequestHeader("X-USER-ID") Integer userId,
@@ -86,8 +103,50 @@ public class ApplianceControlController {
 		);
 	}
 
+	@PatchMapping("/alert-sound-all")
+	@Operation(
+			summary = "전체 가전 알림음 일괄 제어",
+			description = "사용자의 모든 가전 알림음을 한번에 ON/OFF 합니다. "
+					+ "화면: 가전육아 메인 페이지의 '가전 알림음 제어' 토글 스위치 조작 시 호출"
+	)
+	public ApiResponse<List<ApplianceControlResponse>> updateAlertSoundAll(
+			@Parameter(description = "사용자 ID", required = true)
+			@RequestHeader("X-USER-ID") Integer userId,
+			@Valid @RequestBody AlertSoundUpdateRequest request
+	) {
+		return ApiResponse.success(
+				"전체 알림음 설정이 변경되었습니다.",
+				applianceControlService.updateAlertSoundAll(userId, request)
+		);
+	}
+
+	@PatchMapping("/routine-activation")
+	@Operation(
+			summary = "가전제품 자동제어 토글",
+			description = "루틴 활성화/비활성화를 전환합니다. "
+					+ "activated=true: 선택한 루틴대로 가전이 자동 제어됨, "
+					+ "activated=false: 자동 제어 중지. "
+					+ "화면: 가전육아 메인 페이지의 '가전제품 자동제어' 토글 스위치 조작 시 호출"
+	)
+	public ApiResponse<List<ApplianceControlResponse>> updateRoutineActivation(
+			@Parameter(description = "사용자 ID", required = true)
+			@RequestHeader("X-USER-ID") Integer userId,
+			@Valid @RequestBody RoutineActivationRequest request
+	) {
+		return ApiResponse.success(
+				request.activated() ? "가전제품 자동제어가 활성화되었습니다." : "가전제품 자동제어가 비활성화되었습니다.",
+				applianceControlService.updateRoutineActivation(userId, request)
+		);
+	}
+
 	@GetMapping("/routines")
-	@Operation(summary = "루틴 목록 조회", description = "3개 루틴(초기/중기/후기)과 각 루틴의 가전 동작 목록을 조회합니다.")
+	@Operation(
+			summary = "루틴 목록 조회",
+			description = "3개 루틴(초기/중기/후기)과 각 루틴의 가전 동작 목록을 조회합니다. "
+					+ "routineSubtitle: 루틴 카드에 표시할 짧은 문구, "
+					+ "routineDetailDescription: 루틴 상세 페이지의 설명 문구. "
+					+ "화면: 가전제품 루틴 목록 페이지 + 루틴 상세 페이지 공용"
+	)
 	public ApiResponse<List<RoutineResponse>> getRoutines() {
 		return ApiResponse.success(
 				"루틴 목록을 조회했습니다.",

@@ -33,7 +33,9 @@ create table if not exists public.routine_master (
   pregnancy_stage varchar(20) not null unique
     check (pregnancy_stage in ('EARLY', 'MIDDLE', 'LATE')),
   routine_name varchar(100) not null,
+  routine_subtitle varchar(200),
   routine_description text,
+  routine_detail_description text,
   created_at timestamptz not null default now()
 );
 
@@ -69,6 +71,7 @@ create table if not exists public.user_appliance_control (
   user_id integer not null references public.users(user_id) on delete cascade on update cascade,
   appliance_master_id bigint not null references public.appliance_master(appliance_master_id) on delete restrict on update cascade,
   routine_id bigint not null references public.routine_master(routine_id) on delete restrict on update cascade,
+  routine_activated boolean not null default false,
   alert_sound_enabled boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -103,19 +106,27 @@ set
 -- =========================================
 -- Seed: 루틴 마스터 데이터 (3개)
 -- =========================================
-insert into public.routine_master (routine_code, pregnancy_stage, routine_name, routine_description)
+insert into public.routine_master (routine_code, pregnancy_stage, routine_name, routine_subtitle, routine_description, routine_detail_description)
 values
   ('PREG_EARLY_ROUTINE', 'EARLY', '임신 초기 루틴',
-   '입덧과 예민함이 큰 시기를 고려해 실내 공기와 소음을 부드럽게 관리하는 루틴입니다.'),
+   '수면 방해 차단 ''올 무음'' 루틴',
+   '입덧과 예민함이 큰 시기를 고려해 실내 공기와 소음을 부드럽게 관리하는 루틴입니다.',
+   E'편안한 휴식이 더 중요한 시기입니다.\n공기청정기 소음·불빛을 끄고,\n로봇청소기와 세탁 종료 알림을 잠시 멈춥니다.'),
   ('PREG_MIDDLE_ROUTINE', 'MIDDLE', '임신 중기 루틴',
-   '활동량이 늘어나는 시기에 맞춰 청소와 세탁 준비를 안정적으로 돕는 루틴입니다.'),
+   '허리 굽힘 제로 ''노터치'' 세탁 루틴',
+   '활동량이 늘어나는 시기에 맞춰 청소와 세탁 준비를 안정적으로 돕는 루틴입니다.',
+   E'무거운 배로 오래 서 있기 힘든 시기입니다.\n세탁기에서 빨래를 꺼내 건조기로 옮기는 과정은\n임산부에게 큰 부담이 됩니다.\n세탁 후 건조가 자동으로 이어져,\n허리를 굽히고 오래 조작하는 부담을 덜어줍니다.'),
   ('PREG_LATE_ROUTINE', 'LATE', '임신 후기 루틴',
-   '휴식과 출산 준비를 우선해 공기 관리와 저소음 환경 유지에 초점을 둔 루틴입니다.')
+   '아기 옷 ''먼지 철벽 방어'' 루틴',
+   '휴식과 출산 준비를 우선해 공기 관리와 저소음 환경 유지에 초점을 둔 루틴입니다.',
+   E'태어날 아기를 위한 빨래가 부쩍 많아지는 시기입니다.\n아기 옷을 꺼내는 순간 공기청정기가 강하게 작동해,\n공기 중에 뜨는 먼지를 빠르게 줄여줍니다.')
 on conflict (routine_code) do update
 set
   pregnancy_stage = excluded.pregnancy_stage,
   routine_name = excluded.routine_name,
-  routine_description = excluded.routine_description;
+  routine_subtitle = excluded.routine_subtitle,
+  routine_description = excluded.routine_description,
+  routine_detail_description = excluded.routine_detail_description;
 
 -- =========================================
 -- Seed: 루틴 액션 데이터 (루틴당 4개, 총 12개)
