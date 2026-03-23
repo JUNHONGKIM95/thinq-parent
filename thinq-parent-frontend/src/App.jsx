@@ -721,6 +721,26 @@ async function patchApplianceAlertSoundAll(userId, enabled) {
   return response.json().catch(() => null)
 }
 
+async function patchApplianceRoutine(userId, routineId) {
+  const response = await fetch(`${API_BASE_URL}/api/appliance-controls/routine`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-USER-ID': String(userId),
+    },
+    body: JSON.stringify({
+      routineId,
+    }),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(payload?.message || '가전제품 루틴 저장에 실패했어요.')
+  }
+
+  return response.json().catch(() => null)
+}
+
 function getMombtiAttemptPayload(payload) {
   if (payload?.data && typeof payload.data === 'object') {
     return payload.data
@@ -1868,6 +1888,48 @@ function App() {
     }
   }
 
+  const handleApplyMiddleApplianceRoutine = async () => {
+    setIsApplianceRoutineSaving(true)
+
+    try {
+      await patchApplianceRoutine(currentUserId, 2)
+      await refreshApplianceControls(currentUserId)
+      setCurrentScreen('parent-mode-device')
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '가전제품 루틴 저장에 실패했어요.')
+    } finally {
+      setIsApplianceRoutineSaving(false)
+    }
+  }
+
+  const handleApplyFirstApplianceRoutine = async () => {
+    setIsApplianceRoutineSaving(true)
+
+    try {
+      await patchApplianceRoutine(currentUserId, 1)
+      await refreshApplianceControls(currentUserId)
+      setCurrentScreen('parent-mode-device')
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '가전제품 루틴 저장에 실패했어요.')
+    } finally {
+      setIsApplianceRoutineSaving(false)
+    }
+  }
+
+  const handleApplyFinalApplianceRoutine = async () => {
+    setIsApplianceRoutineSaving(true)
+
+    try {
+      await patchApplianceRoutine(currentUserId, 3)
+      await refreshApplianceControls(currentUserId)
+      setCurrentScreen('parent-mode-device')
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '가전제품 루틴 저장에 실패했어요.')
+    } finally {
+      setIsApplianceRoutineSaving(false)
+    }
+  }
+
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
     setIsScheduleDetailInitiallyOpen(shouldOpenDetail)
     setIsScheduleInputInitiallyOpen(shouldOpenScheduleInput)
@@ -2184,6 +2246,7 @@ function App() {
               onOpenHome={() => navigateToScreen('parent-mode')}
               onOpenMy={openMyScreen}
               onOpenCommunity={openCommunity}
+              onStartRoutine={handleApplyFirstApplianceRoutine}
               navIcons={{
                 home: whiteHomeIcon,
                 device: whiteBabyIcon,
@@ -2199,6 +2262,7 @@ function App() {
               onOpenHome={() => navigateToScreen('parent-mode')}
               onOpenMy={openMyScreen}
               onOpenCommunity={openCommunity}
+              onStartRoutine={handleApplyMiddleApplianceRoutine}
               navIcons={{
                 home: whiteHomeIcon,
                 device: whiteBabyIcon,
@@ -2214,6 +2278,7 @@ function App() {
               onOpenHome={() => navigateToScreen('parent-mode')}
               onOpenMy={openMyScreen}
               onOpenCommunity={openCommunity}
+              onStartRoutine={handleApplyFinalApplianceRoutine}
               navIcons={{
                 home: whiteHomeIcon,
                 device: whiteBabyIcon,

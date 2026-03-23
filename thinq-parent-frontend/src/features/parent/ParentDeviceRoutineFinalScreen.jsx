@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY' },
 ]
 
-function ParentDeviceRoutineFinalScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
+function ParentDeviceRoutineFinalScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, onStartRoutine, navIcons }) {
   return (
     <div className="parent-device-routine-detail-screen parent-device-routine-detail-screen--final">
       <header className="parent-device-routine-header parent-device-routine-detail-header">
@@ -42,7 +42,11 @@ function ParentDeviceRoutineFinalScreen({ onBack, onOpenHome, onOpenMy, onOpenCo
           <p>공기 중에 뜨는 먼지를 빠르게 줄여줍니다.</p>
         </div>
 
-        <button type="button" className="parent-device-routine-detail-start-button parent-device-routine-detail-start-button--final">
+        <button
+          type="button"
+          className="parent-device-routine-detail-start-button parent-device-routine-detail-start-button--final"
+          onClick={onStartRoutine}
+        >
           <span>시작하기</span>
         </button>
       </div>

@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY' },
 ]
 
-function ParentDeviceRoutineFirstScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
+function ParentDeviceRoutineFirstScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, onStartRoutine, navIcons }) {
   return (
     <div className="parent-device-routine-detail-screen">
       <header className="parent-device-routine-header parent-device-routine-detail-header">
@@ -42,7 +42,7 @@ function ParentDeviceRoutineFirstScreen({ onBack, onOpenHome, onOpenMy, onOpenCo
           <p>로봇청소기와 세탁 종료 알림을 잠시 멈춥니다.</p>
         </div>
 
-        <button type="button" className="parent-device-routine-detail-start-button">
+        <button type="button" className="parent-device-routine-detail-start-button" onClick={onStartRoutine}>
           <span>시작하기</span>
         </button>
       </div>

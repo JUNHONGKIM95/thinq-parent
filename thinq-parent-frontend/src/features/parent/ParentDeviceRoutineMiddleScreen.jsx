@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { key: 'my', label: 'MY' },
 ]
 
-function ParentDeviceRoutineMiddleScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, navIcons }) {
+function ParentDeviceRoutineMiddleScreen({ onBack, onOpenHome, onOpenMy, onOpenCommunity, onStartRoutine, navIcons }) {
   return (
     <div className="parent-device-routine-detail-screen parent-device-routine-detail-screen--middle">
       <header className="parent-device-routine-header parent-device-routine-detail-header">
@@ -44,7 +44,11 @@ function ParentDeviceRoutineMiddleScreen({ onBack, onOpenHome, onOpenMy, onOpenC
           <p>허리를 굽히고 오래 조작하는 부담을 덜어줍니다.</p>
         </div>
 
-        <button type="button" className="parent-device-routine-detail-start-button parent-device-routine-detail-start-button--middle">
+        <button
+          type="button"
+          className="parent-device-routine-detail-start-button parent-device-routine-detail-start-button--middle"
+          onClick={onStartRoutine}
+        >
           <span>시작하기</span>
         </button>
       </div>
