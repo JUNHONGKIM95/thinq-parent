@@ -1,9 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import diaryExampleImage from '@shared-assets/srg/diary_example.svg'
 import diaryEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import diaryDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
+import { API_BASE_URL } from '../../config/api'
+
+const DIARY_PAGE_SIZE = 10
+
+async function getApiErrorMessage(response, fallbackMessage) {
+  try {
+    const payload = await response.json()
+    return payload?.message || payload?.error || fallbackMessage
+  } catch {
+    return fallbackMessage
+  }
+}
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -51,17 +63,144 @@ function PaginationIcon({ direction, double = false }) {
   )
 }
 
-const DIARY_ITEMS = Array.from({ length: 5 }, (_, index) => ({
-  id: `pregnancy-diary-${index + 1}`,
-  image: diaryExampleImage,
-  date: '2026/03/28',
-  author: '요정이맘',
-  title: '일기제목이철구',
-}))
+function formatDiaryDate(value) {
+  if (!value) {
+    return '-'
+  }
 
-function PregnancyDiaryScreen({ onBack, onOpenWrite }) {
+  return String(value).replaceAll('-', '/')
+}
+
+function mapDiaryItem(item) {
+  const diaryId = item.diaryId ?? item.id ?? item.diary_id ?? item.pregnancyDiaryId ?? null
+
+  return {
+    id: diaryId,
+    image: item.thumbnailImageUrl || diaryExampleImage,
+    imageUrl: item.thumbnailImageUrl || '',
+    date: formatDiaryDate(item.diaryDate),
+    diaryDate: item.diaryDate || '',
+    author: item.authorName || '작성자',
+    title: item.title || '제목 없음',
+    content: item.content ?? item.diaryContent ?? item.body ?? '',
+    isMine: Boolean(item.isMine),
+    thumbnailDiaryImageId: item.thumbnailDiaryImageId ?? item.thumbnailImageId ?? item.diaryImageId ?? null,
+  }
+}
+
+function PregnancyDiaryScreen({ userId, onBack, onOpenWrite, onEdit, onOpenDetail }) {
   const [currentPage, setCurrentPage] = useState(1)
-  const totalPages = 5
+  const [diaryItems, setDiaryItems] = useState([])
+  const [totalPages, setTotalPages] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [reloadToken, setReloadToken] = useState(0)
+
+  useEffect(() => {
+    if (!userId) {
+      setDiaryItems([])
+      setTotalPages(1)
+      return undefined
+    }
+
+    let isMounted = true
+    const controller = new AbortController()
+
+    const fetchDiaries = async () => {
+      setIsLoading(true)
+      setErrorMessage('')
+
+      try {
+        const query = new URLSearchParams({
+          userId: String(userId),
+          page: String(currentPage),
+          limit: String(DIARY_PAGE_SIZE),
+        })
+
+        const response = await fetch(`${API_BASE_URL}/api/pregnancy-diaries?${query.toString()}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error(`Pregnancy diaries request failed: ${response.status}`)
+        }
+
+        const payload = await response.json()
+        const items = Array.isArray(payload?.data?.items) ? payload.data.items : []
+        const pagination = payload?.data?.pagination
+
+        if (!isMounted) {
+          return
+        }
+
+        setDiaryItems(items.map(mapDiaryItem))
+        setTotalPages(Math.max(1, Number(pagination?.totalPages) || 1))
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return
+        }
+
+        console.error(error)
+
+        if (!isMounted) {
+          return
+        }
+
+        setDiaryItems([])
+        setTotalPages(1)
+        setErrorMessage('임신일기 목록을 불러오지 못했어요.')
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    fetchDiaries()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [currentPage, reloadToken, userId])
+
+  const handleDelete = async (event, diaryId) => {
+    event.stopPropagation()
+
+    if (!diaryId || !userId) {
+      return
+    }
+
+    const isConfirmed = window.confirm('이 임신일기를 삭제할까요?')
+
+    if (!isConfirmed) {
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/pregnancy-diaries/${diaryId}?authorUserId=${encodeURIComponent(String(userId))}`,
+        {
+          method: 'DELETE',
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(await getApiErrorMessage(response, `Pregnancy diary delete failed: ${response.status}`))
+      }
+
+      const payload = await response.json()
+
+      if (payload?.success === false) {
+        throw new Error(payload?.message || 'Pregnancy diary delete failed')
+      }
+
+      setReloadToken((prev) => prev + 1)
+    } catch (error) {
+      console.error(error)
+      window.alert(error instanceof Error ? error.message : '삭제에 실패했어요. 잠시 후 다시 시도해 주세요.')
+    }
+  }
 
   return (
     <div className="pregnancy-diary-screen">
@@ -77,8 +216,23 @@ function PregnancyDiaryScreen({ onBack, onOpenWrite }) {
 
       <div className="pregnancy-diary-content">
         <div className="pregnancy-diary-list">
-          {DIARY_ITEMS.map((item) => (
-            <article key={item.id} className="pregnancy-diary-card">
+          {isLoading ? <p className="pregnancy-diary-status">일기 목록을 불러오는 중이에요...</p> : null}
+          {!isLoading && errorMessage ? <p className="pregnancy-diary-status">{errorMessage}</p> : null}
+          {!isLoading && !errorMessage && !diaryItems.length ? (
+            <p className="pregnancy-diary-status">아직 등록된 임신일기가 없어요.</p>
+          ) : null}
+
+          {diaryItems.map((item) => (
+            <article
+              key={item.id}
+              className="pregnancy-diary-card pregnancy-diary-card--interactive"
+            >
+              <button
+                type="button"
+                className="pregnancy-diary-card-link"
+                aria-label={`${item.title} 상세 보기`}
+                onClick={() => onOpenDetail?.(item.id)}
+              />
               <div className="pregnancy-diary-image-frame">
                 <img src={item.image} alt="" className="pregnancy-diary-image" />
               </div>
@@ -90,14 +244,29 @@ function PregnancyDiaryScreen({ onBack, onOpenWrite }) {
 
               <div className="pregnancy-diary-title-row">
                 <h2>{item.title}</h2>
-                <div className="pregnancy-diary-actions">
-                  <button type="button" className="pregnancy-diary-action pregnancy-diary-action--edit" aria-label="일기 수정">
-                    <img src={diaryEditActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
-                  </button>
-                  <button type="button" className="pregnancy-diary-action pregnancy-diary-action--delete" aria-label="일기 삭제">
-                    <img src={diaryDeleteActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
-                  </button>
-                </div>
+                {item.isMine ? (
+                  <div className="pregnancy-diary-actions">
+                    <button
+                      type="button"
+                      className="pregnancy-diary-action pregnancy-diary-action--edit"
+                      aria-label="일기 수정"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onEdit?.(item)
+                      }}
+                    >
+                      <img src={diaryEditActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className="pregnancy-diary-action pregnancy-diary-action--delete"
+                      aria-label="일기 삭제"
+                      onClick={(event) => handleDelete(event, item.id)}
+                    >
+                      <img src={diaryDeleteActionIcon} alt="" className="pregnancy-diary-action-icon" aria-hidden="true" />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </article>
           ))}

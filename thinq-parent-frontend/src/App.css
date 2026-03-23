@@ -5724,9 +5724,11 @@
 }
 
 .pregnancy-diary-screen {
-  min-height: 100%;
+  position: absolute;
+  inset: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
   background: #fdf8e8;
 }
 
@@ -5742,7 +5744,7 @@
 .pregnancy-diary-content {
   min-height: 0;
   overflow-y: auto;
-  padding: 17px 18px 14px;
+  padding: 17px 18px 76px;
 }
 
 .pregnancy-diary-list {
@@ -5750,7 +5752,20 @@
   gap: 16px;
 }
 
+.pregnancy-diary-status {
+  margin: 0;
+  padding: 24px 18px;
+  border: 1px solid #e1dccc;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.72);
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #4f4b3d;
+}
+
 .pregnancy-diary-card {
+  position: relative;
   padding: 21px 18px 25px;
   border: 1px solid #e1dccc;
   border-radius: 5px;
@@ -5758,7 +5773,113 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.pregnancy-diary-card--interactive {
+  cursor: pointer;
+}
+
+.pregnancy-diary-card-link {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.pregnancy-diary-detail-screen {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.pregnancy-diary-detail-content {
+  padding-bottom: 28px;
+}
+
+.pregnancy-diary-detail-card {
+  padding: 20px 18px 24px;
+  border: 1px solid #e1dccc;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.pregnancy-diary-detail-image-frame {
+  position: relative;
+  height: 220px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e1dccc;
+}
+
+.pregnancy-diary-detail-image,
+.pregnancy-diary-detail-gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pregnancy-diary-detail-meta-row {
+  margin-top: 14px;
+}
+
+.pregnancy-diary-detail-title {
+  margin: 10px 0 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+  color: #4f4b3d;
+}
+
+.pregnancy-diary-detail-body {
+  margin: 16px 0 0;
+  font-size: 0.9375rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: #4f4b3d;
+  white-space: pre-wrap;
+}
+
+.pregnancy-diary-detail-gallery {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.pregnancy-diary-detail-gallery-item {
+  position: relative;
+  height: 160px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e1dccc;
+}
+
+.pregnancy-diary-image-delete-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.pregnancy-diary-image-delete-button--gallery {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+}
+
 .pregnancy-diary-image-frame {
+  position: relative;
   height: 148px;
   border-radius: 3px;
   background: #e1dccc;
@@ -5774,6 +5895,7 @@
 }
 
 .pregnancy-diary-meta-row {
+  position: relative;
   margin-top: 8px;
   display: flex;
   align-items: center;
@@ -5801,6 +5923,7 @@
 }
 
 .pregnancy-diary-title-row {
+  position: relative;
   margin-top: 5px;
   display: flex;
   align-items: flex-end;
@@ -5818,10 +5941,12 @@
 }
 
 .pregnancy-diary-actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 3px;
   flex-shrink: 0;
+  z-index: 3;
 }
 
 .pregnancy-diary-action {
@@ -5886,6 +6011,10 @@
 }
 
 .pregnancy-diary-bottom-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 55px;
   padding: 9px 16px 13px;
   border-top: 1px solid #ccc3c3;
@@ -5894,6 +6023,7 @@
   align-items: center;
   justify-content: flex-end;
   box-sizing: border-box;
+  z-index: 5;
 }
 
 .pregnancy-diary-write-button {
@@ -5916,9 +6046,13 @@
 }
 
 .pregnancy-diary-write-screen {
-  min-height: 100%;
-  position: relative;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
   background: #fdf8e8;
+}
+
+.pregnancy-diary-write-body {
   padding: 24px 25px 32px;
   box-sizing: border-box;
 }
@@ -6000,11 +6134,65 @@
   place-items: center;
   background: rgba(154, 141, 141, 0.8);
   color: #ffffff;
+  overflow: hidden;
 }
 
 .pregnancy-diary-write-media svg {
   width: 32px;
   height: 32px;
+  display: block;
+}
+
+.pregnancy-diary-write-media-button {
+  position: relative;
+  cursor: pointer;
+}
+
+.pregnancy-diary-write-media-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pregnancy-diary-write-media-text {
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.pregnancy-diary-write-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pregnancy-diary-write-existing-images {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pregnancy-diary-write-existing-image-item {
+  position: relative;
+  height: 82px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #d9d3c1;
+}
+
+.pregnancy-diary-write-existing-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -6059,6 +6247,13 @@
   outline: none;
 }
 
+.pregnancy-diary-write-status {
+  margin: 16px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #796e6d;
+}
+
 .pregnancy-diary-write-actions {
   display: flex;
   justify-content: flex-end;
@@ -6090,6 +6285,12 @@
   border: 0;
   background: #aea4a3;
   color: #ffffff;
+}
+
+.pregnancy-diary-write-cancel:disabled,
+.pregnancy-diary-write-submit:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 @media (max-width: 460px) {

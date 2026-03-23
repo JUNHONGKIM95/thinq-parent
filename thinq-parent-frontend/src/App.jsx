@@ -44,6 +44,7 @@ import { mockMombtiMeta, mockMombtiRow } from './data/mockMombti'
 import CommunityScreen from './features/community/CommunityScreen'
 import CommunityDetailScreen from './features/community/CommunityDetailScreen'
 import CommunityWriteScreen from './features/community/CommunityWriteScreen'
+import PregnancyDiaryDetailScreen from './features/diary/PregnancyDiaryDetailScreen'
 import PregnancyDiaryScreen from './features/diary/PregnancyDiaryScreen'
 import PregnancyDiaryWriteScreen from './features/diary/PregnancyDiaryWriteScreen'
 import ChildProfileScreen from './features/my/ChildProfileScreen'
@@ -1303,6 +1304,8 @@ function App() {
   )
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
   const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(null)
+  const [selectedPregnancyDiaryId, setSelectedPregnancyDiaryId] = useState(null)
+  const [editingPregnancyDiary, setEditingPregnancyDiary] = useState(null)
   const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
   const [mombtiResultData, setMombtiResultData] = useState(() =>
     buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
@@ -1583,7 +1586,31 @@ function App() {
     navigateToScreen('pregnancy-diary')
   }
 
+  const openPregnancyDiaryDetail = (diaryId) => {
+    if (!diaryId) {
+      return
+    }
+
+    setSelectedPregnancyDiaryId(diaryId)
+    navigateToScreen('pregnancy-diary-detail')
+  }
+
   const openPregnancyDiaryWrite = () => {
+    setEditingPregnancyDiary(null)
+    navigateToScreen('pregnancy-diary-write')
+  }
+
+  const goPregnancyDiaryHome = () => {
+    setCurrentScreen('parent-mode')
+    setScreenHistory([])
+  }
+
+  const openPregnancyDiaryEdit = (diary) => {
+    if (!diary?.id) {
+      return
+    }
+
+    setEditingPregnancyDiary(diary)
     navigateToScreen('pregnancy-diary-write')
   }
 
@@ -1774,7 +1801,9 @@ function App() {
           ? 'community-mode'
         : currentScreen === 'community-write'
           ? 'community-write-mode'
-        : currentScreen === 'pregnancy-diary' || currentScreen === 'pregnancy-diary-write'
+        : currentScreen === 'pregnancy-diary' ||
+            currentScreen === 'pregnancy-diary-write' ||
+            currentScreen === 'pregnancy-diary-detail'
           ? 'diary-mode'
         : currentScreen === 'my' || currentScreen === 'child-profile'
           ? 'my-mode'
@@ -2024,11 +2053,33 @@ function App() {
         )}
 
         {currentScreen === 'pregnancy-diary' && (
-          <PregnancyDiaryScreen onBack={goBack} onOpenWrite={openPregnancyDiaryWrite} />
+          <PregnancyDiaryScreen
+            userId={currentUserId}
+            onBack={goPregnancyDiaryHome}
+            onOpenWrite={openPregnancyDiaryWrite}
+            onEdit={openPregnancyDiaryEdit}
+            onOpenDetail={openPregnancyDiaryDetail}
+          />
+        )}
+
+        {currentScreen === 'pregnancy-diary-detail' && (
+          <PregnancyDiaryDetailScreen
+            diaryId={selectedPregnancyDiaryId}
+            userId={currentUserId}
+            onBack={goPregnancyDiaryHome}
+            onEdit={openPregnancyDiaryEdit}
+            onDeleted={goBack}
+          />
         )}
 
         {currentScreen === 'pregnancy-diary-write' && (
-          <PregnancyDiaryWriteScreen onBack={goBack} babyNickname={pregnancySummary.babyNickname} />
+          <PregnancyDiaryWriteScreen
+            userId={currentUserId}
+            onBack={goPregnancyDiaryHome}
+            onSuccess={goBack}
+            babyNickname={pregnancySummary.babyNickname}
+            initialDiary={editingPregnancyDiary}
+          />
         )}
 
         {currentScreen === 'mombti-menu' && (
