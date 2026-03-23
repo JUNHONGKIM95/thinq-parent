@@ -325,19 +325,35 @@ function MyScreen({
         </section>
 
         <section className="my-section my-section--todo">
-          <div className="my-todo-card parent-mode-card parent-mode-todo">
+          <div
+            className="my-todo-card parent-mode-card parent-mode-todo"
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenSchedule(false)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onOpenSchedule(false)
+              }
+            }}
+          >
             <div className="parent-mode-todo-head">
               <h3>TO DO</h3>
             </div>
 
             <div className="my-todo-list">
               {data.todo.items.map((item) => (
-                <label key={item.key} className="parent-mode-todo-item">
+                <label
+                  key={item.key}
+                  className="parent-mode-todo-item"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     className="parent-mode-todo-checkbox"
                     checked={Boolean(item.checked)}
                     onChange={() => onToggleTodayTodo?.(item)}
+                    onClick={(event) => event.stopPropagation()}
                   />
                   <span className="parent-mode-todo-check" aria-hidden="true" />
                   <span>{item.text}</span>

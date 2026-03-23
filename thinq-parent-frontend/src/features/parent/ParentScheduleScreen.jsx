@@ -740,6 +740,7 @@ function ParentScheduleScreen({
   initialDetailOpen = true,
   initialScheduleInputOpen = false,
   userId = DEFAULT_SCHEDULE_USER_ID,
+  onDailySchedulesChange,
 }) {
   const initialMonth = getMonthStart(new Date())
   const initialMonthlySchedules = readMonthlyScheduleCache(initialMonth, userId)
@@ -805,6 +806,14 @@ function ParentScheduleScreen({
     setCalendarMarkersByDate((prev) => replaceMonthEntries(prev, monthDate, markersByDate))
     setScheduleDetails((prev) => replaceMonthEntries(prev, monthDate, detailsByDate))
     setIsMonthlyScheduleLoaded(true)
+  }
+
+  const syncDailyScheduleCards = async () => {
+    if (typeof onDailySchedulesChange !== 'function') {
+      return
+    }
+
+    await onDailySchedulesChange(userId)
   }
 
   useEffect(() => {
@@ -1061,6 +1070,7 @@ function ParentScheduleScreen({
       }
 
       await refreshMonthlySchedules(getMonthStart(parseDateKey(activeDateKey)))
+      await syncDailyScheduleCards()
       setScheduleForm(DEFAULT_SCHEDULE_FORM)
       setIsDetailOpen(true)
       setIsScheduleInputSheetOpen(false)
@@ -1153,6 +1163,7 @@ function ParentScheduleScreen({
       }
 
       await refreshMonthlySchedules(getMonthStart(parseDateKey(editingScheduleMeta.dateKey ?? activeDateKey)))
+      await syncDailyScheduleCards()
       closeScheduleEditSheet()
       setIsDetailOpen(true)
     } catch (error) {
@@ -1187,6 +1198,7 @@ function ParentScheduleScreen({
       await refreshMonthlySchedules(
         getMonthStart(parseDateKey(selectedScheduleItem.scheduleDateKey ?? activeDateKey ?? DEFAULT_ACTIVE_DATE_KEY))
       )
+      await syncDailyScheduleCards()
       closeScheduleActionSheet()
       setIsDetailOpen(true)
     } catch (error) {

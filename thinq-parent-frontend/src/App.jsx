@@ -104,7 +104,6 @@ const DEFAULT_TODAY_TODO_CARD = {
   weekLabel: '',
   items: [],
 }
-const DAILY_SCHEDULE_CACHE_PREFIX = 'parent-daily-schedules'
 const DEFAULT_CURRENT_USER_ID = 3
 const CHATBOT_API_URL = 'https://chatbot-api-338378601376.asia-northeast3.run.app/ask'
 const DEFAULT_CHATBOT_GREETING = '안녕하세요, 틔움이 어머니를 위한 전문가 챗봇입니다.'
@@ -205,37 +204,6 @@ function formatDueDateLabel(dueDate) {
 
 function formatDaysUntilDueDateLabel(daysUntilDueDate) {
   return String(daysUntilDueDate)
-}
-
-function getDailyScheduleCacheKey(userId, date) {
-  return `${DAILY_SCHEDULE_CACHE_PREFIX}:${userId}:${getDateKey(date)}`
-}
-
-function readDailyScheduleCache(userId, date) {
-  if (typeof window === 'undefined') {
-    return []
-  }
-
-  try {
-    const cachedValue = window.localStorage.getItem(getDailyScheduleCacheKey(userId, date))
-    const parsedValue = cachedValue ? JSON.parse(cachedValue) : []
-
-    return Array.isArray(parsedValue) ? parsedValue : []
-  } catch {
-    return []
-  }
-}
-
-function writeDailyScheduleCache(userId, date, items) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    window.localStorage.setItem(getDailyScheduleCacheKey(userId, date), JSON.stringify(items))
-  } catch {
-    // Ignore storage failures and continue with live data.
-  }
 }
 
 function getMeetingName(summary) {
@@ -391,6 +359,50 @@ function getParentModeScheduleTypeStyle(scheduleType, index) {
   )
 }
 
+function getScheduleObjectPayload(payload) {
+  if (payload?.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+    return payload.data
+  }
+
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    return payload
+  }
+
+  return null
+}
+
+async function fetchScheduleDetail(scheduleId) {
+  if (!scheduleId) {
+    return null
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/schedules/${scheduleId}`)
+
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    const schedule = getScheduleObjectPayload(payload)
+
+    if (!schedule) {
+      return null
+    }
+
+    return {
+      scheduleId: schedule.scheduleId ?? schedule.id ?? scheduleId,
+      title: schedule.title ?? '',
+      time: schedule.time ?? '',
+      startDate: schedule.startDate ?? schedule.scheduleDate ?? '',
+      scheduleType: schedule.scheduleType ?? schedule.type ?? '',
+      memo: schedule.memo ?? schedule.note ?? '',
+    }
+  } catch {
+    return null
+  }
+}
+
 async function fetchDailySchedules(userId = 3, date = new Date()) {
   const dateKey = getDateKey(date)
 
@@ -420,15 +432,27 @@ async function fetchDailySchedules(userId = 3, date = new Date()) {
 
     const payload = await response.json()
     const schedules = Array.isArray(payload?.data) ? payload.data : []
+    const limitedSchedules = schedules.slice(0, 2)
+    const scheduleDetails = await Promise.all(
+      limitedSchedules.map((schedule) => fetchScheduleDetail(schedule.scheduleId))
+    )
 
-    const items = schedules.slice(0, 2).map((schedule, index) => ({
-      key: schedule.scheduleId ?? `${schedule.title}-${schedule.scheduleDate}-${schedule.time}-${index}`,
-      title: schedule.title ?? '',
-      time: formatDailyScheduleTime(schedule.time, schedule.startDate),
-      boxStyle: getParentModeScheduleTypeStyle(schedule.scheduleType, index),
-    }))
+    const items = limitedSchedules.map((schedule, index) => {
+      const detail = scheduleDetails[index]
+      const resolvedSchedule = detail ?? schedule
 
-    writeDailyScheduleCache(userId, date, items)
+      return {
+        key:
+          resolvedSchedule.scheduleId ??
+          `${resolvedSchedule.title}-${resolvedSchedule.scheduleDate ?? resolvedSchedule.startDate}-${resolvedSchedule.time}-${index}`,
+        scheduleId: resolvedSchedule.scheduleId ?? schedule.scheduleId ?? null,
+        title: resolvedSchedule.title ?? '',
+        time: formatDailyScheduleTime(resolvedSchedule.time, resolvedSchedule.startDate),
+        note: resolvedSchedule.memo ?? '',
+        boxStyle: getParentModeScheduleTypeStyle(resolvedSchedule.scheduleType, index),
+      }
+    })
+
     return items
   } catch {
     return []
@@ -1078,6 +1102,10 @@ function ParentModeScreen({
     return () => window.clearInterval(intervalId)
   }, [])
 
+  const handleOpenTodoSchedule = () => {
+    onOpenSchedule(false)
+  }
+
   const parentModeNavItems = [
     { key: 'home', label: '홈', icon: parentModeHomeIcon, onClick: onOpenHome, isActive: true },
     { key: 'device', label: '가전육아', icon: parentModeBabyIcon, onClick: onOpenDevice, isActive: false },
@@ -1185,28 +1213,44 @@ function ParentModeScreen({
                 ))}
               </div>
             </button>
-            <section className="parent-mode-card parent-mode-todo">
+            <section
+              className="parent-mode-card parent-mode-todo"
+              role="button"
+              tabIndex={0}
+              onClick={handleOpenTodoSchedule}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  handleOpenTodoSchedule()
+                }
+              }}
+            >
               <div
                 className="parent-mode-todo-head"
-                onClick={() => onOpenSchedule(false)}
+                onClick={handleOpenTodoSchedule}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
-                    onOpenSchedule(false)
+                    handleOpenTodoSchedule()
                   }
                 }}
               >
                 <h3>TO DO</h3>
               </div>
               {todayTodoItems.map((item) => (
-                <label key={item.key} className="parent-mode-todo-item">
+                <label
+                  key={item.key}
+                  className="parent-mode-todo-item"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   <input
                     type="checkbox"
                     className="parent-mode-todo-checkbox"
                     checked={Boolean(item.checked)}
                     onChange={() => onToggleTodayTodo(item)}
+                    onClick={(event) => event.stopPropagation()}
                   />
                   <span className="parent-mode-todo-check" aria-hidden="true" />
                   <span>{item.text}</span>
@@ -1292,9 +1336,7 @@ function App() {
   const [isAccountSwitchPopupOpen, setIsAccountSwitchPopupOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
-  const [dailyScheduleItems, setDailyScheduleItems] = useState(() =>
-    readDailyScheduleCache(DEFAULT_CURRENT_USER_ID, new Date())
-  )
+  const [dailyScheduleItems, setDailyScheduleItems] = useState([])
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
   const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(null)
   const [selectedPregnancyDiaryId, setSelectedPregnancyDiaryId] = useState(null)
@@ -1340,7 +1382,7 @@ function App() {
     setPregnancySummary(DEFAULT_PREGNANCY_SUMMARY)
     setChildProfile(mockChildProfile)
     setCheerMessageText(DEFAULT_CHEER_MESSAGE)
-    setDailyScheduleItems(readDailyScheduleCache(currentUserId, new Date()))
+    setDailyScheduleItems([])
     setTodayTodoCard(DEFAULT_TODAY_TODO_CARD)
 
     fetchPregnancySummary(currentUserId).then((data) => {
@@ -1415,6 +1457,14 @@ function App() {
     }
 
     let isMounted = true
+
+    fetchDailySchedules(currentUserId, new Date()).then((items) => {
+      if (!isMounted) {
+        return
+      }
+
+      setDailyScheduleItems(items)
+    })
 
     fetchTodayTodoCard(currentUserId, new Date()).then((todoCard) => {
       if (!isMounted) {
@@ -1627,6 +1677,12 @@ function App() {
   const handleSelectAccount = (nextUserId) => {
     setCurrentUserId(nextUserId)
     setIsAccountSwitchPopupOpen(false)
+  }
+
+  const refreshHomeDailySchedules = async (targetUserId = currentUserId) => {
+    const items = await fetchDailySchedules(targetUserId, new Date())
+    setDailyScheduleItems(items)
+    return items
   }
 
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
@@ -1984,6 +2040,7 @@ function App() {
               initialDetailOpen={isScheduleDetailInitiallyOpen}
               initialScheduleInputOpen={isScheduleInputInitiallyOpen}
               userId={currentUserId}
+              onDailySchedulesChange={refreshHomeDailySchedules}
               navIcons={{
                 home: parentModeHomeIcon,
                 device: parentModeBabyIcon,
