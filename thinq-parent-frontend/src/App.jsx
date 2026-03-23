@@ -618,6 +618,109 @@ async function updateMyListCheckYn(myListId, checked) {
   }
 }
 
+function getApplianceControlsPayload(payload) {
+  const candidates = [payload?.data, payload?.items, payload?.controls, payload]
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate
+    }
+  }
+
+  return []
+}
+
+function normalizeApplianceBoolean(rawValue) {
+  if (typeof rawValue === 'boolean') {
+    return rawValue
+  }
+
+  const normalizedValue = String(rawValue ?? '').trim().toUpperCase()
+
+  if (!normalizedValue) {
+    return false
+  }
+
+  return normalizedValue === 'ON' || normalizedValue === 'TRUE' || normalizedValue === 'Y'
+}
+
+function isApplianceRoutineActivated(control) {
+  return normalizeApplianceBoolean(
+    control?.routineActivated ??
+      control?.routine_activated ??
+      control?.activated ??
+      control?.isActivated
+  )
+}
+
+function isApplianceAlertSoundEnabled(control) {
+  return normalizeApplianceBoolean(
+    control?.alertSoundEnabled ??
+      control?.alert_sound_enabled ??
+      control?.targetAlertSound ??
+      control?.target_alert_sound
+  )
+}
+
+async function fetchApplianceControls(userId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appliance-controls`, {
+      headers: {
+        'X-USER-ID': String(userId),
+      },
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    const payload = await response.json()
+    return getApplianceControlsPayload(payload)
+  } catch {
+    return []
+  }
+}
+
+async function patchApplianceRoutineActivation(userId, activated) {
+  const response = await fetch(`${API_BASE_URL}/api/appliance-controls/routine-activation`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-USER-ID': String(userId),
+    },
+    body: JSON.stringify({
+      activated,
+    }),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(payload?.message || '가전제품 자동제어 저장에 실패했어요.')
+  }
+
+  return response.json().catch(() => null)
+}
+
+async function patchApplianceAlertSoundAll(userId, enabled) {
+  const response = await fetch(`${API_BASE_URL}/api/appliance-controls/alert-sound-all`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-USER-ID': String(userId),
+    },
+    body: JSON.stringify({
+      enabled,
+    }),
+  })
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(payload?.message || '가전 알림음 제어 저장에 실패했어요.')
+  }
+
+  return response.json().catch(() => null)
+}
+
 function getMombtiAttemptPayload(payload) {
   if (payload?.data && typeof payload.data === 'object') {
     return payload.data
@@ -1351,6 +1454,10 @@ function App() {
   const [chatExpertDraft, setChatExpertDraft] = useState('')
   const [chatExpertMessages, setChatExpertMessages] = useState([{ role: 'bot', text: DEFAULT_CHATBOT_GREETING }])
   const [isChatExpertSending, setIsChatExpertSending] = useState(false)
+  const [applianceControls, setApplianceControls] = useState([])
+  const [isApplianceControlsLoading, setIsApplianceControlsLoading] = useState(false)
+  const [isApplianceRoutineSaving, setIsApplianceRoutineSaving] = useState(false)
+  const [isApplianceAlertSaving, setIsApplianceAlertSaving] = useState(false)
   const mombtiAttemptRequestRef = useRef(null)
   const chatExpertSessionIdRef = useRef(`user-${Date.now()}`)
   const today = new Date()
@@ -1384,6 +1491,10 @@ function App() {
     setCheerMessageText(DEFAULT_CHEER_MESSAGE)
     setDailyScheduleItems([])
     setTodayTodoCard(DEFAULT_TODAY_TODO_CARD)
+    setApplianceControls([])
+    setIsApplianceControlsLoading(false)
+    setIsApplianceRoutineSaving(false)
+    setIsApplianceAlertSaving(false)
 
     fetchPregnancySummary(currentUserId).then((data) => {
       if (!isMounted || !data) {
@@ -1472,6 +1583,28 @@ function App() {
       }
 
       setTodayTodoCard(todoCard)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentScreen, currentUserId])
+
+  useEffect(() => {
+    if (currentScreen !== 'parent-mode-device') {
+      return undefined
+    }
+
+    let isMounted = true
+    setIsApplianceControlsLoading(true)
+
+    fetchApplianceControls(currentUserId).then((controls) => {
+      if (!isMounted) {
+        return
+      }
+
+      setApplianceControls(controls)
+      setIsApplianceControlsLoading(false)
     })
 
     return () => {
@@ -1683,6 +1816,56 @@ function App() {
     const items = await fetchDailySchedules(targetUserId, new Date())
     setDailyScheduleItems(items)
     return items
+  }
+
+  const refreshApplianceControls = async (targetUserId = currentUserId) => {
+    setIsApplianceControlsLoading(true)
+
+    try {
+      const controls = await fetchApplianceControls(targetUserId)
+      setApplianceControls(controls)
+      return controls
+    } finally {
+      setIsApplianceControlsLoading(false)
+    }
+  }
+
+  const handleToggleApplianceRoutineActivation = async () => {
+    if (!applianceControls.length || isApplianceRoutineSaving || isApplianceControlsLoading) {
+      return
+    }
+
+    const nextActivated = !applianceControls.every(isApplianceRoutineActivated)
+
+    setIsApplianceRoutineSaving(true)
+
+    try {
+      await patchApplianceRoutineActivation(currentUserId, nextActivated)
+      await refreshApplianceControls(currentUserId)
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '가전제품 자동제어 저장에 실패했어요.')
+    } finally {
+      setIsApplianceRoutineSaving(false)
+    }
+  }
+
+  const handleToggleApplianceAlertSound = async () => {
+    if (!applianceControls.length || isApplianceAlertSaving || isApplianceControlsLoading) {
+      return
+    }
+
+    const nextEnabled = !applianceControls.every(isApplianceAlertSoundEnabled)
+
+    setIsApplianceAlertSaving(true)
+
+    try {
+      await patchApplianceAlertSoundAll(currentUserId, nextEnabled)
+      await refreshApplianceControls(currentUserId)
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : '가전 알림음 제어 저장에 실패했어요.')
+    } finally {
+      setIsApplianceAlertSaving(false)
+    }
   }
 
   const openParentSchedule = (shouldOpenDetail = true, shouldOpenScheduleInput = false) => {
@@ -1954,6 +2137,20 @@ function App() {
               onOpenMy={openMyScreen}
               onOpenCommunity={openCommunity}
               onOpenRoutine={openParentDeviceRoutine}
+              isAutoControlEnabled={
+                applianceControls.length > 0 && applianceControls.every(isApplianceRoutineActivated)
+              }
+              isSoundControlEnabled={
+                applianceControls.length > 0 && applianceControls.every(isApplianceAlertSoundEnabled)
+              }
+              isAutoControlDisabled={
+                applianceControls.length === 0 || isApplianceControlsLoading || isApplianceRoutineSaving
+              }
+              isSoundControlDisabled={
+                applianceControls.length === 0 || isApplianceControlsLoading || isApplianceAlertSaving
+              }
+              onToggleAutoControl={handleToggleApplianceRoutineActivation}
+              onToggleSoundControl={handleToggleApplianceAlertSound}
               navIcons={{
                 home: parentModeHomeIcon,
                 device: parentModeBabyIcon,

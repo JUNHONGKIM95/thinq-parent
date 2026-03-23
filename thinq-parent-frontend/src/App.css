@@ -1700,6 +1700,10 @@ select {
   line-height: 0;
 }
 
+.parent-device-toggle-button:disabled {
+  cursor: default;
+}
+
 .parent-device-toggle-visual {
   position: relative;
   display: block;

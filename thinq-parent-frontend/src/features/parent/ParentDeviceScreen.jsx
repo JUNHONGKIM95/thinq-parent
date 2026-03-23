@@ -1,4 +1,3 @@
-﻿import { useState } from 'react'
 import backIcon from '@shared-assets/srg/Arrow_left.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import autoOffIcon from '@shared-assets/srg/elecoff.svg'
@@ -19,11 +18,14 @@ function ParentDeviceScreen({
   onOpenMy,
   onOpenCommunity,
   onOpenRoutine,
+  isAutoControlEnabled = false,
+  isSoundControlEnabled = false,
+  isAutoControlDisabled = false,
+  isSoundControlDisabled = false,
+  onToggleAutoControl,
+  onToggleSoundControl,
   navIcons,
 }) {
-  const [isAutoControlEnabled, setIsAutoControlEnabled] = useState(true)
-  const [isSoundControlEnabled, setIsSoundControlEnabled] = useState(false)
-
   return (
     <div className="parent-device-screen">
       <header className="parent-device-header">
@@ -45,9 +47,10 @@ function ParentDeviceScreen({
                 <button
                   type="button"
                   className="parent-device-toggle-button parent-device-toggle-button--auto"
-                  aria-label="가전제품 자동 제어 토글"
+                  aria-label="가전제품 자동제어 토글"
                   aria-pressed={isAutoControlEnabled}
-                  onClick={() => setIsAutoControlEnabled((prev) => !prev)}
+                  onClick={onToggleAutoControl}
+                  disabled={isAutoControlDisabled}
                 >
                   <span className="parent-device-toggle-visual parent-device-toggle-visual--auto" aria-hidden="true">
                     <img
@@ -82,7 +85,8 @@ function ParentDeviceScreen({
                   className="parent-device-toggle-button parent-device-toggle-button--sound"
                   aria-label="가전 알림음 제어 토글"
                   aria-pressed={isSoundControlEnabled}
-                  onClick={() => setIsSoundControlEnabled((prev) => !prev)}
+                  onClick={onToggleSoundControl}
+                  disabled={isSoundControlDisabled}
                 >
                   <span className="parent-device-toggle-visual parent-device-toggle-visual--sound" aria-hidden="true">
                     <img
@@ -149,4 +153,3 @@ function ParentDeviceScreen({
 }
 
 export default ParentDeviceScreen
-
