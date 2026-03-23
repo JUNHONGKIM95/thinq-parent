@@ -23,6 +23,7 @@ function MombtiMenuScreen({
   onOpenCommunity,
   onOpenResult,
   onOpenTest,
+  latestResultType = '',
   isCreatingAttempt = false,
 }) {
   return (
@@ -38,6 +39,12 @@ function MombtiMenuScreen({
       </header>
 
       <div className="mombti-menu-content">
+        <section className="mombti-menu-latest-card" aria-label="내 MomBTI 최신 결과">
+          <span className="mombti-menu-latest-label">내 MomBTI</span>
+          <span className="mombti-menu-latest-divider" aria-hidden="true" />
+          <strong className="mombti-menu-latest-type">{latestResultType || 'MBTI'}</strong>
+        </section>
+
         <button type="button" className="mombti-menu-card" onClick={onOpenResult}>
           <strong>결과 조회</strong>
           <p>상세한 분석 결과를 통해 나를 이해해보세요.</p>

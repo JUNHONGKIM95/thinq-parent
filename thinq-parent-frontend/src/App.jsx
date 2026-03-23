@@ -2436,6 +2436,7 @@ function App() {
               onOpenResult={openMombtiResult}
               onOpenTest={openMombtiTest}
               isCreatingAttempt={isCreatingMombtiAttempt}
+              latestResultType={latestMombti?.type}
             />
           )}
 

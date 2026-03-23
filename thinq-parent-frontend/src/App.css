@@ -2672,10 +2672,54 @@ select {
 
 .mombti-menu-content {
   min-height: 0;
-  padding: 46px 20px 24px;
+  padding: 14px 20px 24px;
   display: grid;
   align-content: start;
   gap: 8px;
+}
+
+.mombti-menu-latest-card {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.mombti-menu-latest-label,
+.mombti-menu-latest-type {
+  position: absolute;
+  width: 84px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  line-height: 1.1875;
+  letter-spacing: -0.02em;
+}
+
+.mombti-menu-latest-label {
+  left: 24px;
+  top: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.mombti-menu-latest-divider {
+  position: absolute;
+  left: 118px;
+  top: 7px;
+  width: 1px;
+  height: 26px;
+  background: #ff7070;
+}
+
+.mombti-menu-latest-type {
+  left: 139px;
+  top: 14px;
+  font-weight: 600;
+  color: #ff4444;
 }
 
 .mombti-menu-card {
