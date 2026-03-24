@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -96,6 +97,21 @@ public class ScheduleController {
 	@Operation(summary = "Get schedule by id", description = "Returns one schedule")
 	public ApiResponse<ScheduleResponse> findById(@PathVariable Integer scheduleId) {
 		return ApiResponse.success("Schedule fetched successfully", scheduleService.findById(scheduleId));
+	}
+
+	@GetMapping("/users/{userId}/latest")
+	@Operation(summary = "Get latest due date by user", description = "Returns the latest saved due-date schedule for a user")
+	public ApiResponse<ScheduleResponse> findLatestByUserId(@PathVariable Integer userId) {
+		return ApiResponse.success("Latest schedule fetched successfully", scheduleService.findLatestDueDateByUserId(userId));
+	}
+
+	@GetMapping("/daily/{userId}/{date}")
+	@Operation(summary = "Get daily schedules by user", description = "Returns schedules for a specific user and date")
+	public ApiResponse<List<ScheduleResponse>> findDailyByUserId(
+			@PathVariable Integer userId,
+			@PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+	) {
+		return ApiResponse.success("Daily schedules fetched successfully", scheduleService.findDailyByUserId(userId, date));
 	}
 
 	@PatchMapping("/{scheduleId}")

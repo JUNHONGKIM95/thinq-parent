@@ -8,4 +8,6 @@ public interface CheerMessageService {
 	CheerMessageResponse create(CheerMessageCreateRequest request);
 
 	CheerMessageResponse findLatestByGroupId(Integer groupId);
+
+	CheerMessageResponse findLatestByUserId(Integer userId);
 }

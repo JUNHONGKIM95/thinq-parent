@@ -1,29 +1,29 @@
 @font-face {
   font-family: 'LGSmartUI';
-  src: url('../assets/fonts/LGSmHaL.ttf') format('truetype');
+  src: url('../assets/fonts/LG_Smart_UI-Light.ttf') format('truetype');
   font-weight: 300;
 }
 
 @font-face {
   font-family: 'LGSmartUI';
-  src: url('../assets/fonts/LGSmHaR.ttf') format('truetype');
+  src: url('../assets/fonts/LG_Smart_UI-Regular.ttf') format('truetype');
   font-weight: 400;
 }
 
 @font-face {
   font-family: 'LGSmartUI';
-  src: url('../assets/fonts/LGSmHaSB.ttf') format('truetype');
+  src: url('../assets/fonts/LG_Smart_UI-Semibold.ttf') format('truetype');
   font-weight: 600;
 }
 
 @font-face {
   font-family: 'LGSmartUI';
-  src: url('../assets/fonts/LGSmHaB.ttf') format('truetype');
+  src: url('../assets/fonts/LG_Smart_UI-Bold.ttf') format('truetype');
   font-weight: 700;
 }
 
 :root {
-  font-family: 'LGSmartUI', 'Noto Sans KR', sans-serif;
+  font-family: 'LGSmartUI';
   line-height: 1.5;
   font-weight: 400;
   color: #181311;

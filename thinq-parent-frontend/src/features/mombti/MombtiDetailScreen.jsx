@@ -1,22 +1,12 @@
-import menuIcon from '@shared-assets/assets/icons/menu.svg'
+import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
+import menuIcon from '@shared-assets/srg/Menu.svg'
 import parentModeCommunityIcon from '@shared-assets/srg/부모모드커뮤니티_아이콘.svg'
 import parentModeDeviceIcon from '@shared-assets/srg/부모모드가전육아_아이콘.svg'
 import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg'
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 
 function BackIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M15 5 8 12l7 7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
 const NAV_ICONS = {
@@ -26,31 +16,15 @@ const NAV_ICONS = {
   my: parentModeMyIcon,
 }
 
-function highlightText(text, target) {
-  if (!target || !text.includes(target)) {
-    return text
-  }
-
-  const [before, after] = text.split(target)
-
-  return (
-    <>
-      {before}
-      <span className="mombti-highlight">{target}</span>
-      {after}
-    </>
-  )
-}
-
-function MombtiDetailScreen({ data, onBack }) {
+function MombtiDetailScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, onOpenDevice, onOpenCommunity }) {
   return (
     <div className="mombti-screen-shell">
       <header className="mombti-header">
-        <button type="button" className="mombti-icon-button" aria-label="뒤로 가기" onClick={onBack}>
+        <button type="button" className="mombti-icon-button" aria-label="뒤로 가기" onClick={onOpenMombtiMenu}>
           <BackIcon />
         </button>
         <h1>MomBTI</h1>
-        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기">
+        <button type="button" className="mombti-icon-button" aria-label="메뉴 열기" onClick={onOpenMombtiMenu}>
           <img src={menuIcon} alt="" className="mombti-header-menu-icon" aria-hidden="true" />
         </button>
       </header>
@@ -58,18 +32,8 @@ function MombtiDetailScreen({ data, onBack }) {
       <div className="mombti-content">
         <section className="mombti-panel">
           <div className="mombti-hero">
-            <div className="mombti-copy">
-              <span className="mombti-copy-accent" aria-hidden="true" />
-              <div>
-                <p className="mombti-type">{data.type}</p>
-                <p className="mombti-title">{data.title}</p>
-                <p className="mombti-subtitle">
-                  {highlightText(data.subtitle, data.subtitleHighlight)}
-                </p>
-              </div>
-            </div>
-
-            <img src={data.image} alt={`${data.type} 유형 이미지`} className="mombti-hero-image" />
+            <img src={data.copyImage || data.image} alt={`${data.type} 왼쪽 이미지`} className="mombti-side-image" />
+            <img src={data.titleImage || data.image} alt={`${data.type} 결과 이미지`} className="mombti-hero-image" />
           </div>
 
           <section className="mombti-summary-box" aria-label="MomBTI 요약">
@@ -81,10 +45,11 @@ function MombtiDetailScreen({ data, onBack }) {
               <div className="mombti-bar-group" key={pair.leftKey}>
                 <div className="mombti-bar-labels">
                   <span>{pair.leftLabel}</span>
+                  <span>{`${Math.round(pair.activePercent)}%`}</span>
                   <span>{pair.rightLabel}</span>
                 </div>
                 <div
-                  className="mombti-bar-track"
+                  className={`mombti-bar-track ${pair.activeSide === 'right' ? 'is-right' : 'is-left'}`}
                   aria-label={`${pair.leftLabel} ${pair.leftValue}, ${pair.rightLabel} ${pair.rightValue}`}
                 >
                   <div className="mombti-bar-fill" style={{ width: `${pair.activePercent}%` }} />
@@ -110,6 +75,14 @@ function MombtiDetailScreen({ data, onBack }) {
         {data.navigation.map((item) => {
           const iconSrc = NAV_ICONS[item.key] ?? parentModeHomeIcon
           const isActive = item.key === 'my'
+          const handleClick =
+            item.key === 'home'
+              ? onOpenHome
+              : item.key === 'device'
+                ? onOpenDevice
+                : item.key === 'community'
+                  ? onOpenCommunity
+                  : undefined
 
           return (
             <button
@@ -117,6 +90,7 @@ function MombtiDetailScreen({ data, onBack }) {
               type="button"
               className={`parent-mode-nav-item ${isActive ? 'parent-mode-nav-item--active' : ''}`}
               aria-current={isActive ? 'page' : undefined}
+              onClick={handleClick}
             >
               <span className="parent-mode-nav-icon-frame" aria-hidden="true">
                 <img src={iconSrc} alt="" className="parent-mode-nav-icon" aria-hidden="true" />

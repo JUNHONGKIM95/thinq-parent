@@ -105,6 +105,42 @@ public class ScheduleServiceImpl implements ScheduleService {
 	}
 
 	@Override
+	public List<ScheduleResponse> findDailyByUserId(Integer userId, LocalDate date) {
+		AppUser user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("User not found. userId=" + userId));
+		if (user.getGroupId() == null) {
+			return List.of();
+		}
+		return scheduleRepository.findByGroupIdAndScheduleDateOrderByTimeAsc(user.getGroupId(), date)
+				.stream()
+				.map(this::toResponse)
+				.toList();
+	}
+
+	@Override
+	public ScheduleResponse findLatestDueDateByUserId(Integer userId) {
+		AppUser user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("User not found. userId=" + userId));
+		if (user.getGroupId() == null) {
+			throw new ResourceNotFoundException("User has no group. userId=" + userId);
+		}
+		List<Schedule> dueDates = scheduleRepository.findByGroupIdAndTitleAndScheduleTypeOrderByCreatedAtAsc(
+				user.getGroupId(), "출산 예정일", "중요");
+		if (dueDates.isEmpty()) {
+			throw new ResourceNotFoundException("No due date schedule found for userId=" + userId);
+		}
+		return toResponse(dueDates.get(dueDates.size() - 1));
+	}
+
+	@Override
+	public List<ScheduleResponse> findByGroupId(Integer groupId) {
+		return scheduleRepository.findByGroupIdOrderByCreatedAtDesc(groupId)
+				.stream()
+				.map(this::toResponse)
+				.toList();
+	}
+
+	@Override
 	@Transactional
 	public ScheduleResponse createFromTodo(TodoScheduleCreateRequest request) {
 		AppUser user = validateGroupMember(request.groupId(), request.userId());

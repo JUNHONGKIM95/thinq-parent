@@ -18,6 +18,12 @@ public interface ScheduleService {
 
 	List<ScheduleResponse> findDailySchedules(Integer groupId, LocalDate date);
 
+	List<ScheduleResponse> findDailyByUserId(Integer userId, LocalDate date);
+
+	ScheduleResponse findLatestDueDateByUserId(Integer userId);
+
+	List<ScheduleResponse> findByGroupId(Integer groupId);
+
 	ScheduleResponse createFromTodo(TodoScheduleCreateRequest request);
 
 	ScheduleResponse patch(Integer scheduleId, SchedulePatchRequest request);
