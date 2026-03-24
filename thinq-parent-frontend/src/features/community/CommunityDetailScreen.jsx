@@ -2,6 +2,7 @@
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import commentReactionIcon from '@shared-assets/srg/fi-rr-comment2.svg'
 import heartReactionIcon from '@shared-assets/srg/fi-rr-heart2.svg'
+import heartReactionActiveIcon from '@shared-assets/srg/heart.svg'
 import menuIcon from '@shared-assets/srg/Menu.svg'
 import commentEditActionIcon from '@shared-assets/srg/fi-rr-pencil.svg'
 import commentDeleteActionIcon from '@shared-assets/srg/fi-rr-trash.svg'
@@ -22,8 +23,8 @@ function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
 }
 
-function HeartIcon() {
-  return <img src={heartReactionIcon} alt="" aria-hidden="true" />
+function HeartIcon({ isActive = false }) {
+  return <img src={isActive ? heartReactionActiveIcon : heartReactionIcon} alt="" aria-hidden="true" />
 }
 
 function CommentIcon() {
@@ -59,6 +60,32 @@ function normalizeString(value) {
 function normalizeNumber(value) {
   const parsedValue = Number.parseInt(String(value ?? '').trim(), 10)
   return Number.isFinite(parsedValue) ? parsedValue : null
+}
+
+function normalizeBoolean(value) {
+  if (typeof value === 'boolean') {
+    return value
+  }
+
+  if (typeof value === 'number') {
+    return value !== 0
+  }
+
+  const normalizedValue = String(value ?? '').trim().toLowerCase()
+
+  if (!normalizedValue) {
+    return false
+  }
+
+  return normalizedValue === 'true' || normalizedValue === '1' || normalizedValue === 'y' || normalizedValue === 'yes'
+}
+
+function normalizeOptionalBoolean(value) {
+  if (value === undefined || value === null || value === '') {
+    return null
+  }
+
+  return normalizeBoolean(value)
 }
 
 function normalizeMombtiAttemptStatus(value) {
@@ -192,6 +219,16 @@ function mapCommunityDetail(post) {
     mbtiLabel: normalizeString(post?.authorMombtiResultType ?? post?.author_mombti_result_type) || 'MBTI',
     keywordLabel: normalizeString(post?.keywordName ?? post?.keyword_name) || '키워드',
     likeCount: normalizeNumber(post?.likeCount ?? post?.like_count) ?? 0,
+    isLikedByCurrentUser: normalizeOptionalBoolean(
+      post?.likedByMe ??
+        post?.liked_by_me ??
+        post?.isLikedByCurrentUser ??
+        post?.is_liked_by_current_user ??
+        post?.likedByCurrentUser ??
+        post?.liked_by_current_user ??
+        post?.isLiked ??
+        post?.is_liked
+    ),
     commentCount: normalizeNumber(post?.commentCount ?? post?.comment_count) ?? 0,
     elapsedTimeText: normalizeString(post?.elapsedTimeText ?? post?.elapsed_time_text),
     authorUserId: normalizeNumber(post?.authorUserId ?? post?.author_user_id),
@@ -236,8 +273,16 @@ function buildCommunityListUpdate(detail) {
   }
 }
 
-async function fetchCommunityPostDetail(postId) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/community/posts/${postId}`)
+async function fetchCommunityPostDetail(postId, userId) {
+  const query = new URLSearchParams()
+
+  if (userId !== null && userId !== undefined) {
+    query.set('userId', String(userId))
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/community/posts/${postId}${query.toString() ? `?${query.toString()}` : ''}`
+  )
 
   if (!response.ok) {
     const errorPayload = await response.json().catch(() => null)
@@ -396,8 +441,39 @@ async function deleteCommunityPost(postId, authorUserId) {
   }
 }
 
+async function createCommunityPostLike(postId, userId) {
+  const query = new URLSearchParams({
+    userId: String(userId),
+  })
+  const response = await fetch(`${API_BASE_URL}/api/v1/community/posts/${postId}/likes?${query.toString()}`, {
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => null)
+    const errorMessage = errorPayload?.message ?? `Failed to create community like: ${response.status}`
+    throw new Error(errorMessage)
+  }
+}
+
+async function deleteCommunityPostLike(postId, userId) {
+  const query = new URLSearchParams({
+    userId: String(userId),
+  })
+  const response = await fetch(`${API_BASE_URL}/api/v1/community/posts/${postId}/likes?${query.toString()}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    const errorPayload = await response.json().catch(() => null)
+    const errorMessage = errorPayload?.message ?? `Failed to delete community like: ${response.status}`
+    throw new Error(errorMessage)
+  }
+}
+
 function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevice, onOpenMy, onEdit, onDeleted }) {
   const [detail, setDetail] = useState(null)
+  const [isLiked, setIsLiked] = useState(false)
   const [comments, setComments] = useState([])
   const [commentInput, setCommentInput] = useState('')
   const [editingCommentId, setEditingCommentId] = useState(null)
@@ -406,6 +482,7 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [isUpdatingComment, setIsUpdatingComment] = useState(false)
   const [deletingCommentId, setDeletingCommentId] = useState(null)
+  const [isUpdatingLike, setIsUpdatingLike] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
 
@@ -415,16 +492,21 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     }
 
     const [nextDetail, nextComments] = await Promise.all([
-      fetchCommunityPostDetail(postId),
+      fetchCommunityPostDetail(postId, userId),
       fetchCommunityPostComments(postId),
     ])
 
     const nextCommentsWithMombti = await enrichCommentMombtiLabels(nextComments)
 
     setDetail(nextDetail)
+    setIsLiked((prev) => (typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : prev))
     setComments(nextCommentsWithMombti)
     writeCachedCommunityDetail(postId, {
-      detail: nextDetail,
+      detail: {
+        ...nextDetail,
+        isLikedByCurrentUser:
+          typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked,
+      },
       comments: nextCommentsWithMombti,
     })
 
@@ -448,6 +530,7 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
 
     if (cachedValue?.detail) {
       setDetail(cachedValue.detail)
+      setIsLiked(Boolean(cachedValue.detail.isLikedByCurrentUser))
       setComments(Array.isArray(cachedValue.comments) ? cachedValue.comments : [])
       setErrorMessage('')
     }
@@ -458,7 +541,7 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     setEditingCommentId(null)
     setEditingCommentInput('')
 
-    Promise.all([fetchCommunityPostDetail(postId), fetchCommunityPostComments(postId)])
+    Promise.all([fetchCommunityPostDetail(postId, userId), fetchCommunityPostComments(postId)])
       .then(async ([nextDetail, nextComments]) => {
         if (!isMounted) {
           return
@@ -471,9 +554,14 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
         }
 
         setDetail(nextDetail)
+        setIsLiked((prev) => (typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : prev))
         setComments(nextCommentsWithMombti)
         writeCachedCommunityDetail(postId, {
-          detail: nextDetail,
+          detail: {
+            ...nextDetail,
+            isLikedByCurrentUser:
+              typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked,
+          },
           comments: nextCommentsWithMombti,
         })
 
@@ -618,6 +706,31 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     }
   }
 
+  const handleToggleLike = async () => {
+    if (!detail?.postId || isUpdatingLike) {
+      return
+    }
+
+    try {
+      setIsUpdatingLike(true)
+      const nextIsLiked = !isLiked
+
+      if (isLiked) {
+        await deleteCommunityPostLike(detail.postId, userId)
+      } else {
+        await createCommunityPostLike(detail.postId, userId)
+      }
+
+      setIsLiked(nextIsLiked)
+      await refreshDetailData()
+    } catch (error) {
+      console.error(error)
+      window.alert(error instanceof Error ? error.message : '공감 처리 중 문제가 생겼어요.')
+    } finally {
+      setIsUpdatingLike(false)
+    }
+  }
+
   return (
     <div className="community-detail-screen">
       <header className="community-header">
@@ -669,11 +782,16 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
               </div>
 
               <div className="community-detail-reaction-strip">
-                <div className="community-detail-reaction-item">
-                  <HeartIcon />
+                <button
+                  type="button"
+                  className={`community-detail-reaction-item ${isLiked ? 'is-active' : ''}`}
+                  onClick={handleToggleLike}
+                  disabled={isUpdatingLike}
+                >
+                  <HeartIcon isActive={isLiked} />
                   <span>공감</span>
                   <strong>{detail.likeCount}</strong>
-                </div>
+                </button>
                 <div className="community-detail-reaction-divider" />
                 <div className="community-detail-reaction-item">
                   <CommentIcon />

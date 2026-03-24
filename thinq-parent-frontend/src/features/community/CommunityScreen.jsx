@@ -167,6 +167,12 @@ function mapCommunityPost(post, index) {
     title,
     content,
     likeCount: normalizeNumber(post?.likeCount ?? post?.like_count) ?? 0,
+    likedByMe:
+      post?.likedByMe ??
+      post?.liked_by_me ??
+      post?.isLikedByCurrentUser ??
+      post?.is_liked_by_current_user ??
+      false,
     commentCount: normalizeNumber(post?.commentCount ?? post?.comment_count) ?? 0,
     elapsedTimeText: normalizeString(post?.elapsedTimeText ?? post?.elapsed_time_text),
   }
@@ -187,6 +193,7 @@ function buildCommunityDetailCacheValue(post) {
       mbtiLabel: post.mbtiLabel,
       keywordLabel: post.boardLabel || '키워드',
       likeCount: post.likeCount,
+      isLikedByCurrentUser: Boolean(post.likedByMe),
       commentCount: post.commentCount,
       elapsedTimeText: post.elapsedTimeText,
       authorUserId: post.authorUserId,
@@ -203,16 +210,16 @@ async function fetchCommunityPosts({ boardId, keywordId, sameMombtiOnly, userId 
     query.set('boardId', String(boardId))
   }
 
+  if (userId !== null && userId !== undefined) {
+    query.set('userId', String(userId))
+  }
+
   if (keywordId !== null && keywordId !== undefined) {
     query.set('keywordId', String(keywordId))
   }
 
   if (sameMombtiOnly) {
     query.set('sameMombtiOnly', 'true')
-
-    if (userId !== null && userId !== undefined) {
-      query.set('userId', String(userId))
-    }
   }
 
   const queryString = query.toString()

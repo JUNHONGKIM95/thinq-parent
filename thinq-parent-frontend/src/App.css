@@ -5390,10 +5390,12 @@ select {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  border: 0;
   font-size: 0.9rem;
   font-weight: 400;
   background-color: #F3E8D6;
   padding : 3px;
+  cursor: pointer;
 }
 
 .community-detail-reaction-item strong {
