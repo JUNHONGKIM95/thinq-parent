@@ -19,6 +19,7 @@ public record CommunityPostResponse(
 		Integer commentCount,
 		Integer viewCount,
 		Boolean isAnonymous,
+		Boolean likedByMe,
 		String status,
 		String elapsedTimeText,
 		LocalDateTime createdAt,

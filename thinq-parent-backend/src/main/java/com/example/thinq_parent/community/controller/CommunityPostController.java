@@ -53,9 +53,12 @@ public class CommunityPostController {
 	}
 
 	@GetMapping("/posts/{postId}")
-	@Operation(summary = "Get community post detail", description = "Returns one post and increases its view count")
-	public ApiResponse<CommunityPostResponse> getPost(@PathVariable Integer postId) {
-		return ApiResponse.success("Community post fetched successfully", communityService.getPost(postId));
+	@Operation(summary = "Get community post detail", description = "Returns one post and increases its view count. Pass userId to get likedByMe status.")
+	public ApiResponse<CommunityPostResponse> getPost(
+			@PathVariable Integer postId,
+			@RequestParam(required = false) Integer userId
+	) {
+		return ApiResponse.success("Community post fetched successfully", communityService.getPost(postId, userId));
 	}
 
 	@PostMapping("/posts")

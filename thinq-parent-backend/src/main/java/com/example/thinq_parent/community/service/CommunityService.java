@@ -19,7 +19,7 @@ public interface CommunityService {
 
 	List<CommunityPostResponse> getPosts(Integer boardId, Integer keywordId, boolean sameMombtiOnly, Integer userId);
 
-	CommunityPostResponse getPost(Integer postId);
+	CommunityPostResponse getPost(Integer postId, Integer userId);
 
 	CommunityPostResponse createPost(CommunityPostCreateRequest request);
 

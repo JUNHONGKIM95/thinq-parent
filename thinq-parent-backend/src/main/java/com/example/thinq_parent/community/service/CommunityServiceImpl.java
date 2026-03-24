@@ -123,16 +123,16 @@ public class CommunityServiceImpl implements CommunityService {
 		).stream().collect(Collectors.toMap(CommunityKeyword::getKeywordId, Function.identity()));
 
 		return posts.stream()
-				.map(post -> toPostResponse(post, boards.get(post.getBoardId()), keywords.get(post.getKeywordId())))
+				.map(post -> toPostResponse(post, boards.get(post.getBoardId()), keywords.get(post.getKeywordId()), userId))
 				.toList();
 	}
 
 	@Override
 	@Transactional
-	public CommunityPostResponse getPost(Integer postId) {
+	public CommunityPostResponse getPost(Integer postId, Integer userId) {
 		CommunityPost post = getActivePost(postId);
 		post.incrementViewCount();
-		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()));
+		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()), userId);
 	}
 
 	@Override
@@ -153,7 +153,7 @@ public class CommunityServiceImpl implements CommunityService {
 				request.isAnonymous()
 		);
 
-		return toPostResponse(postRepository.save(post), board, keyword);
+		return toPostResponse(postRepository.save(post), board, keyword, author.getUserId());
 	}
 
 	@Override
@@ -164,7 +164,7 @@ public class CommunityServiceImpl implements CommunityService {
 		Board board = request.boardId() == null ? getBoard(post.getBoardId()) : getBoard(request.boardId());
 		CommunityKeyword keyword = request.keywordId() == null ? getKeyword(post.getKeywordId()) : getKeyword(request.keywordId());
 		post.patch(request.boardId(), request.keywordId(), request.title(), request.content(), request.isAnonymous());
-		return toPostResponse(post, board, keyword);
+		return toPostResponse(post, board, keyword, request.authorUserId());
 	}
 
 	@Override
@@ -225,7 +225,7 @@ public class CommunityServiceImpl implements CommunityService {
 		postLikeRepository.findByPostIdAndUserId(postId, userId)
 				.orElseGet(() -> postLikeRepository.save(new CommunityPostLike(postId, userId)));
 		post.updateLikeCount((int) postLikeRepository.countByPostId(postId));
-		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()));
+		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()), userId);
 	}
 
 	@Override
@@ -236,7 +236,7 @@ public class CommunityServiceImpl implements CommunityService {
 		postLikeRepository.findByPostIdAndUserId(postId, userId)
 				.ifPresent(postLikeRepository::delete);
 		post.updateLikeCount((int) postLikeRepository.countByPostId(postId));
-		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()));
+		return toPostResponse(post, getBoard(post.getBoardId()), getKeyword(post.getKeywordId()), userId);
 	}
 
 	private AppUser getUser(Integer userId) {
@@ -285,7 +285,11 @@ public class CommunityServiceImpl implements CommunityService {
 				.orElse(null);
 	}
 
-	private CommunityPostResponse toPostResponse(CommunityPost post, Board board, CommunityKeyword keyword) {
+	private CommunityPostResponse toPostResponse(CommunityPost post, Board board, CommunityKeyword keyword, Integer currentUserId) {
+		Boolean likedByMe = currentUserId != null
+				? postLikeRepository.findByPostIdAndUserId(post.getPostId(), currentUserId).isPresent()
+				: null;
+
 		return new CommunityPostResponse(
 				post.getPostId(),
 				post.getBoardId(),
@@ -303,6 +307,7 @@ public class CommunityServiceImpl implements CommunityService {
 				post.getCommentCount(),
 				post.getViewCount(),
 				post.getIsAnonymous(),
+				likedByMe,
 				post.getStatus(),
 				formatElapsedTime(post.getCreatedAt()),
 				post.getCreatedAt(),
