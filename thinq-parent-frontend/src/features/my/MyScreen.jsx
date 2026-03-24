@@ -9,6 +9,7 @@ import parentModeHomeIcon from '@shared-assets/srg/부모모드홈_아이콘.svg
 import parentModeMyIcon from '@shared-assets/srg/부모모드MY_아이콘.svg'
 import ScheduleInputSheet, { DEFAULT_SCHEDULE_FORM } from '../parent/ScheduleInputSheet'
 import { API_BASE_URL } from '../../config/api'
+import taeaImage from '../../../assets/taea.png'
 
 function BackIcon() {
   return <img src={arrowLeftIcon} alt="" className="back-button-icon" aria-hidden="true" />
@@ -40,14 +41,6 @@ function ChevronIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  )
-}
-
-function PlusIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 6v12M6 12h12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -162,9 +155,7 @@ function MyScreen({
       <div className="my-content">
         <section className="my-profile-section">
           <button type="button" className="my-profile-card" aria-label="아이 사진 추가">
-            <span className="my-profile-plus" aria-hidden="true">
-              <PlusIcon />
-            </span>
+            <img src={taeaImage} alt="" className="my-profile-image" aria-hidden="true" />
           </button>
 
           <div className="my-name-row">
