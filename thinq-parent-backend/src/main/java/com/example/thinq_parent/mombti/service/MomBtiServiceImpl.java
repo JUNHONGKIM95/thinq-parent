@@ -194,8 +194,9 @@ public class MomBtiServiceImpl implements MomBtiService {
 	@Override
 	public MomBtiAttemptResponse getLatestAttempt(Integer userId) {
 		validateUser(userId);
-		MomBtiTestAttempt attempt = testAttemptRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
-				.orElseThrow(() -> new ResourceNotFoundException("MomBTI attempt not found. userId=" + userId));
+		MomBtiTestAttempt attempt = testAttemptRepository
+				.findFirstByUserIdAndStatusOrderByCompletedAtDescCreatedAtDesc(userId, "COMPLETED")
+				.orElseThrow(() -> new ResourceNotFoundException("완료된 MomBTI 검사가 없습니다. userId=" + userId));
 		return toAttemptResponse(attempt);
 	}
 
