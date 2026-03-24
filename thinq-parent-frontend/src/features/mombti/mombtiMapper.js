@@ -64,6 +64,10 @@ function getAttemptProfile(attempt) {
     return attempt.profile
   }
 
+  if (attempt?.result && typeof attempt.result === 'object') {
+    return attempt.result
+  }
+
   if (attempt?.resultProfile && typeof attempt.resultProfile === 'object') {
     return attempt.resultProfile
   }
@@ -109,7 +113,21 @@ export function buildMombtiViewModel(record, meta) {
 export function buildMombtiViewModelFromAttempt(attempt, meta) {
   const profile = getAttemptProfile(attempt)
   const resultType = normalizeResultType(
-    attempt?.resultType ?? attempt?.result_type ?? profile?.resultType ?? profile?.result_type
+    attempt?.resultType ??
+      attempt?.result_type ??
+      attempt?.mombtiType ??
+      attempt?.mombti_type ??
+      attempt?.type ??
+      attempt?.result?.resultType ??
+      attempt?.result?.result_type ??
+      attempt?.result?.mombtiType ??
+      attempt?.result?.mombti_type ??
+      attempt?.result?.type ??
+      profile?.resultType ??
+      profile?.result_type ??
+      profile?.mombtiType ??
+      profile?.mombti_type ??
+      profile?.type
   )
   const scores = attempt?.scores ?? attempt?.score ?? {}
   const copyImage =

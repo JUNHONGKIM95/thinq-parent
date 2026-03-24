@@ -888,6 +888,7 @@ select {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   background: #feffdf;
   border-radius: 11px;
   box-sizing: border-box;
@@ -950,12 +951,20 @@ select {
 .parent-mode-input-text {
   margin: 0 0 0 auto;
   padding-left: 8px;
+  min-width: 0;
+  flex: 1 1 0;
+  width: 0;
+  max-width: 100%;
+  display: block;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 16px;
   letter-spacing: -0.02em;
   color: #000000;
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cheer-message-screen {
@@ -1237,6 +1246,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
   padding: 6px 10px;
   border-radius: 15px;
   font-size: 0.8125rem;
@@ -1265,10 +1275,17 @@ select {
 }
 
 .parent-mode-event-label {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 400;
 }
 
 .parent-mode-event-time {
+  flex-shrink: 0;
   font-weight: 600;
   letter-spacing: 0.15em;
 }
@@ -1293,6 +1310,8 @@ select {
   display: flex;
   align-items: center;
   gap: 1px;
+  width: 100%;
+  min-width: 0;
   margin-top: 6px;
   font-size: 0.8125rem;
   font-weight: 400;
@@ -1304,8 +1323,15 @@ select {
 
 .parent-mode-todo-item > span:last-child {
   flex: 1;
+  min-width: 0;
+  width: 0;
+  max-width: 100%;
+  display: block;
   text-align: left;
   margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
@@ -2478,6 +2504,7 @@ select {
 }
 
 .mombti-hero {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 128px));
   gap: 3px;
@@ -2487,6 +2514,8 @@ select {
 }
 
 .mombti-side-image {
+  position: relative;
+  z-index: 2;
   width: 160%;
   height: auto;
   display: block;
@@ -2494,6 +2523,8 @@ select {
 }
 
 .mombti-hero-image {
+  position: relative;
+  z-index: 1;
   width: 130%;
   height: auto;
   display: block;
@@ -2565,14 +2596,14 @@ select {
   top: 4px;
   bottom: 4px;
   left: 4px;
-  border-radius: 999px 0 0 999px;
+  border-radius: 999px;
   background: #ff8a8f;
 }
 
 .mombti-bar-track.is-right .mombti-bar-fill {
   left: auto;
   right: 4px;
-  border-radius: 0 999px 999px 0;
+  border-radius: 999px;
 }
 
 .mombti-details {
@@ -3019,25 +3050,18 @@ select {
   height: 130px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   border: 0;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.9);
   cursor: pointer;
 }
 
-.my-profile-plus {
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(126, 134, 158, 0.25);
-  color: #292929;
-}
-
-.my-profile-plus svg {
-  width: 12px;
-  height: 12px;
+.my-profile-image {
+  width: 100%;
+  height: 100%;
+  border-radius:10px;
+  display: block;
+  object-fit: cover;
 }
 
 .my-name-row {
@@ -3884,6 +3908,21 @@ select {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 25px;
+}
+
+.parent-schedule-calendar-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.parent-schedule-calendar-year {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #8c7a73;
 }
 
 .parent-schedule-calendar-card h2 {

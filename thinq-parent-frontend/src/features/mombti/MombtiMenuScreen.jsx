@@ -42,7 +42,7 @@ function MombtiMenuScreen({
         <section className="mombti-menu-latest-card" aria-label="내 MomBTI 최신 결과">
           <span className="mombti-menu-latest-label">내 MomBTI</span>
           <span className="mombti-menu-latest-divider" aria-hidden="true" />
-          <strong className="mombti-menu-latest-type">{latestResultType || 'MBTI'}</strong>
+          <strong className="mombti-menu-latest-type">{latestResultType ?? ''}</strong>
         </section>
 
         <button type="button" className="mombti-menu-card" onClick={onOpenResult}>
@@ -54,7 +54,6 @@ function MombtiMenuScreen({
           type="button"
           className="mombti-menu-card"
           onClick={onOpenTest}
-          disabled={isCreatingAttempt}
         >
           <strong>테스트하기</strong>
           <p>나의 유형을 알아보아요.</p>

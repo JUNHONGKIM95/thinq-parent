@@ -52,7 +52,7 @@ function MombtiLatestResultScreen({ data, onBack, onOpenMombtiMenu, onOpenHome, 
                   className={`mombti-bar-track ${pair.activeSide === 'right' ? 'is-right' : 'is-left'}`}
                   aria-label={`${pair.leftLabel} ${pair.leftValue}, ${pair.rightLabel} ${pair.rightValue}`}
                 >
-                  <div className="mombti-bar-fill" style={{ width: `${pair.activePercent}%` }} />
+                  <div className="mombti-bar-fill" style={{ width: `max(0px, calc(${pair.activePercent}% - 8px))` }} />
                 </div>
               </div>
             ))}
