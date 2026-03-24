@@ -1363,7 +1363,10 @@ function ParentScheduleScreen({
             >
               ‹
             </button>
-            <h2>{getMonthLabel(visibleMonth)}</h2>
+            <div className="parent-schedule-calendar-title">
+              <span className="parent-schedule-calendar-year">{visibleMonth.getFullYear()}</span>
+              <h2>{getMonthLabel(visibleMonth)}</h2>
+            </div>
             <button
               type="button"
               className="parent-schedule-month-button"
