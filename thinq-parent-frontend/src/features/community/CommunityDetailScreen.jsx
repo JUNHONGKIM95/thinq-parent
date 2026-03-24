@@ -253,10 +253,13 @@ function mapCommunityComment(comment) {
   }
 }
 
-function buildCommunityListUpdate(detail) {
+function buildCommunityListUpdate(detail, fallbackLikedByMe = false) {
   if (!detail?.postId) {
     return null
   }
+
+  const resolvedLikedByMe =
+    typeof detail.isLikedByCurrentUser === 'boolean' ? detail.isLikedByCurrentUser : fallbackLikedByMe
 
   return {
     postId: detail.postId,
@@ -268,8 +271,23 @@ function buildCommunityListUpdate(detail) {
     authorUsername: detail.authorUsername,
     mbtiLabel: detail.mbtiLabel,
     likeCount: detail.likeCount,
+    likedByMe: resolvedLikedByMe,
+    isLikedByCurrentUser: resolvedLikedByMe,
     commentCount: detail.commentCount,
     elapsedTimeText: detail.elapsedTimeText,
+  }
+}
+
+function buildCachedCommunityDetailValue(detail, comments, fallbackLikedByMe = false) {
+  const resolvedLikedByMe =
+    typeof detail?.isLikedByCurrentUser === 'boolean' ? detail.isLikedByCurrentUser : fallbackLikedByMe
+
+  return {
+    detail: {
+      ...detail,
+      isLikedByCurrentUser: resolvedLikedByMe,
+    },
+    comments,
   }
 }
 
@@ -497,20 +515,18 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     ])
 
     const nextCommentsWithMombti = await enrichCommentMombtiLabels(nextComments)
+    const resolvedLikedByMe =
+      typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked
 
-    setDetail(nextDetail)
-    setIsLiked((prev) => (typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : prev))
-    setComments(nextCommentsWithMombti)
-    writeCachedCommunityDetail(postId, {
-      detail: {
-        ...nextDetail,
-        isLikedByCurrentUser:
-          typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked,
-      },
-      comments: nextCommentsWithMombti,
+    setDetail({
+      ...nextDetail,
+      isLikedByCurrentUser: resolvedLikedByMe,
     })
+    setIsLiked(resolvedLikedByMe)
+    setComments(nextCommentsWithMombti)
+    writeCachedCommunityDetail(postId, buildCachedCommunityDetailValue(nextDetail, nextCommentsWithMombti, resolvedLikedByMe))
 
-    const listUpdate = buildCommunityListUpdate(nextDetail)
+    const listUpdate = buildCommunityListUpdate(nextDetail, resolvedLikedByMe)
 
     if (listUpdate) {
       upsertCommunityPostInCachedLists(listUpdate)
@@ -548,24 +564,22 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
         }
 
         const nextCommentsWithMombti = await enrichCommentMombtiLabels(nextComments)
+        const resolvedLikedByMe =
+          typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked
 
         if (!isMounted) {
           return
         }
 
-        setDetail(nextDetail)
-        setIsLiked((prev) => (typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : prev))
-        setComments(nextCommentsWithMombti)
-        writeCachedCommunityDetail(postId, {
-          detail: {
-            ...nextDetail,
-            isLikedByCurrentUser:
-              typeof nextDetail.isLikedByCurrentUser === 'boolean' ? nextDetail.isLikedByCurrentUser : isLiked,
-          },
-          comments: nextCommentsWithMombti,
+        setDetail({
+          ...nextDetail,
+          isLikedByCurrentUser: resolvedLikedByMe,
         })
+        setIsLiked(resolvedLikedByMe)
+        setComments(nextCommentsWithMombti)
+        writeCachedCommunityDetail(postId, buildCachedCommunityDetailValue(nextDetail, nextCommentsWithMombti, resolvedLikedByMe))
 
-        const listUpdate = buildCommunityListUpdate(nextDetail)
+        const listUpdate = buildCommunityListUpdate(nextDetail, resolvedLikedByMe)
 
         if (listUpdate) {
           upsertCommunityPostInCachedLists(listUpdate)
@@ -714,6 +728,12 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
     try {
       setIsUpdatingLike(true)
       const nextIsLiked = !isLiked
+      const nextLikeCount = Math.max(0, (detail.likeCount ?? 0) + (nextIsLiked ? 1 : -1))
+      const optimisticDetail = {
+        ...detail,
+        likeCount: nextLikeCount,
+        isLikedByCurrentUser: nextIsLiked,
+      }
 
       if (isLiked) {
         await deleteCommunityPostLike(detail.postId, userId)
@@ -721,7 +741,18 @@ function CommunityDetailScreen({ postId, userId, onBack, onOpenHome, onOpenDevic
         await createCommunityPostLike(detail.postId, userId)
       }
 
+      setDetail(optimisticDetail)
       setIsLiked(nextIsLiked)
+      writeCachedCommunityDetail(
+        detail.postId,
+        buildCachedCommunityDetailValue(optimisticDetail, comments, nextIsLiked),
+      )
+      const optimisticListUpdate = buildCommunityListUpdate(optimisticDetail, nextIsLiked)
+
+      if (optimisticListUpdate) {
+        upsertCommunityPostInCachedLists(optimisticListUpdate)
+      }
+
       await refreshDetailData()
     } catch (error) {
       console.error(error)
