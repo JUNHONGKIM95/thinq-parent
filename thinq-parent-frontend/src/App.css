@@ -1237,6 +1237,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
   padding: 6px 10px;
   border-radius: 15px;
   font-size: 0.8125rem;
@@ -1265,10 +1266,17 @@ select {
 }
 
 .parent-mode-event-label {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 400;
 }
 
 .parent-mode-event-time {
+  flex-shrink: 0;
   font-weight: 600;
   letter-spacing: 0.15em;
 }

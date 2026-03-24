@@ -244,11 +244,12 @@ async function fetchPregnancySummary(userId = 3) {
     const userData = getUserPayload(payload)
 
     if (userData) {
-      const dueDate = userData.dueDate
+      const dueDate = userData.dueDate ?? userData.due_date ?? null
       const daysUntilDueDate = calculateDaysUntilDueDate(dueDate)
 
       return {
         ...userData,
+        dueDate,
         daysUntilDueDate,
       }
     }
@@ -870,6 +871,7 @@ async function fetchLatestCompletedMombtiAttempt(userId) {
 }
 
 const MOMBTI_LATEST_CACHE_KEY_PREFIX = 'thinq-parent:mombti-latest:'
+const APP_UI_STATE_CACHE_KEY = 'thinq-parent:ui-state'
 
 function getLatestMombtiCacheKey(userId) {
   return `${MOMBTI_LATEST_CACHE_KEY_PREFIX}${userId}`
@@ -900,6 +902,29 @@ function writeLatestMombtiCache(userId, value) {
     }
 
     window.localStorage.setItem(storageKey, JSON.stringify(value))
+  } catch {
+    // Ignore cache write failures and keep the live UI path working.
+  }
+}
+
+function readAppUiStateCache() {
+  try {
+    const rawValue = window.sessionStorage.getItem(APP_UI_STATE_CACHE_KEY)
+
+    if (!rawValue) {
+      return null
+    }
+
+    const parsedValue = JSON.parse(rawValue)
+    return parsedValue && typeof parsedValue === 'object' ? parsedValue : null
+  } catch {
+    return null
+  }
+}
+
+function writeAppUiStateCache(value) {
+  try {
+    window.sessionStorage.setItem(APP_UI_STATE_CACHE_KEY, JSON.stringify(value))
   } catch {
     // Ignore cache write failures and keep the live UI path working.
   }
@@ -1510,23 +1535,30 @@ function ParentModeScreen({
 }
 
 function App() {
+  const persistedUiState = readAppUiStateCache()
   const [activeTab, setActiveTab] = useState(0)
-  const [currentUserId, setCurrentUserId] = useState(DEFAULT_CURRENT_USER_ID)
-  const [currentScreen, setCurrentScreen] = useState('home')
-  const [screenHistory, setScreenHistory] = useState([])
+  const [currentUserId, setCurrentUserId] = useState(persistedUiState?.currentUserId ?? DEFAULT_CURRENT_USER_ID)
+  const [currentScreen, setCurrentScreen] = useState(persistedUiState?.currentScreen ?? 'home')
+  const [screenHistory, setScreenHistory] = useState(() =>
+    Array.isArray(persistedUiState?.screenHistory) ? persistedUiState.screenHistory : []
+  )
   const [isHomeSheetOpen, setIsHomeSheetOpen] = useState(false)
-  const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(true)
-  const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(false)
+  const [isScheduleDetailInitiallyOpen, setIsScheduleDetailInitiallyOpen] = useState(
+    persistedUiState?.isScheduleDetailInitiallyOpen ?? true
+  )
+  const [isScheduleInputInitiallyOpen, setIsScheduleInputInitiallyOpen] = useState(
+    persistedUiState?.isScheduleInputInitiallyOpen ?? false
+  )
   const [isAccountSwitchPopupOpen, setIsAccountSwitchPopupOpen] = useState(false)
   const [pregnancySummary, setPregnancySummary] = useState(DEFAULT_PREGNANCY_SUMMARY)
   const [cheerMessageText, setCheerMessageText] = useState(DEFAULT_CHEER_MESSAGE)
   const [dailyScheduleItems, setDailyScheduleItems] = useState([])
   const [todayTodoCard, setTodayTodoCard] = useState(DEFAULT_TODAY_TODO_CARD)
-  const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(null)
-  const [editingCommunityPost, setEditingCommunityPost] = useState(null)
-  const [selectedPregnancyDiaryId, setSelectedPregnancyDiaryId] = useState(null)
-  const [editingPregnancyDiary, setEditingPregnancyDiary] = useState(null)
-  const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(null)
+  const [selectedCommunityPostId, setSelectedCommunityPostId] = useState(persistedUiState?.selectedCommunityPostId ?? null)
+  const [editingCommunityPost, setEditingCommunityPost] = useState(persistedUiState?.editingCommunityPost ?? null)
+  const [selectedPregnancyDiaryId, setSelectedPregnancyDiaryId] = useState(persistedUiState?.selectedPregnancyDiaryId ?? null)
+  const [editingPregnancyDiary, setEditingPregnancyDiary] = useState(persistedUiState?.editingPregnancyDiary ?? null)
+  const [activeMombtiAttempt, setActiveMombtiAttempt] = useState(persistedUiState?.activeMombtiAttempt ?? null)
   const [mombtiResultData, setMombtiResultData] = useState(() =>
     buildMombtiViewModel(mockMombtiRow, mockMombtiMeta)
   )
@@ -1605,24 +1637,26 @@ function App() {
       setPregnancySummary({
         babyNickname:
           data.babyNickname ??
+          data.baby_nickname ??
           data.meetingTitle?.replace(/\s*만나기$/, '') ??
+          data.meeting_title?.replace(/\s*만나기$/, '') ??
           DEFAULT_PREGNANCY_SUMMARY.babyNickname,
-        meetingTitle: data.meetingTitle,
+        meetingTitle: data.meetingTitle ?? data.meeting_title,
         daysUntilDueDate: data.daysUntilDueDate ?? DEFAULT_PREGNANCY_SUMMARY.daysUntilDueDate,
-        dueDate: data.dueDate ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
-        groupId: data.groupId ?? DEFAULT_PREGNANCY_SUMMARY.groupId,
+        dueDate: data.dueDate ?? data.due_date ?? DEFAULT_PREGNANCY_SUMMARY.dueDate,
+        groupId: data.groupId ?? data.group_id ?? DEFAULT_PREGNANCY_SUMMARY.groupId,
         role: data.role ?? DEFAULT_PREGNANCY_SUMMARY.role,
       })
 
       setChildProfile((prev) => ({
         ...prev,
-        selectedDate: data.dueDate || getDateKey(new Date()),
+        selectedDate: data.dueDate ?? data.due_date ?? getDateKey(new Date()),
       }))
 
-      if (data.babyNickname) {
+      if (data.babyNickname ?? data.baby_nickname) {
         setChildProfile((prev) => ({
           ...prev,
-          childName: data.babyNickname,
+          childName: data.babyNickname ?? data.baby_nickname,
         }))
       }
     })
@@ -1673,6 +1707,43 @@ function App() {
       isMounted = false
     }
   }, [currentUserId])
+
+  useEffect(() => {
+    writeAppUiStateCache({
+      currentUserId,
+      currentScreen,
+      screenHistory,
+      isScheduleDetailInitiallyOpen,
+      isScheduleInputInitiallyOpen,
+      selectedCommunityPostId,
+      editingCommunityPost,
+      selectedPregnancyDiaryId,
+      editingPregnancyDiary,
+      activeMombtiAttempt,
+    })
+  }, [
+    activeMombtiAttempt,
+    currentScreen,
+    currentUserId,
+    editingCommunityPost,
+    editingPregnancyDiary,
+    isScheduleDetailInitiallyOpen,
+    isScheduleInputInitiallyOpen,
+    screenHistory,
+    selectedCommunityPostId,
+    selectedPregnancyDiaryId,
+  ])
+
+  useEffect(() => {
+    if (currentScreen === 'community-detail' && !selectedCommunityPostId) {
+      setCurrentScreen('community')
+      return
+    }
+
+    if (currentScreen === 'pregnancy-diary-detail' && !selectedPregnancyDiaryId) {
+      setCurrentScreen('pregnancy-diary')
+    }
+  }, [currentScreen, selectedCommunityPostId, selectedPregnancyDiaryId])
 
   useEffect(() => {
     setChatExpertDraft('')
