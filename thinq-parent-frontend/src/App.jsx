@@ -782,11 +782,25 @@ function getMombtiAttemptCompletedAt(attempt) {
   return attempt?.completedAt ?? attempt?.completed_at ?? null
 }
 
-function isCompletedMombtiAttempt(attempt) {
-  return normalizeMombtiAttemptStatus(attempt?.status) === 'COMPLETED' && Boolean(getMombtiAttemptCompletedAt(attempt))
+function getMombtiAttemptUserId(attempt) {
+  return attempt?.userId ?? attempt?.user_id ?? attempt?.user?.id ?? attempt?.user?.userId ?? null
 }
 
-function getLatestCompletedMombtiAttemptFromPayload(payload) {
+function isSameMombtiUser(attempt, userId) {
+  const attemptUserId = getMombtiAttemptUserId(attempt)
+
+  if (attemptUserId === null || attemptUserId === undefined || attemptUserId === '') {
+    return true
+  }
+
+  return String(attemptUserId) === String(userId)
+}
+
+function isCompletedMombtiAttempt(attempt) {
+  return normalizeMombtiAttemptStatus(attempt?.status) === 'COMPLETED'
+}
+
+function getLatestCompletedMombtiAttemptFromPayload(payload, userId) {
   const rawValue = payload?.data ?? payload
   const attempts = Array.isArray(rawValue)
     ? rawValue
@@ -799,7 +813,9 @@ function getLatestCompletedMombtiAttemptFromPayload(payload) {
           : []
 
   return attempts
+    .filter((attempt) => isSameMombtiUser(attempt, userId))
     .filter(isCompletedMombtiAttempt)
+    .filter((attempt) => Boolean(getMombtiAttemptCompletedAt(attempt)))
     .sort((first, second) => {
       const firstTime = new Date(getMombtiAttemptCompletedAt(first) ?? 0).getTime()
       const secondTime = new Date(getMombtiAttemptCompletedAt(second) ?? 0).getTime()
@@ -847,9 +863,45 @@ async function fetchLatestCompletedMombtiAttempt(userId) {
     }
 
     const payload = await response.json()
-    return getLatestCompletedMombtiAttemptFromPayload(payload)
+    return getLatestCompletedMombtiAttemptFromPayload(payload, userId)
   } catch {
     return null
+  }
+}
+
+const MOMBTI_LATEST_CACHE_KEY_PREFIX = 'thinq-parent:mombti-latest:'
+
+function getLatestMombtiCacheKey(userId) {
+  return `${MOMBTI_LATEST_CACHE_KEY_PREFIX}${userId}`
+}
+
+function readLatestMombtiCache(userId) {
+  try {
+    const rawValue = window.localStorage.getItem(getLatestMombtiCacheKey(userId))
+
+    if (!rawValue) {
+      return null
+    }
+
+    const parsedValue = JSON.parse(rawValue)
+    return parsedValue && typeof parsedValue === 'object' ? parsedValue : null
+  } catch {
+    return null
+  }
+}
+
+function writeLatestMombtiCache(userId, value) {
+  try {
+    const storageKey = getLatestMombtiCacheKey(userId)
+
+    if (!value) {
+      window.localStorage.removeItem(storageKey)
+      return
+    }
+
+    window.localStorage.setItem(storageKey, JSON.stringify(value))
+  } catch {
+    // Ignore cache write failures and keep the live UI path working.
   }
 }
 
@@ -1513,6 +1565,25 @@ function App() {
   const mombti = mombtiResultData
   const latestMombti = latestMombtiResultData ?? mombtiResultData
 
+  const refreshLatestMombtiResult = (targetUserId, applyCacheFirst = true) => {
+    if (applyCacheFirst) {
+      setLatestMombtiResultData(readLatestMombtiCache(targetUserId))
+    }
+
+    return fetchLatestCompletedMombtiAttempt(targetUserId).then((latestCompletedAttempt) => {
+      if (!latestCompletedAttempt) {
+        setLatestMombtiResultData(null)
+        writeLatestMombtiCache(targetUserId, null)
+        return null
+      }
+
+      const nextLatestMombti = buildMombtiViewModelFromAttempt(latestCompletedAttempt, mockMombtiMeta)
+      setLatestMombtiResultData(nextLatestMombti)
+      writeLatestMombtiCache(targetUserId, nextLatestMombti)
+      return nextLatestMombti
+    })
+  }
+
   useEffect(() => {
     let isMounted = true
 
@@ -1580,6 +1651,24 @@ function App() {
       setTodayTodoCard(todoCard)
     })
 
+    setLatestMombtiResultData(readLatestMombtiCache(currentUserId))
+
+    fetchLatestCompletedMombtiAttempt(currentUserId).then((latestCompletedAttempt) => {
+      if (!isMounted) {
+        return
+      }
+
+      if (!latestCompletedAttempt) {
+        setLatestMombtiResultData(null)
+        writeLatestMombtiCache(currentUserId, null)
+        return
+      }
+
+      const nextLatestMombti = buildMombtiViewModelFromAttempt(latestCompletedAttempt, mockMombtiMeta)
+      setLatestMombtiResultData(nextLatestMombti)
+      writeLatestMombtiCache(currentUserId, nextLatestMombti)
+    })
+
     return () => {
       isMounted = false
     }
@@ -1613,6 +1702,37 @@ function App() {
       }
 
       setTodayTodoCard(todoCard)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentScreen, currentUserId])
+
+  useEffect(() => {
+    if (currentScreen !== 'mombti-menu' && currentScreen !== 'mombti-latest') {
+      return undefined
+    }
+
+    let isMounted = true
+    const cachedLatestMombti = readLatestMombtiCache(currentUserId)
+
+    setLatestMombtiResultData(cachedLatestMombti)
+
+    fetchLatestCompletedMombtiAttempt(currentUserId).then((latestCompletedAttempt) => {
+      if (!isMounted) {
+        return
+      }
+
+      if (!latestCompletedAttempt) {
+        setLatestMombtiResultData(null)
+        writeLatestMombtiCache(currentUserId, null)
+        return
+      }
+
+      const nextLatestMombti = buildMombtiViewModelFromAttempt(latestCompletedAttempt, mockMombtiMeta)
+      setLatestMombtiResultData(nextLatestMombti)
+      writeLatestMombtiCache(currentUserId, nextLatestMombti)
     })
 
     return () => {
@@ -1983,9 +2103,15 @@ function App() {
 
   const openMombti = () => {
     navigateToScreen('mombti-menu')
+    void refreshLatestMombtiResult(currentUserId, true)
   }
 
   const openMombtiResult = async () => {
+    if (latestMombtiResultData?.type) {
+      navigateToScreen('mombti-latest')
+      return
+    }
+
     const latestCompletedAttempt = await fetchLatestCompletedMombtiAttempt(currentUserId)
 
     if (!latestCompletedAttempt) {
@@ -2037,8 +2163,12 @@ function App() {
   }
 
   const openMombtiTest = () => {
-    beginMombtiAttempt()
     navigateToScreen('mombti-test')
+    window.setTimeout(() => {
+      beginMombtiAttempt().catch((error) => {
+        console.error(error)
+      })
+    }, 0)
   }
 
   const handleMombtiMenuBack = () => {
@@ -2125,8 +2255,11 @@ function App() {
     const completedAttempt = getCompletedMombtiAttemptPayload(completedAttemptPayload)
 
     if (completedAttempt) {
+      const nextCompletedMombti = buildMombtiViewModelFromAttempt(completedAttempt, mockMombtiMeta)
       setActiveMombtiAttempt(completedAttempt)
-      setMombtiResultData(buildMombtiViewModelFromAttempt(completedAttempt, mockMombtiMeta))
+      setMombtiResultData(nextCompletedMombti)
+      setLatestMombtiResultData(nextCompletedMombti)
+      writeLatestMombtiCache(currentUserId, nextCompletedMombti)
     }
 
     navigateToScreen('mombti')
@@ -2465,7 +2598,7 @@ function App() {
               onOpenResult={openMombtiResult}
               onOpenTest={openMombtiTest}
               isCreatingAttempt={isCreatingMombtiAttempt}
-              latestResultType={latestMombti?.type}
+              latestResultType={latestMombtiResultData?.type ?? ''}
             />
           )}
 
