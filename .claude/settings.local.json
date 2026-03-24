@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node check_schema.cjs)",
+      "Bash(./gradlew compileJava)",
+      "Bash(node migrate3.cjs)",
+      "Bash(./gradlew clean:*)",
+      "Bash(curl -s http://localhost:8081/swagger-ui/index.html)",
+      "Bash(curl -s http://192.168.0.43:8081/swagger-ui/index.html)"
+    ]
+  }
+}

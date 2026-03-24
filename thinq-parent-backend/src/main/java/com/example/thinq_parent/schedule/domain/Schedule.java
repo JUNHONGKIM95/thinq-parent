@@ -8,7 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "schedules")
@@ -25,17 +27,20 @@ public class Schedule {
 	@Column(name = "user_id", nullable = false)
 	private Integer userId;
 
-	@Column(name = "todo_id")
-	private Integer todoId;
-
 	@Column(nullable = false, length = 200)
 	private String title;
 
-	@Column(name = "start_date")
-	private LocalDateTime startDate;
+	@Column
+	private String memo;
 
-	@Column(name = "end_date")
-	private LocalDateTime endDate;
+	@Column(name = "schedule_type", length = 20, nullable = false)
+	private String scheduleType;
+
+	@Column(name = "schedule_date", nullable = false)
+	private LocalDate scheduleDate;
+
+	@Column(name = "\"time\"", nullable = false)
+	private LocalTime time;
 
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
@@ -47,25 +52,57 @@ public class Schedule {
 	public Schedule(
 			Integer groupId,
 			Integer userId,
-			Integer todoId,
 			String title,
-			LocalDateTime startDate,
-			LocalDateTime endDate
+			String memo,
+			String scheduleType,
+			LocalDate scheduleDate,
+			LocalTime time
 	) {
 		this.groupId = groupId;
 		this.userId = userId;
-		this.todoId = todoId;
 		this.title = title;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.memo = memo;
+		this.scheduleType = scheduleType;
+		this.scheduleDate = scheduleDate;
+		this.time = time;
 	}
 
-	public void update(Integer groupId, Integer userId, String title, LocalDateTime startDate, LocalDateTime endDate) {
+	public void update(
+			Integer groupId,
+			Integer userId,
+			String title,
+			String memo,
+			String scheduleType,
+			LocalDate scheduleDate,
+			LocalTime time
+	) {
 		this.groupId = groupId;
 		this.userId = userId;
 		this.title = title;
-		this.startDate = startDate;
-		this.endDate = endDate;
+		this.memo = memo;
+		this.scheduleType = scheduleType;
+		this.scheduleDate = scheduleDate;
+		this.time = time;
+	}
+
+	public void updateTitle(String title) {
+		this.title = title;
+	}
+
+	public void updateMemo(String memo) {
+		this.memo = memo;
+	}
+
+	public void updateScheduleDate(LocalDate scheduleDate) {
+		this.scheduleDate = scheduleDate;
+	}
+
+	public void updateTime(LocalTime time) {
+		this.time = time;
+	}
+
+	public void updateScheduleType(String scheduleType) {
+		this.scheduleType = scheduleType;
 	}
 
 	public Integer getScheduleId() {
@@ -80,20 +117,24 @@ public class Schedule {
 		return userId;
 	}
 
-	public Integer getTodoId() {
-		return todoId;
-	}
-
 	public String getTitle() {
 		return title;
 	}
 
-	public LocalDateTime getStartDate() {
-		return startDate;
+	public String getMemo() {
+		return memo;
 	}
 
-	public LocalDateTime getEndDate() {
-		return endDate;
+	public String getScheduleType() {
+		return scheduleType;
+	}
+
+	public LocalDate getScheduleDate() {
+		return scheduleDate;
+	}
+
+	public LocalTime getTime() {
+		return time;
 	}
 
 	public LocalDateTime getCreatedAt() {

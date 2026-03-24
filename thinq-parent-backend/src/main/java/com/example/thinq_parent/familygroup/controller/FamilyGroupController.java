@@ -3,6 +3,7 @@ package com.example.thinq_parent.familygroup.controller;
 import com.example.thinq_parent.common.api.ApiResponse;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupCreateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupJoinRequest;
+import com.example.thinq_parent.familygroup.dto.FamilyGroupNameUpdateRequest;
 import com.example.thinq_parent.familygroup.dto.FamilyGroupResponse;
 import com.example.thinq_parent.familygroup.service.FamilyGroupService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,5 +56,14 @@ public class FamilyGroupController {
 	@Operation(summary = "Join family group by invite code", description = "Allows another family member to join with a shared invite code")
 	public ApiResponse<FamilyGroupResponse> join(@Valid @RequestBody FamilyGroupJoinRequest request) {
 		return ApiResponse.success("Family group joined successfully", familyGroupService.join(request));
+	}
+
+	@PatchMapping("/{groupId}/group-name")
+	@Operation(summary = "Update family group name", description = "Updates only the group_name column of the family_groups table")
+	public ApiResponse<FamilyGroupResponse> updateGroupName(
+			@PathVariable Integer groupId,
+			@Valid @RequestBody FamilyGroupNameUpdateRequest request
+	) {
+		return ApiResponse.success("Family group name updated successfully", familyGroupService.updateGroupName(groupId, request));
 	}
 }

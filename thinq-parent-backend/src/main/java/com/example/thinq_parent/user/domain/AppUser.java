@@ -45,34 +45,61 @@ public class AppUser {
 	@Column(name = "due_date")
 	private LocalDate dueDate;
 
+	@Column(name = "current_week")
+	private Integer currentWeek;
+
 	protected AppUser() {
 	}
 
-	public AppUser(String email, String password, String username, String babyNickname, String role, LocalDate dueDate) {
+	public AppUser(
+			String email,
+			String password,
+			String username,
+			String babyNickname,
+			String role,
+			LocalDate dueDate,
+			Integer currentWeek
+	) {
 		this.email = email;
 		this.password = password;
 		this.username = username;
 		this.babyNickname = babyNickname;
 		this.role = role;
 		this.dueDate = dueDate;
+		this.currentWeek = currentWeek;
 	}
 
-	public void update(String email, String password, String username, String babyNickname, String role, LocalDate dueDate) {
+	public void update(
+			String email,
+			String password,
+			String username,
+			String babyNickname,
+			String role,
+			LocalDate dueDate,
+			Integer currentWeek
+	) {
 		this.email = email;
 		this.password = password;
 		this.username = username;
 		this.babyNickname = babyNickname;
 		this.role = role;
 		this.dueDate = dueDate;
+		this.currentWeek = currentWeek;
 	}
 
-	public void updateDueDate(LocalDate dueDate) {
+	public void updateDueDate(LocalDate dueDate, Integer currentWeek) {
 		this.dueDate = dueDate;
+		this.currentWeek = currentWeek;
 	}
 
-	public void updatePregnancyInfo(String babyNickname, LocalDate dueDate) {
+	public void updatePregnancyInfo(String babyNickname, LocalDate dueDate, Integer currentWeek) {
 		this.babyNickname = babyNickname;
 		this.dueDate = dueDate;
+		this.currentWeek = currentWeek;
+	}
+
+	public void updateGroupId(Integer groupId) {
+		this.groupId = groupId;
 	}
 
 	public Integer getUserId() {
@@ -109,5 +136,9 @@ public class AppUser {
 
 	public LocalDate getDueDate() {
 		return dueDate;
+	}
+
+	public Integer getCurrentWeek() {
+		return currentWeek;
 	}
 }

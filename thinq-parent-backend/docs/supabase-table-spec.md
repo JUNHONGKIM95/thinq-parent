@@ -1,0 +1,626 @@
+# Supabase Public Schema Table Spec
+
+기준: 2026-03-23 기준 `public` 스키마 실DB 조회 결과
+
+## 사용자
+
+### 사용자 (`users`)
+- `user_id`
+  - 사용자 PK
+  - 사용자 1명의 고유 ID
+- `baby_nickname`
+  - 태명
+  - 임신/육아 서비스에서 표시하는 아기 애칭
+- `created_at`
+  - 가입 시각
+  - 사용자 row 생성 시각
+- `due_date`
+  - 출산 예정일
+  - 임신 주차 계산 기준일
+- `email`
+  - 로그인/식별용 이메일
+  - 일반적으로 unique로 관리되는 계정 식별값
+- `password`
+  - 로그인 비밀번호
+  - 현재 서비스 내부 인증용 해시 저장 컬럼
+- `role`
+  - 사용자 역할
+  - 예: 일반 사용자, 관리자
+- `username`
+  - 사용자 표시 이름
+  - 화면에 노출되는 닉네임 또는 이름
+- `group_id`
+  - 소속 가족 그룹 ID
+  - `family_groups.group_id` 참조
+- `current_week`
+  - 현재 임신 주차
+  - 출산 예정일 기준으로 계산해 저장하는 값
+
+### 가족 그룹 (`family_groups`)
+- `group_id`
+  - 가족 그룹 PK
+  - 그룹 1개의 고유 ID
+- `group_name`
+  - 가족 그룹 이름
+  - 예: 우리 가족, 육아팀
+- `invite_code`
+  - 그룹 초대 코드
+  - 다른 사용자가 그룹에 합류할 때 사용하는 코드
+- `created_at`
+  - 그룹 생성 시각
+  - 그룹 row 생성 시각
+- `user_id`
+  - 그룹 생성자 또는 대표 사용자 ID
+  - `users.user_id` 참조
+
+### 응원 메시지 (`cheer_messages`)
+- `message_id`
+  - 응원 메시지 PK
+  - 메시지 1건의 고유 ID
+- `group_id`
+  - 대상 가족 그룹 ID
+  - `family_groups.group_id` 참조
+- `sender_id`
+  - 메시지 작성 사용자 ID
+  - `users.user_id` 참조
+- `content`
+  - 응원 메시지 본문
+  - 그룹에 남긴 격려 문구
+- `reaction_emoji`
+  - 응원 반응 이모지
+  - 예: 하트, 박수
+- `created_at`
+  - 메시지 생성 시각
+  - 메시지 row 생성 시각
+
+## 임신 일기
+
+### 임신 일기 (`pregnancy_diaries`)
+- `diary_id`
+  - 임신 일기 PK
+  - 일기 1건의 고유 ID
+- `group_id`
+  - 어느 가족 그룹의 일기인지 나타내는 FK
+  - `family_groups.group_id` 참조
+- `author_user_id`
+  - 일기 작성자 사용자 ID
+  - `users.user_id` 참조
+- `title`
+  - 일기 제목
+  - 목록과 상세에서 표시하는 제목
+- `content`
+  - 일기 본문
+  - 사용자가 작성한 내용
+- `diary_date`
+  - 일기 기록 날짜
+  - 실제 기록 대상으로 삼는 날짜
+- `status`
+  - 일기 상태값
+  - 예: `published`, `hidden`, `deleted`
+- `created_at`
+  - 일기 생성 시각
+  - row 최초 생성 시각
+- `updated_at`
+  - 일기 수정 시각
+  - 마지막 수정 시점
+- `deleted_at`
+  - 소프트 삭제 시각
+  - 삭제 처리된 경우만 값 저장
+
+### 임신 일기 이미지 (`pregnancy_diary_images`)
+- `diary_image_id`
+  - 이미지 row PK
+  - 이미지 메타데이터 1건의 고유 ID
+- `diary_id`
+  - 어느 일기에 속한 이미지인지 나타내는 FK
+  - `pregnancy_diaries.diary_id` 참조
+- `bucket_name`
+  - Supabase Storage 버킷 이름
+  - 현재 기본값은 `pregnancy-diary-images`
+- `file_path`
+  - Storage 내부 파일 경로
+  - 실제 이미지 바이너리 대신 경로만 DB에 저장
+- `original_file_name`
+  - 사용자가 업로드한 원본 파일명
+  - 화면 표시나 디버깅용 메타데이터
+- `mime_type`
+  - 파일 타입
+  - 예: `image/jpeg`, `image/png`
+- `file_size`
+  - 파일 크기(byte)
+  - 업로드 제한 및 검증용
+- `is_thumbnail`
+  - 대표 이미지 여부
+  - `true`면 일기 대표 썸네일로 사용
+- `sort_order`
+  - 이미지 정렬 순서
+  - 다중 이미지 UI에서 표시 순서를 제어
+- `created_at`
+  - 이미지 메타 row 생성 시각
+  - 업로드 메타데이터 생성 시점
+
+## 커뮤니티
+
+### 게시판 마스터 (`boards`)
+- `board_id`
+  - 게시판 PK
+  - 게시판 1개의 고유 ID
+- `board_code`
+  - 게시판 코드
+  - 시스템 내부 식별용 코드값
+- `board_name`
+  - 게시판 이름
+  - 사용자 화면에 표시되는 명칭
+- `description`
+  - 게시판 설명
+  - 게시판 목적 또는 안내 문구
+- `sort_order`
+  - 정렬 순서
+  - 게시판 목록 노출 순서를 제어
+- `is_active`
+  - 사용 여부
+  - 비활성 게시판은 목록에서 숨길 수 있음
+- `created_at`
+  - 게시판 생성 시각
+  - row 생성 시각
+- `updated_at`
+  - 게시판 수정 시각
+  - 마지막 수정 시각
+
+### 커뮤니티 키워드 (`community_keywords`)
+- `keyword_id`
+  - 키워드 PK
+  - 키워드 1개의 고유 ID
+- `keyword_code`
+  - 키워드 코드
+  - 내부 식별용 코드값
+- `keyword_name`
+  - 키워드 이름
+  - 화면에서 보이는 태그명
+- `sort_order`
+  - 정렬 순서
+  - 키워드 목록 노출 순서
+- `is_active`
+  - 사용 여부
+  - 비활성 키워드는 선택 목록에서 제외 가능
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+- `updated_at`
+  - 수정 시각
+  - 마지막 수정 시각
+
+### 커뮤니티 게시글 (`community_posts`)
+- `post_id`
+  - 게시글 PK
+  - 게시글 1건의 고유 ID
+- `board_id`
+  - 소속 게시판 ID
+  - `boards.board_id` 참조
+- `keyword_id`
+  - 게시글 키워드 ID
+  - `community_keywords.keyword_id` 참조
+- `author_user_id`
+  - 작성자 사용자 ID
+  - `users.user_id` 참조
+- `author_mombti_result_type`
+  - 작성자의 MomBTI 결과 타입
+  - 작성 시점 프로필 정보 표시용
+- `title`
+  - 게시글 제목
+  - 목록 및 상세 상단 제목
+- `content`
+  - 게시글 본문
+  - 사용자가 작성한 텍스트 내용
+- `like_count`
+  - 좋아요 수
+  - 집계된 좋아요 개수
+- `comment_count`
+  - 댓글 수
+  - 집계된 댓글 개수
+- `view_count`
+  - 조회 수
+  - 게시글 열람 횟수 집계
+- `is_anonymous`
+  - 익명 여부
+  - 익명 게시글 표시용
+- `status`
+  - 게시 상태값
+  - 예: `published`, `hidden`, `deleted`
+- `created_at`
+  - 생성 시각
+  - 게시글 row 생성 시각
+- `updated_at`
+  - 수정 시각
+  - 마지막 수정 시각
+- `deleted_at`
+  - 소프트 삭제 시각
+  - 삭제 처리된 경우만 저장
+
+### 커뮤니티 댓글 (`community_comments`)
+- `comment_id`
+  - 댓글 PK
+  - 댓글 1건의 고유 ID
+- `post_id`
+  - 어느 게시글에 달린 댓글인지 나타내는 FK
+  - `community_posts.post_id` 참조
+- `author_user_id`
+  - 댓글 작성자 ID
+  - `users.user_id` 참조
+- `content`
+  - 댓글 본문
+  - 사용자가 작성한 댓글 내용
+- `status`
+  - 댓글 상태값
+  - 예: `published`, `hidden`, `deleted`
+- `created_at`
+  - 댓글 생성 시각
+  - row 생성 시각
+- `updated_at`
+  - 댓글 수정 시각
+  - 마지막 수정 시각
+- `deleted_at`
+  - 소프트 삭제 시각
+  - 삭제 처리 시 저장
+
+### 게시글 좋아요 (`community_post_likes`)
+- `post_like_id`
+  - 좋아요 PK
+  - 좋아요 row 1건의 고유 ID
+- `post_id`
+  - 좋아요 대상 게시글 ID
+  - `community_posts.post_id` 참조
+- `user_id`
+  - 좋아요를 누른 사용자 ID
+  - `users.user_id` 참조
+- `created_at`
+  - 좋아요 생성 시각
+  - 사용자가 좋아요를 누른 시점
+
+## MomBTI
+
+### MomBTI 질문 (`mombti_question`)
+- `question_id`
+  - 질문 PK
+  - 질문 1건의 고유 ID
+- `question_text`
+  - 질문 문구
+  - 사용자에게 보여주는 질문 본문
+- `dimension`
+  - 성향 축 구분값
+  - 어떤 성향 축을 측정하는지 표시
+- `display_order`
+  - 표시 순서
+  - 테스트 화면의 노출 순서
+- `is_active`
+  - 사용 여부
+  - `Y/N` 형태로 활성 상태 관리
+- `created_at`
+  - 질문 생성 시각
+  - row 생성 시각
+- `target_trait`
+  - 정방향 특성값
+  - 선택 시 점수가 누적될 특성
+- `reverse_trait`
+  - 역방향 특성값
+  - 반대 방향 계산 시 참고하는 특성
+
+### MomBTI 선택지 (`mombti_choice`)
+- `choice_id`
+  - 선택지 PK
+  - 선택지 1건의 고유 ID
+- `question_id`
+  - 소속 질문 ID
+  - `mombti_question.question_id` 참조
+- `choice_text`
+  - 선택지 문구
+  - 사용자에게 보여줄 답변 텍스트
+- `target_trait`
+  - 반영 특성값
+  - 이 선택지가 가산하는 성향
+- `score_value`
+  - 점수값
+  - 선택 시 누적되는 점수
+- `display_order`
+  - 노출 순서
+  - 질문 내 선택지 표시 순서
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+
+### MomBTI 결과 프로필 (`mombti_result_profile`)
+- `result_type`
+  - 결과 타입 PK
+  - 예: `PTIE` 같은 결과 코드
+- `title`
+  - 결과 제목
+  - 유형명 또는 대표 문구
+- `subtitle`
+  - 결과 부제
+  - 보조 설명 문구
+- `summary`
+  - 결과 요약
+  - 유형의 핵심 설명
+- `image_url`
+  - 결과 이미지 URL
+  - 결과 페이지 대표 이미지
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+- `updated_at`
+  - 수정 시각
+  - 마지막 수정 시각
+- `title_url`
+  - 제목용 이미지 URL
+  - 타이틀 전용 리소스 경로
+- `content`
+  - 상세 설명 본문
+  - 결과 페이지 장문 설명
+
+### MomBTI 검사 시도 (`mombti_test_attempt`)
+- `attempt_id`
+  - 검사 시도 PK
+  - 테스트 1회 진행의 고유 ID
+- `user_id`
+  - 검사 사용자 ID
+  - `users.user_id` 참조
+- `result_type`
+  - 계산된 결과 타입
+  - 완료 후 확정되는 결과 코드
+- `score_p`
+  - P 성향 점수
+  - 성향 축별 누적 점수
+- `score_r`
+  - R 성향 점수
+  - 성향 축별 누적 점수
+- `score_t`
+  - T 성향 점수
+  - 성향 축별 누적 점수
+- `score_f`
+  - F 성향 점수
+  - 성향 축별 누적 점수
+- `score_i`
+  - I 성향 점수
+  - 성향 축별 누적 점수
+- `score_c`
+  - C 성향 점수
+  - 성향 축별 누적 점수
+- `score_e`
+  - E 성향 점수
+  - 성향 축별 누적 점수
+- `score_m`
+  - M 성향 점수
+  - 성향 축별 누적 점수
+- `status`
+  - 검사 상태값
+  - 예: `IN_PROGRESS`, `COMPLETED`
+- `started_at`
+  - 검사 시작 시각
+  - 테스트 시작 시점
+- `completed_at`
+  - 검사 완료 시각
+  - 결과가 확정된 시점
+- `created_at`
+  - row 생성 시각
+  - 검사 시도 생성 시점
+
+### MomBTI 답변 (`mombti_answer`)
+- `answer_id`
+  - 답변 PK
+  - 답변 row 1건의 고유 ID
+- `attempt_id`
+  - 어느 검사 시도에 속한 답변인지 나타내는 FK
+  - `mombti_test_attempt.attempt_id` 참조
+- `question_id`
+  - 답변한 질문 ID
+  - `mombti_question.question_id` 참조
+- `choice_id`
+  - 사용자가 선택한 선택지 ID
+  - `mombti_choice.choice_id` 참조
+- `target_trait`
+  - 반영된 특성값
+  - 점수 집계 대상 특성
+- `score_value`
+  - 반영 점수
+  - 선택지로부터 집계된 값
+- `answered_at`
+  - 답변 시각
+  - 선택 완료 시점
+
+## 일정/체크리스트
+
+### 할 일 마스터 (`todos`)
+- `todo_id`
+  - 할 일 PK
+  - 할 일 템플릿 1건의 고유 ID
+- `target_week`
+  - 대상 임신 주차
+  - 어느 주차에 추천할 항목인지 정의
+- `todo_name`
+  - 할 일 이름
+  - 사용자에게 보여주는 항목명
+- `description`
+  - 할 일 설명
+  - 상세 안내 문구
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+
+### 추천 리스트 (`recommand_list`)
+- `recommand_list_id`
+  - 추천 리스트 PK
+  - 추천 항목 row 1건의 고유 ID
+- `group_id`
+  - 소속 가족 그룹 ID
+  - `family_groups.group_id` 참조
+- `user_id`
+  - 대상 사용자 ID
+  - `users.user_id` 참조
+- `todo_id`
+  - 연결된 할 일 ID
+  - `todos.todo_id` 참조
+- `current_week`
+  - 추천 당시 임신 주차
+  - 주차별 추천 기준 기록용
+- `check_yn`
+  - 체크 완료 여부
+  - `Y/N` 형태로 완료 상태 관리
+- `created_at`
+  - 생성 시각
+  - 추천 row 생성 시각
+
+### 내 리스트 (`my_list`)
+- `my_list_id`
+  - 내 리스트 PK
+  - 사용자 개인 일정/체크 항목 1건의 고유 ID
+- `group_id`
+  - 소속 가족 그룹 ID
+  - `family_groups.group_id` 참조
+- `user_id`
+  - 작성 사용자 ID
+  - `users.user_id` 참조
+- `title`
+  - 항목 제목
+  - 사용자 지정 할 일 또는 메모 제목
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+- `check_yn`
+  - 체크 완료 여부
+  - `Y/N` 형태로 완료 상태 관리
+- `my_list_date`
+  - 항목 날짜
+  - 개인 일정 기준 날짜
+
+### 일정 (`schedules`)
+- `schedule_id`
+  - 일정 PK
+  - 일정 1건의 고유 ID
+- `group_id`
+  - 소속 가족 그룹 ID
+  - `family_groups.group_id` 참조
+- `user_id`
+  - 작성자 사용자 ID
+  - `users.user_id` 참조
+- `title`
+  - 일정 제목
+  - 캘린더에 표시할 제목
+- `memo`
+  - 일정 메모
+  - 상세 설명 또는 비고
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+- `schedule_date`
+  - 일정 날짜
+  - 캘린더 기준 날짜
+- `time`
+  - 일정 시간
+  - 하루 내 세부 시각
+- `schedule_type`
+  - 일정 유형
+  - 예: 병원, 검사, 개인 일정
+
+## 가전 제어
+
+### 가전 마스터 (`appliance_master`)
+- `appliance_master_id`
+  - 가전 마스터 PK
+  - 지원 가전 종류 1개의 고유 ID
+- `appliance_code`
+  - 가전 코드
+  - 예: `WASHER`, `DRYER`, `ROBOT_VACUUM`, `AIR_PURIFIER`
+- `appliance_name`
+  - 가전 이름
+  - 사용자 화면에 표시할 한글 명칭
+- `appliance_description`
+  - 가전 설명
+  - 가전 역할 또는 제어 목적 설명
+- `created_at`
+  - 생성 시각
+  - 마스터 row 생성 시각
+
+### 가전 루틴 마스터 (`routine_master`)
+- `routine_id`
+  - 루틴 PK
+  - 루틴 1개의 고유 ID
+- `routine_code`
+  - 루틴 코드
+  - 시스템 내부 식별용 코드값
+- `pregnancy_stage`
+  - 임신 단계
+  - 예: `EARLY`, `MIDDLE`, `LATE`
+- `routine_name`
+  - 루틴 이름
+  - 화면에 보이는 루틴 제목
+- `routine_description`
+  - 루틴 설명
+  - 루틴의 기본 소개 문구
+- `created_at`
+  - 생성 시각
+  - row 생성 시각
+- `routine_subtitle`
+  - 루틴 부제
+  - 카드 또는 상세 상단 보조 문구
+- `routine_detail_description`
+  - 루틴 상세 설명
+  - 루틴 상세 화면의 장문 설명
+
+### 가전 루틴 액션 (`routine_action`)
+- `routine_action_id`
+  - 루틴 액션 PK
+  - 루틴 내 동작 1건의 고유 ID
+- `routine_id`
+  - 어느 루틴에 속한 액션인지 나타내는 FK
+  - `routine_master.routine_id` 참조
+- `appliance_master_id`
+  - 대상 가전 마스터 ID
+  - `appliance_master.appliance_master_id` 참조
+- `sequence_no`
+  - 동작 순서
+  - 루틴 상세에서 가전이 동작하는 순서
+- `action_title`
+  - 액션 제목
+  - 사용자가 이해할 수 있는 제어 명칭
+- `action_description`
+  - 액션 설명
+  - 해당 가전이 어떻게 동작하는지 설명
+- `target_power_state`
+  - 목표 전원 상태
+  - 예: `ON`, `OFF`
+- `target_mode`
+  - 목표 동작 모드
+  - 예: `SLEEP`, `NORMAL`
+- `target_alert_sound`
+  - 목표 알림음 상태
+  - 예: `ON`, `OFF`
+- `created_at`
+  - 생성 시각
+  - 액션 row 생성 시각
+
+### 사용자 가전 제어 상태 (`user_appliance_control`)
+- `user_appliance_control_id`
+  - 사용자 가전 제어 상태 PK
+  - 사용자별 가전 제어 row 1건의 고유 ID
+- `user_id`
+  - 사용자 ID
+  - `users.user_id` 참조
+- `appliance_master_id`
+  - 가전 마스터 ID
+  - `appliance_master.appliance_master_id` 참조
+- `routine_id`
+  - 현재 선택된 루틴 ID
+  - `routine_master.routine_id` 참조
+- `alert_sound_enabled`
+  - 개별 가전 알림음 ON/OFF
+  - 홈 또는 수동 제어 화면에서 개별 제어 가능
+- `created_at`
+  - 생성 시각
+  - 제어 상태 row 최초 생성 시각
+- `updated_at`
+  - 수정 시각
+  - 최근 제어 상태 변경 시각
+- `routine_activated`
+  - 루틴 활성 여부
+  - 사용자가 현재 루틴 제어 상태를 적용 중인지 여부
+
