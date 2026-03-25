@@ -10,7 +10,7 @@
     @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaSB.ttf') format('truetype'); font-weight: 600; }
     @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaB.ttf') format('truetype'); font-weight: 700; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23C21C44'/%3E%3C/svg%3E") 12 12, auto; }
 
     html, body {
       width: 1920px;
@@ -48,15 +48,6 @@
       66% { transform: translate(-20px, 15px) scale(0.95); }
     }
 
-    .booth::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
-      pointer-events: none;
-      z-index: 100;
-    }
-
     .deco-ring {
       position: absolute;
       border: 1px solid rgba(245,198,176,0.06);
@@ -66,6 +57,15 @@
     .deco-ring.r1 { width: 800px; height: 800px; top: -200px; right: -200px; }
     .deco-ring.r2 { width: 600px; height: 600px; bottom: -150px; left: -100px; }
 
+    .booth::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px);
+      pointer-events: none;
+      z-index: 100;
+    }
+
     /* ══════════════════════════════════════
        TOP NAV
        ══════════════════════════════════════ */
@@ -74,16 +74,14 @@
       top: 24px;
       left: 50%;
       transform: translateX(-50%);
-      width: 480px;
+      width: 350px;
       height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0;
       z-index: 20;
-      background: rgba(0,0,0,0.3);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(245,198,176,0.1);
       border-radius: 12px;
     }
     .nav-tab {
@@ -104,7 +102,7 @@
     .nav-tab:hover { color: rgba(255,255,255,0.6); }
     .nav-tab.active {
       color: #fff;
-      background: rgba(194,28,68,0.2);
+      background: rgba(240, 155, 175, 0.2);
     }
     .nav-tab.active::after {
       content: '';
@@ -174,7 +172,7 @@
     @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
     .title-logo {
-      margin-bottom: 5px;
+      margin-bottom: -5px;
       margin-left : 50px;
       display: flex;
       align-items: center;
@@ -183,6 +181,7 @@
     .title-logo-icon {
       height: 80px;
       width: auto;
+      margin-bottom: 20px;
       flex-shrink: 0;
       cursor: pointer;
       transition: transform 0.2s ease;
@@ -193,7 +192,7 @@
     .title-logo-text {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 0px;
     }
     .title-logo-text .thinq {
       font-size: 42px;
@@ -202,28 +201,70 @@
       letter-spacing: -1px;
       line-height: 1;
     }
-    .title-logo-text .thinq .lg {
+    .title-logo-text .thinq .gradient-text {
+      background: linear-gradient(90deg, #e1bebe, #df3a74, #e1bebe, #df3a74);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientFlow 4s ease-in-out infinite;
+    }
+    @keyframes gradientFlow {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .title-logo-text .thinq {
       color: rgba(255,255,255,0.45);
       font-weight: 700;
       font-size: 36px;
+    }
+    .lg{
+      color:#ffffff;
     }
     .title-logo-text .mode {
       font-size: 28px;
       font-weight: 800;
       line-height: 1.4;
-      background: linear-gradient(135deg, #f5c6b0, #C21C44);
+      color: #b5b5b5;
+      background: linear-gradient(
+        120deg,
+        #b5b5b5 0%,
+        #b5b5b5 35%,
+        #ffffff 50%,
+        #b5b5b5 65%,
+        #b5b5b5 100%
+      );
+      background-size: 250% 100%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: shinySlide 2s linear infinite;
+    }
+    @keyframes shinySlide {
+      0%   { background-position: 100% center; }
+      100% { background-position: -100% center; }
     }
 
     .subtitle {
       font-size: 20px;
-      font-weight: 300;
+      font-weight: 500;
       color: rgba(255,255,255,0.45);
       margin-bottom: 20px;
       margin-left: 50px;
-      line-height: 1.65;
+      line-height: 1.4;
+    }
+
+    /* ── BlurText Animation ── */
+    .blur-text-char {
+      display: inline-block;
+      filter: blur(10px);
+      opacity: 0;
+      animation: blurReveal 0.6s cubic-bezier(0.11, 0, 0.5, 0) forwards;
+    }
+    @keyframes blurReveal {
+      0%   { filter: blur(10px); opacity: 0; }
+      100% { filter: blur(0px);  opacity: 1; }
     }
 
     /* Feature Buttons */
@@ -242,11 +283,30 @@
       cursor: pointer;
       transition: all 0.25s ease;
       user-select: none;
+      --glow-x: 50%;
+      --glow-y: 50%;
+      --glow-intensity: 0;
+      --glow-radius: 490px;
+    }
+    .fc::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        circle var(--glow-radius) at var(--glow-x) var(--glow-y),
+        rgba(245,198,176, calc(0.15 * var(--glow-intensity))),
+        rgba(194,28,68, calc(0.08 * var(--glow-intensity))) 40%,
+        transparent 70%
+      );
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.3s ease;
     }
     .fc:hover {
-      background: rgba(245,198,176,0.08);
-      border-color: rgba(245,198,176,0.2);
+      border-color: rgba(245,198,176,0.25);
       transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(194,28,68, calc(0.12 * var(--glow-intensity)));
     }
     .fc.active {
       background: rgba(194,28,68,0.15);
@@ -547,6 +607,62 @@
       padding: 54px 42px 45px;
       text-align: center;
       transition: all 0.3s;
+      --cursor-angle: 45deg;
+      --edge-proximity: 0;
+      --edge-sensitivity: 30;
+      --color-sensitivity: 50;
+      --cone-spread: 25;
+      isolation: isolate;
+      overflow: visible;
+      position: relative;
+    }
+    .team-card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      border: 2px solid transparent;
+      background:
+        linear-gradient(rgba(10,10,10,0.9), rgba(10,10,10,0.9)) padding-box,
+        conic-gradient(
+          from var(--cursor-angle) at 50% 50%,
+          #C21C44, #f5c6b0, #e8a0b4, #C21C44, transparent, transparent, #C21C44
+        ) border-box;
+      mask-image: conic-gradient(
+        from var(--cursor-angle) at center,
+        black calc(var(--cone-spread) * 1%),
+        transparent calc((var(--cone-spread) + 20) * 1%),
+        transparent calc((100 - var(--cone-spread) - 20) * 1%),
+        black calc((100 - var(--cone-spread)) * 1%)
+      );
+      opacity: calc((var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
+      transition: opacity 0.25s ease-out;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .team-card::after {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 40px;
+      pointer-events: none;
+      z-index: -1;
+      mask-image: conic-gradient(
+        from var(--cursor-angle) at center,
+        black 2.5%, transparent 10%, transparent 90%, black 97.5%
+      );
+      box-shadow:
+        0 0 4px 0 rgba(194,28,68,0.5),
+        0 0 12px 0 rgba(245,198,176,0.3),
+        0 0 24px 2px rgba(194,28,68,0.2),
+        0 0 40px 4px rgba(245,198,176,0.1);
+      opacity: calc((var(--edge-proximity) - var(--edge-sensitivity)) / (100 - var(--edge-sensitivity)));
+      transition: opacity 0.25s ease-out;
+    }
+    .team-card:not(:hover)::before,
+    .team-card:not(:hover)::after {
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
     }
     .team-card:hover {
       background: rgba(245,198,176,0.08);
@@ -650,14 +766,14 @@
         <div class="title-logo">
           
           <div class="title-logo-text">
-            <div class="thinq"><span class="lg">LG </span>ThinQ</div>
+            <div class="thinq"><span class="lg">LG </span><span class="gradient-text">ThinQ</span></div>
             <div class="mode">Parenting Mode</div>
           </div>
           <img class="title-logo-icon" src="html_asset/homelogo.png" alt="Home Icon" />
         </div>
         <p class="subtitle">
-          공간 제어를 넘어 첫 만남을 준비하는 여정까지,<br/>
-          ThinQ로 연결된 임신·출산 라이프
+          <span class="blur-text" data-delay="200">공간 제어를 넘어 첫 만남을 준비하는 여정까지,</span><br/>
+          <span class="blur-text" data-delay="50">ThinQ로 연결된 임신·출산 라이프</span>
         </p>
         <div class="features">
           <div class="fc" data-feature="0">
@@ -939,7 +1055,7 @@
             <div class="qr-box">QR</div>
             <div class="qr-text">
               <strong>직접 체험해보세요!</strong>
-              QR 코드를 스캔하면<br/>바로 시연을 확인할 수 있습니다
+              QR 코드를 스캔하면<br/>바로 시연하실 수 있습니다
             </div>
           </div>
         </div>
@@ -954,33 +1070,33 @@
         <div class="team-grid">
           <div class="team-card">
             <div class="team-avatar">👤</div>
-            <div class="team-name">팀원 1</div>
-            <div class="team-role">역할</div>
-            <div class="team-desc">담당 업무 설명</div>
+            <div class="team-name">김준홍</div>
+            <div class="team-role">팀장</div>
+            <div class="team-desc">기획 및 데이터분석</div>
           </div>
           <div class="team-card">
             <div class="team-avatar">👤</div>
-            <div class="team-name">팀원 2</div>
-            <div class="team-role">역할</div>
-            <div class="team-desc">담당 업무 설명</div>
+            <div class="team-name">박성원</div>
+            <div class="team-role">팀원</div>
+            <div class="team-desc">데이터 분석</div>
           </div>
           <div class="team-card">
             <div class="team-avatar">👤</div>
-            <div class="team-name">팀원 3</div>
-            <div class="team-role">역할</div>
-            <div class="team-desc">담당 업무 설명</div>
+            <div class="team-name">박하은</div>
+            <div class="team-role">팀원</div>
+            <div class="team-desc">디자인</div>
           </div>
           <div class="team-card">
             <div class="team-avatar">👤</div>
-            <div class="team-name">팀원 4</div>
-            <div class="team-role">역할</div>
-            <div class="team-desc">담당 업무 설명</div>
+            <div class="team-name">송상준</div>
+            <div class="team-role">팀원</div>
+            <div class="team-desc">프론트엔드</div>
           </div>
           <div class="team-card">
             <div class="team-avatar">👤</div>
-            <div class="team-name">팀원 5</div>
-            <div class="team-role">역할</div>
-            <div class="team-desc">담당 업무 설명</div>
+            <div class="team-name">이도한</div>
+            <div class="team-role">팀원</div>
+            <div class="team-desc">백엔드</div>
           </div>
         </div>
       </div>
@@ -990,7 +1106,7 @@
     <div class="bottom-bar">
       <div class="bottom-left">
         <span class="lg-logo">LG</span>
-        <span>DX School 2025 &middot; 4팀 Last Dance</span>
+        <span>DX School 2025 &middot; 2반 4팀 Last Dance</span>
       </div>
       <div class="bottom-right">
         <span>React + Vite + Spring Boot + Supabase</span>
@@ -1001,6 +1117,99 @@
   </div>
 
   <script>
+    /* ── BlurText Animation (sequential repeating) ── */
+    const blurLines = [];
+
+    document.querySelectorAll('.blur-text').forEach(el => {
+      const text = el.textContent;
+      const delay = parseInt(el.dataset.delay) || 50;
+      const chars = [...text];
+      el.textContent = '';
+      const spans = chars.map(char => {
+        const span = document.createElement('span');
+        span.className = 'blur-text-char';
+        span.style.animationDelay = '0ms';
+        span.style.animationPlayState = 'paused';
+        span.textContent = char === ' ' ? '\u00A0' : char;
+        el.appendChild(span);
+        return span;
+      });
+      blurLines.push({ spans, delay, duration: chars.length * delay + 600 });
+    });
+
+    function playLine(line) {
+      line.spans.forEach((s, i) => {
+        s.style.animation = 'none';
+        s.offsetHeight;
+        s.style.animationDelay = `${i * line.delay}ms`;
+        s.style.animationPlayState = 'running';
+        s.style.animation = '';
+        s.style.animationDelay = `${i * line.delay}ms`;
+      });
+    }
+
+    function runSequence() {
+      // 1행 실행
+      playLine(blurLines[0]);
+
+      // 1행 끝나면 2행 실행
+      setTimeout(() => {
+        playLine(blurLines[1]);
+
+        // 2행 끝나면 2초 쉬고 다시 반복
+        setTimeout(() => {
+          setTimeout(runSequence, 2000);
+        }, blurLines[1].duration);
+      }, blurLines[0].duration);
+    }
+
+    runSequence();
+
+    /* ── Magic Bento Spotlight on .fc ── */
+    const spotlightRadius = 490;
+    const fcCards = document.querySelectorAll('.fc');
+
+    document.addEventListener('mousemove', e => {
+      fcCards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dist = Math.hypot(e.clientX - cx, e.clientY - cy) - Math.max(rect.width, rect.height) / 2;
+
+        const proximity = spotlightRadius * 0.5;
+        const fadeDistance = spotlightRadius * 0.75;
+        let intensity = 0;
+        if (dist <= proximity) {
+          intensity = 1;
+        } else if (dist <= fadeDistance) {
+          intensity = (fadeDistance - dist) / (fadeDistance - proximity);
+        }
+
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        card.style.setProperty('--glow-x', x + '%');
+        card.style.setProperty('--glow-y', y + '%');
+        card.style.setProperty('--glow-intensity', intensity);
+      });
+    });
+
+    /* ── BorderGlow cursor tracking (.team-card) ── */
+    function attachBorderGlow(el) {
+      el.addEventListener('pointermove', e => {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI) + 90;
+        const maxDist = Math.hypot(rect.width, rect.height) / 2;
+        const distFromCenter = Math.hypot(e.clientX - cx, e.clientY - cy);
+        const proximity = Math.round((1 - Math.min(distFromCenter / maxDist, 1)) * 100);
+        el.style.setProperty('--cursor-angle', angle + 'deg');
+        el.style.setProperty('--edge-proximity', proximity);
+      });
+    }
+    document.querySelectorAll('.team-card').forEach(attachBorderGlow);
+
     /* Tab navigation */
     const tabs = document.querySelectorAll('.nav-tab');
     const pages = document.querySelectorAll('.page');
@@ -1067,6 +1276,76 @@
       phoneScreen.src = 'html_asset/ParentingHome.jpg';
       phoneContainer.scrollTop = 0;
     });
+
+    /* ── ClickSpark Animation ── */
+    (function() {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const sparks = [];
+      const sparkCount = 8;
+      const sparkRadius = 30;
+      const sparkSize = 10;
+      const duration = 400;
+      const sparkColor = '#f5c6b0';
+
+      function easeOut(t) { return t * (2 - t); }
+
+      document.addEventListener('click', e => {
+        const now = performance.now();
+        for (let i = 0; i < sparkCount; i++) {
+          sparks.push({
+            x: e.clientX,
+            y: e.clientY,
+            angle: (2 * Math.PI * i) / sparkCount,
+            startTime: now
+          });
+        }
+      });
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const now = performance.now();
+
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const s = sparks[i];
+          const elapsed = now - s.startTime;
+          if (elapsed >= duration) { sparks.splice(i, 1); continue; }
+
+          const progress = elapsed / duration;
+          const eased = easeOut(progress);
+          const dist = eased * sparkRadius;
+          const lineLen = sparkSize * (1 - eased);
+
+          const x = s.x + Math.cos(s.angle) * dist;
+          const y = s.y + Math.sin(s.angle) * dist;
+          const ex = x + Math.cos(s.angle) * lineLen;
+          const ey = y + Math.sin(s.angle) * lineLen;
+
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(ex, ey);
+          ctx.strokeStyle = sparkColor;
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.globalAlpha = 1 - eased;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
   </script>
 </body>
 </html>
