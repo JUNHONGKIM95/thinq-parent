@@ -142,35 +142,47 @@ npm install
 npm run dev
 ```
 
-### 화면 구성 (19개 화면)
+### 화면 구성 (21개 화면)
 
-#### 부모모드 홈 & 가전제어 (7개 화면)
+#### 부모모드 홈 (2개 화면)
 
 | 화면 | 파일 | 기능 |
 |------|------|------|
-| 부모모드 홈 | `ParentDeviceScreen.jsx` | D-DAY, 가전 자동제어/알림음 토글, 추천 루틴 카드 |
-| 가전 루틴 목록 | `ParentDeviceRoutineScreen.jsx` | 초기/중기/후기 루틴 선택 |
-| 초기 루틴 상세 | `ParentDeviceRoutineFirstScreen.jsx` | "수면 방해 차단 올 무음 루틴" |
-| 중기 루틴 상세 | `ParentDeviceRoutineMiddleScreen.jsx` | "허리 굽힘 제로 노터치 세탁 루틴" |
-| 후기 루틴 상세 | `ParentDeviceRoutineFinalScreen.jsx` | "아기 옷 먼지 철벽 방어 루틴" |
-| 일정 캘린더 | `ParentScheduleScreen.jsx` | 월별/일별 일정 + 할 일 관리 |
-| 응원 메시지 | `CheerMessageScreen.jsx` | 배우자 간 응원 메시지 전송 |
+| 부모모드 홈 | `ParentDeviceScreen.jsx` | D-DAY 카운트다운, 주차별 추천 할 일, 남편 응원 메시지, 추천 루틴 카드 |
+| 응원 메시지 | `CheerMessageScreen.jsx` | 배우자 간 응원 메시지 전송/조회 |
+
+#### 가전 제어 (5개 화면)
+
+| 화면 | 파일 | 기능 |
+|------|------|------|
+| 가전육아 메인 | `ParentDeviceScreen.jsx` | 가전제품 자동제어 ON/OFF, 알림음 제어 ON/OFF 토글 |
+| 가전 루틴 목록 | `ParentDeviceRoutineScreen.jsx` | 초기/중기/후기 3개 루틴 카드 선택 |
+| 초기 루틴 상세 | `ParentDeviceRoutineFirstScreen.jsx` | "수면 방해 차단 '올 무음' 루틴" — 시작하기 |
+| 중기 루틴 상세 | `ParentDeviceRoutineMiddleScreen.jsx` | "허리 굽힘 제로 '노터치' 세탁 루틴" — 시작하기 |
+| 후기 루틴 상세 | `ParentDeviceRoutineFinalScreen.jsx` | "아기 옷 '먼지 철벽 방어' 루틴" — 시작하기 |
+
+#### 일정/캘린더 (2개 화면)
+
+| 화면 | 파일 | 기능 |
+|------|------|------|
+| 일정 캘린더 | `ParentScheduleScreen.jsx` | 월별 캘린더, 일별 일정 목록 조회 |
+| 일정 등록/수정 | `ScheduleInputSheet.jsx` | 일정 제목, 메모, 날짜, 시간, 유형(아기/가족/업무/개인/중요/기타) 입력 |
 
 #### 임신 일기 (3개 화면)
 
 | 화면 | 파일 | 기능 |
 |------|------|------|
-| 일기 목록 | `PregnancyDiaryScreen.jsx` | 부부 공유 일기 목록 (페이지네이션) |
+| 일기 목록 | `PregnancyDiaryScreen.jsx` | 부부 공유 일기 목록 (페이지네이션, 썸네일) |
 | 일기 상세 | `PregnancyDiaryDetailScreen.jsx` | 일기 내용 + 이미지 보기 |
-| 일기 작성 | `PregnancyDiaryWriteScreen.jsx` | 일기 작성/수정, 사진 첨부 |
+| 일기 작성 | `PregnancyDiaryWriteScreen.jsx` | 일기 작성/수정, 사진 첨부 (Supabase Storage) |
 
 #### 커뮤니티 (3개 화면)
 
 | 화면 | 파일 | 기능 |
 |------|------|------|
-| 게시판 | `CommunityScreen.jsx` | 게시판별/키워드별 필터, 맘BTI 필터 |
+| 게시판 | `CommunityScreen.jsx` | 게시판별/키워드별 필터, 맘BTI 동일 유형 필터 |
 | 게시글 상세 | `CommunityDetailScreen.jsx` | 본문, 댓글, 좋아요 (likedByMe 상태 유지) |
-| 글 작성 | `CommunityWriteScreen.jsx` | 게시글 작성/수정 |
+| 글 작성 | `CommunityWriteScreen.jsx` | 게시글 작성/수정, 게시판·키워드 선택 |
 
 #### 맘BTI 검사 (4개 화면)
 
@@ -193,18 +205,32 @@ npm run dev
 ```
 ThinQ 홈 → 설정 → 라이프 에이전트 → 부모모드
 │
-├── 홈 (D-DAY, 추천 루틴, 응원 메시지)
-├── 가전육아 (자동제어, 알림음, 루틴 선택)
-│   └── 루틴 상세 (초기 / 중기 / 후기)
-├── 커뮤니티 (게시판, 키워드 필터, 맘BTI 필터)
+├── [홈] 부모모드 홈
+│   ├── D-DAY 카운트다운, 주차별 추천 할 일
+│   ├── 남편 응원 메시지
+│   └── 추천 가전 루틴 카드
+│
+├── [가전육아] 가전 제어
+│   ├── 가전제품 자동제어 ON/OFF
+│   ├── 가전 알림음 제어 ON/OFF
+│   └── 가전제품 루틴
+│       ├── 초기 루틴 상세 → 시작하기
+│       ├── 중기 루틴 상세 → 시작하기
+│       └── 후기 루틴 상세 → 시작하기
+│
+├── [커뮤니티] 게시판
+│   ├── 게시판별 / 키워드별 / 맘BTI 필터
 │   ├── 게시글 상세 (댓글, 좋아요)
-│   └── 글 작성
-├── MY
-│   ├── 아이 프로필 (태명, 예정일)
-│   ├── 맘BTI (검사, 결과)
+│   └── 글 작성/수정
+│
+├── [MY] 마이페이지
+│   ├── 아이 프로필 (태명, 출산 예정일)
+│   ├── 맘BTI 검사 / 결과 조회
 │   ├── 임신 일기 (목록, 상세, 작성)
-│   └── 일정/할 일
-└── AI 챗봇 (Gemini 기반 질의응답)
+│   ├── 일정 캘린더 (월별/일별, 등록/수정)
+│   └── 나만의 할 일 (투두 리스트)
+│
+└── [AI 챗봇] Gemini 기반 임산부 질의응답
 ```
 
 ---
