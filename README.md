@@ -333,32 +333,28 @@ cd thinq-parent-backend
 
 ## 팀 구성
 
+## 팀 구성
+
 <table>
   <tr>
-    <td align="center">
-      <img src="./image/team2.png" width="150" /><br />
-      <b>팀장 김준홍</b><br />
-      기획, 데이터 분석
-    </td>
-    <td align="center">
-      <img src="./image/team3.png" width="150" /><br />
-      <b>팀원 박성원</b><br />
-      데이터 분석
-    </td>
-    <td align="center">
-      <img src="./image/team1.png" width="150" /><br />
-      <b>팀원 박하은</b><br />
-      디자인 기획
-    </td>
-    <td align="center">
-      <img src="./image/team5.png" width="150" /><br />
-      <b>팀원 송상준</b><br />
-      프론트 엔드
-    </td>
-    <td align="center">
-      <img src="./image/team4.png" width="150" /><br />
-      <b>팀원 이도한</b><br />
-      백엔드
-    </td>
+    <td align="center"><img src="./image/team2.png" width="150" /></td>
+    <td align="center"><img src="./image/team3.png" width="150" /></td>
+    <td align="center"><img src="./image/team1.png" width="150" /></td>
+    <td align="center"><img src="./image/team5.png" width="150" /></td>
+    <td align="center"><img src="./image/team4.png" width="150" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>팀장 김준홍</b></td>
+    <td align="center"><b>팀원 박성원</b></td>
+    <td align="center"><b>팀원 박하은</b></td>
+    <td align="center"><b>팀원 송상준</b></td>
+    <td align="center"><b>팀원 이도한</b></td>
+  </tr>
+  <tr>
+    <td align="center">기획, 데이터 분석</td>
+    <td align="center">데이터 분석</td>
+    <td align="center">디자인 기획</td>
+    <td align="center">프론트 엔드</td>
+    <td align="center">백엔드</td>
   </tr>
 </table>
