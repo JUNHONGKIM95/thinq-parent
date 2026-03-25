@@ -333,8 +333,6 @@ cd thinq-parent-backend
 
 ## 팀 구성
 
-## 팀 구성
-
 <table>
   <tr>
     <td align="center"><img src="./image/team2.png" width="120" /></td>
