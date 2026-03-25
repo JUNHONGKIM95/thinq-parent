@@ -331,8 +331,6 @@ cd thinq-parent-backend
 
 **LG전자 DX School 4기 2반 4팀**
 
-## 팀 구성
-
 <table>
   <tr>
     <td align="center" width="20%"><img src="./image/team2.png" width="120" /></td>
