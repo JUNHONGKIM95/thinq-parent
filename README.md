@@ -333,5 +333,5 @@ cd thinq-parent-backend
 
 | 팀장 김준홍 | 팀원 박성원 | 팀원 박하은 | 팀원 송상준 | 팀원 이도한 |
 |:---:|:---:|:---:|:---:|:---:|
-| ![image](./image/team2 1.png) | ![image](./image/team3 1.png) | ![image](./image/team1 1.png) | ![image](./image/team5 1.png) | ![image](./image/team4 1.png) |
+| ![image](./image/team2.png) | ![image](./image/team3.png) | ![image](./image/team1.png) | ![image](./image/team5.png) | ![image](./image/team4.png) |
 | 기획, 데이터 분석 | 데이터 분석 | 디자인 기획 | 프론트 엔드 | 백엔드 |
