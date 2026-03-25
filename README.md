@@ -335,11 +335,11 @@ cd thinq-parent-backend
 
 <table>
   <tr>
-    <td align="center"><img src="./image/team2.png" width="120" /></td>
-    <td align="center"><img src="./image/team3.png" width="120" /></td>
-    <td align="center"><img src="./image/team1.png" width="120" /></td>
-    <td align="center"><img src="./image/team5.png" width="120" /></td>
-    <td align="center"><img src="./image/team4.png" width="120" /></td>
+    <td align="center" width="20%"><img src="./image/team2.png" width="120" /></td>
+    <td align="center" width="20%"><img src="./image/team3.png" width="120" /></td>
+    <td align="center" width="20%"><img src="./image/team1.png" width="120" /></td>
+    <td align="center" width="20%"><img src="./image/team5.png" width="120" /></td>
+    <td align="center" width="20%"><img src="./image/team4.png" width="120" /></td>
   </tr>
   <tr>
     <td align="center"><b>팀장 김준홍</b></td>
@@ -349,10 +349,10 @@ cd thinq-parent-backend
     <td align="center"><b>팀원 이도한</b></td>
   </tr>
   <tr>
-    <td align="center">기획, 데이터 분석</td>
+    <td align="center">기획·데이터분석</td>
     <td align="center">데이터 분석</td>
-    <td align="center">디자인</td>
-    <td align="center">프론트 엔드</td>
+    <td align="center">디자인 기획</td>
+    <td align="center">프론트엔드</td>
     <td align="center">백엔드</td>
   </tr>
 </table>
