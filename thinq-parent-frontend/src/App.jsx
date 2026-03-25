@@ -11,7 +11,6 @@ import floatingInnerImage from '@shared-assets/image5.png'
 import lifeAgentImage from '@shared-assets/lifeagent.png'
 import lookDiaryImage from '@shared-assets/lookdiary.png'
 import plusImage from '@shared-assets/plus.png'
-import userHomeIcon from '@shared-assets/srg/change.png'
 import arrowLeftIcon from '@shared-assets/srg/Arrow_left.svg'
 import messageOpenIcon from '@shared-assets/srg/Message_open_light.svg'
 import sendLightIcon from '@shared-assets/srg/Send_light.svg'
@@ -1302,6 +1301,7 @@ function ParentModeScreen({
 }) {
   const [inputStatusIndex, setInputStatusIndex] = useState(0)
   const today = new Date()
+  const accountSwitchLabel = pregnancySummary.role === 'FAMILY' ? '아빠' : '엄마'
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -1336,7 +1336,7 @@ function ParentModeScreen({
             aria-label="계정 전환"
             onClick={onOpenAccountSwitch}
           >
-            <img src={userHomeIcon} alt="" className="parent-mode-account-switch-icon" aria-hidden="true" />
+            <span className="parent-mode-account-switch-text">{accountSwitchLabel}</span>
           </button>
           <button type="button" className="life-agent-more-button" aria-label="더보기">
             <img src={headerMenuIcon} alt="" className="header-menu-icon" aria-hidden="true" />
@@ -2656,6 +2656,7 @@ function App() {
               onBack={goBack}
               onSuccess={goBack}
               babyNickname={pregnancySummary.babyNickname}
+              role={pregnancySummary.role}
               initialDiary={editingPregnancyDiary}
             />
           )}
