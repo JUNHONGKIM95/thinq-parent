@@ -3802,21 +3802,23 @@ select {
 }
 
 .parent-mode-account-switch-button {
-  width: 32px;
+  min-width: 44px;
   height: 32px;
-  padding: 0;
+  padding: 0 10px;
   border: 0;
-  background: transparent;
+  border-radius: 10px;
+  background: rgba(232, 189, 175, 0.96);
   display: grid;
   place-items: center;
   cursor: pointer;
 }
 
-.parent-mode-account-switch-icon {
-  width: 16px;
-  height: 16px;
+.parent-mode-account-switch-text {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: #111827;
   display: block;
-  object-fit: contain;
 }
 
 .parent-mode-account-switch-overlay {
