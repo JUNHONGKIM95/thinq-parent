@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=1920, height=1080" />
   <title>LG ThinQ Parent Mode - Demo Booth</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+    @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaL.ttf') format('truetype'); font-weight: 300; }
+    @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaR.ttf') format('truetype'); font-weight: 400; }
+    @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaSB.ttf') format('truetype'); font-weight: 600; }
+    @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaB.ttf') format('truetype'); font-weight: 700; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -13,7 +16,7 @@
       width: 1920px;
       height: 1080px;
       overflow: hidden;
-      font-family: 'Noto Sans KR', sans-serif;
+      font-family: 'LG SmartHA', sans-serif;
       background: #0a0a0a;
       color: #fff;
     }
@@ -64,8 +67,70 @@
     .deco-ring.r2 { width: 600px; height: 600px; bottom: -150px; left: -100px; }
 
     /* ══════════════════════════════════════
-       LEFT
+       TOP NAV
        ══════════════════════════════════════ */
+    .top-nav {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 480px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      z-index: 20;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(245,198,176,0.1);
+      border-radius: 12px;
+    }
+    .nav-tab {
+      padding: 0 36px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.25s;
+      user-select: none;
+      letter-spacing: 0.5px;
+      border-radius: 12px;
+    }
+    .nav-tab:hover { color: rgba(255,255,255,0.6); }
+    .nav-tab.active {
+      color: #fff;
+      background: rgba(194,28,68,0.2);
+    }
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 4px; left: 24px; right: 24px;
+      height: 2px;
+      background: linear-gradient(90deg, #C21C44, #f5c6b0);
+      border-radius: 2px;
+    }
+    .nav-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* ══════════════════════════════════════
+       PAGES
+       ══════════════════════════════════════ */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ══════════════════════════════════════
+       PAGE 1: 서비스 소개
+       ══════════════════════════════════════ */
+
+    /* LEFT */
     .left {
       position: absolute;
       left: 80px;
@@ -75,7 +140,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding-bottom: 150px;
+      padding-bottom: 60px;
       z-index: 2;
     }
 
@@ -91,8 +156,14 @@
       font-weight: 500;
       color: #e8a0b4;
       width: fit-content;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .team-badge:hover {
+      background: rgba(194,28,68,0.2);
+      border-color: rgba(194,28,68,0.45);
     }
     .team-badge .dot {
       width: 8px; height: 8px;
@@ -102,23 +173,60 @@
     }
     @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    .title-logo { margin-bottom: 8px; }
-    .title-logo img {
-      height: 100px;
+    .title-logo {
+      margin-bottom: 5px;
+      margin-left : 50px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .title-logo-icon {
+      height: 80px;
       width: auto;
-      filter: brightness(1.8) saturate(0.9);
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .title-logo-icon:hover {
+      transform: scale(1.08);
+    }
+    .title-logo-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .title-logo-text .thinq {
+      font-size: 42px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .title-logo-text .thinq .lg {
+      color: rgba(255,255,255,0.45);
+      font-weight: 700;
+      font-size: 36px;
+    }
+    .title-logo-text .mode {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.4;
+      background: linear-gradient(135deg, #f5c6b0, #C21C44);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .subtitle {
       font-size: 20px;
       font-weight: 300;
       color: rgba(255,255,255,0.45);
-      margin-bottom: 44px;
+      margin-bottom: 20px;
       margin-left: 50px;
       line-height: 1.65;
     }
 
-    /* ── Feature Buttons ── */
+    /* Feature Buttons */
     .features {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -165,9 +273,7 @@
     .fc h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
     .fc p { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.5; }
 
-    /* ══════════════════════════════════════
-       CENTER — Phone
-       ══════════════════════════════════════ */
+    /* CENTER — Phone */
     .phone-area {
       position: absolute;
       left: 52%;
@@ -185,7 +291,7 @@
       pointer-events: none;
     }
     .phone {
-      width: 310px;
+      width: 315px;
       height: 650px;
       background: #000;
       border-radius: 44px;
@@ -199,28 +305,28 @@
     }
     .phone-notch {
       position: absolute;
-      top: 10px; left: 50%;
+      margin-top: 5px;
+      top: 12px; left: 50%;
       transform: translateX(-50%);
-      width: 110px; height: 26px;
-      background: #000;
-      border-radius: 16px;
+      width: 12px; height: 12px;
+      background: #1a1a1a;
+      border-radius: 50%;
       z-index: 10;
+      box-shadow: 0 0 0 3px #000;
     }
-
     .ps {
       position: absolute;
       inset: 8px;
       border-radius: 38px;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
+    .ps::-webkit-scrollbar { display: none; }
     .ps img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
+      height: auto;
       display: block;
     }
-
     .phone-label {
       text-align: center;
       margin-top: 16px;
@@ -233,9 +339,7 @@
       text-transform: uppercase;
     }
 
-    /* ══════════════════════════════════════
-       RIGHT — Feature Detail Panel
-       ══════════════════════════════════════ */
+    /* RIGHT — Detail Panel */
     .right {
       position: absolute;
       right: 40px;
@@ -245,14 +349,37 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       z-index: 2;
+      padding-top: 30px;
+      padding-bottom: 58px;
     }
 
-    /* Default state */
+    .right-content {
+      margin-top:250px;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .right-content::-webkit-scrollbar { width: 4px; }
+    .right-content::-webkit-scrollbar-track { background: transparent; }
+    .right-content::-webkit-scrollbar-thumb {
+      background: rgba(245,198,176,0.15);
+      border-radius: 4px;
+    }
+
+    .right-bottom {
+      flex-shrink: 0;
+      padding-top: 16px;
+    }
+
     .detail-placeholder {
       text-align: center;
       padding: 60px 30px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .detail-placeholder .ph-icon {
       font-size: 48px;
@@ -265,12 +392,13 @@
       line-height: 1.6;
     }
 
-    /* Detail card */
     .detail-panel {
       display: none;
       animation: slideIn 0.35s ease-out;
     }
-    .detail-panel.show { display: block; }
+    .detail-panel.show {
+      display: block;
+    }
 
     @keyframes slideIn {
       from { opacity: 0; transform: translateX(20px); }
@@ -281,7 +409,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
     .detail-emoji {
       font-size: 42px;
@@ -294,7 +422,6 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    .detail-title-wrap {}
     .detail-tag {
       display: inline-block;
       font-size: 11px;
@@ -315,16 +442,16 @@
     }
 
     .detail-desc {
-      font-size: 16px;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.8;
-      margin-bottom: 28px;
+      font-size: 15px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.75;
+      margin-bottom: 22px;
     }
 
     .detail-features {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
     .df-item {
       display: flex;
@@ -333,46 +460,130 @@
       background: rgba(245,198,176,0.04);
       border: 1px solid rgba(245,198,176,0.08);
       border-radius: 14px;
-      padding: 16px 18px;
+      padding: 14px 16px;
       border-left: 3px solid #C21C44;
     }
-    .df-item .df-icon {
-      font-size: 20px;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-    .df-item .df-content {}
-    .df-item .df-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #f5c6b0;
-      margin-bottom: 3px;
-    }
-    .df-item .df-text {
-      font-size: 13px;
-      color: rgba(255,255,255,0.4);
-      line-height: 1.55;
-    }
+    .df-item .df-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .df-item .df-name { font-size: 14px; font-weight: 700; color: #f5c6b0; margin-bottom: 2px; }
+    .df-item .df-text { font-size: 12.5px; color: rgba(255,255,255,0.38); line-height: 1.5; }
 
-    .detail-value {
-      margin-top: 24px;
-      background: linear-gradient(135deg, rgba(194,28,68,0.12), rgba(245,198,176,0.06));
-      border: 1px solid rgba(194,28,68,0.2);
-      border-radius: 14px;
+    /* QR Area */
+    .qr-area {
+      margin-bottom : 90px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      background: rgba(245,198,176,0.04);
+      border: 1px solid rgba(245,198,176,0.08);
+      border-radius: 16px;
       padding: 18px 22px;
     }
-    .detail-value .dv-label {
-      font-size: 11px;
+    .qr-box {
+      width: 90px; height: 90px;
+      background: #fff;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #999;
       font-weight: 700;
-      color: #C21C44;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
+      text-align: center;
+      flex-shrink: 0;
     }
-    .detail-value .dv-text {
+    .qr-text {
       font-size: 14px;
-      color: rgba(255,255,255,0.6);
-      line-height: 1.65;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.7;
+    }
+    .qr-text strong {
+      color: #f5c6b0;
+      font-weight: 600;
+      font-size: 16px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ══════════════════════════════════════
+       PAGE 2: 팀원 소개
+       ══════════════════════════════════════ */
+    .team-page {
+      position: absolute;
+      inset: 0 0 52px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .team-page-title {
+      font-size: 40px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .team-page-title .hl {
+      background: linear-gradient(135deg, #f5c6b0, #C21C44);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .team-page-sub {
+      font-size: 18px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 56px;
+      text-align: center;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 36px;
+      max-width: 1760px;
+    }
+    .team-card {
+      background: rgba(245,198,176,0.04);
+      border: 1px solid rgba(245,198,176,0.08);
+      border-radius: 30px;
+      padding: 54px 42px 45px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .team-card:hover {
+      background: rgba(245,198,176,0.08);
+      border-color: rgba(245,198,176,0.2);
+      transform: translateY(-4px);
+    }
+    .team-avatar {
+      width: 135px; height: 135px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(194,28,68,0.2), rgba(245,198,176,0.15));
+      border: 3px solid rgba(245,198,176,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+      margin: 0 auto 27px;
+    }
+    .team-name {
+      font-size: 30px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 9px;
+    }
+    .team-role {
+      font-size: 20px;
+      font-weight: 600;
+      color: #C21C44;
+      background: rgba(194,28,68,0.12);
+      display: inline-block;
+      padding: 6px 21px;
+      border-radius: 30px;
+      margin-bottom: 21px;
+    }
+    .team-desc {
+      font-size: 20px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.7;
     }
 
     /* ── Bottom bar ── */
@@ -420,316 +631,357 @@
     <div class="deco-ring r1"></div>
     <div class="deco-ring r2"></div>
 
-    <!-- LEFT -->
-    <div class="left">
-      <div class="team-badge">
-        <span class="dot"></span>
-        LG DX School 4기 &middot; 4팀 Last Dance
+    <!-- TOP NAV -->
+    <div class="top-nav">
+      <div class="nav-tab active" data-page="service">서비스 소개</div>
+      <div class="nav-divider"></div>
+      <div class="nav-tab" data-page="team">팀원 소개</div>
+    </div>
+
+    <!-- PAGE 1: 서비스 소개 -->
+    <div class="page active" id="page-service">
+
+      <!-- LEFT -->
+      <div class="left">
+        <div class="team-badge" onclick="location.href='demo-intro.html'">
+          <span class="dot"></span>
+          LG DX School 4기 &middot; 4팀 Last Dance
+        </div>
+        <div class="title-logo">
+          
+          <div class="title-logo-text">
+            <div class="thinq"><span class="lg">LG </span>ThinQ</div>
+            <div class="mode">Parenting Mode</div>
+          </div>
+          <img class="title-logo-icon" src="html_asset/homelogo.png" alt="Home Icon" />
+        </div>
+        <p class="subtitle">
+          공간 제어를 넘어 첫 만남을 준비하는 여정까지,<br/>
+          ThinQ로 연결된 임신·출산 라이프
+        </p>
+        <div class="features">
+          <div class="fc" data-feature="0">
+            <span class="fc-icon">📅</span>
+            <h3>캘린더 & TODO</h3>
+            <p>D-Day·가족 일정·주차별 할 일을 한눈에 관리</p>
+          </div>
+          <div class="fc" data-feature="1">
+            <span class="fc-icon">👥</span>
+            <h3>커뮤니티</h3>
+            <p>비슷한 상황의 엄마들과 경험을 나누는 공간</p>
+          </div>
+          <div class="fc" data-feature="2">
+            <span class="fc-icon">🏠</span>
+            <h3>가전 제품 루틴</h3>
+            <p>세탁기, 건조기, 공기청정기 스마트 루틴 설정</p>
+          </div>
+          <div class="fc" data-feature="3">
+            <span class="fc-icon">🧠</span>
+            <h3>MomBTI 테스트</h3>
+            <p>나만의 육아 성향 분석과 맞춤 가이드 제공</p>
+          </div>
+          <div class="fc" data-feature="4">
+            <span class="fc-icon">📝</span>
+            <h3>임신 다이어리</h3>
+            <p>소중한 임신 기간의 순간을 기록하고 간직</p>
+          </div>
+          <div class="fc" data-feature="5">
+            <span class="fc-icon">💬</span>
+            <h3>RAG 기술로 학습한 AI 육아 상담 챗봇</h3>
+            <p>임신·육아 궁금증을 실시간 AI 상담으로 해결</p>
+          </div>
+        </div>
       </div>
 
-      <div class="title-logo">
-        <img src="html_asset/logo.svg" alt="LG ThinQ" />
+      <!-- CENTER: Phone -->
+      <div class="phone-area">
+        <div class="phone-glow"></div>
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="ps">
+            <img id="phone-screen" src="html_asset/ParentingHome.jpg" alt="ThinQ Parent Mode" />
+          </div>
+        </div>
+        <div class="phone-label">
+          <div class="phone-label-text">Parenting Mode</div>
+        </div>
       </div>
 
-      <p class="subtitle">
-        공간 제어를 넘어 첫 만남을 준비하는 여정까지,<br/>
-        ThinQ로 연결된 임신·출산 라이프
-      </p>
+      <!-- RIGHT: Detail Panel -->
+      <div class="right">
+        <div class="right-content">
+          <div class="detail-placeholder" id="placeholder">
+            <div class="ph-icon">👈</div>
+            <p>왼쪽 기능 카드를 눌러<br/>상세 설명을 확인하세요</p>
+          </div>
 
-      <div class="features">
-        <div class="fc" data-feature="0">
-          <span class="fc-icon">📅</span>
-          <h3>캘린더 & TODO</h3>
-          <p>D-Day·가족 일정·주차별 할 일을 한눈에 관리</p>
+          <div class="detail-panel" id="detail-0">
+            <div class="detail-header">
+              <div class="detail-emoji">📅</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">Core Feature</div>
+                <div class="detail-title">캘린더 & TODO</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              임신 D-Day와 가족 일정을 한곳에서 관리하고, 주차별 맞춤 할 일을 추천받아 완벽히 준비된 상태로 출산을 맞이합니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">📆</span>
+                <div class="df-content">
+                  <div class="df-name">D-Day & 가족 공유 캘린더</div>
+                  <div class="df-text">출산 예정일 카운트다운과 아기·가족·업무·개인 카테고리별 컬러로 일정을 가족 모두가 실시간 확인</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">✅</span>
+                <div class="df-content">
+                  <div class="df-name">주차별 To-Do 추천</div>
+                  <div class="df-text">보건복지부 육아 가이드 기반의 주의사항·정기진찰·기본검사 항목을<br>해당 주차에 맞게 제공</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">☑️</span>
+                <div class="df-content">
+                  <div class="df-name">체크리스트</div>
+                  <div class="df-text">출산 준비물 등 가족이 함께 체크하는 공유 리스트</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel" id="detail-1">
+            <div class="detail-header">
+              <div class="detail-emoji">👥</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">Community</div>
+                <div class="detail-title">커뮤니티</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              약 6만 개의 임신·육아 전문 커뮤니티 게시글을 분석하여 Needs/Pain 카테고리를 구성하고, 익명 기반으로 자유롭게 소통하는 공간입니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">📝</span>
+                <div class="df-content">
+                  <div class="df-name">익명 커뮤니티 글쓰기</div>
+                  <div class="df-text">성향·Needs/Pain 카테고리 기반으로 익명 글을 작성하고 자유롭게 소통</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">🏷️</span>
+                <div class="df-content">
+                  <div class="df-name">MomBTI 태그 필터링</div>
+                  <div class="df-text">작성자명 옆에 MomBTI 유형 태그가 표시되어 유사 성향 엄마를 빠르게 식별</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">📊</span>
+                <div class="df-content">
+                  <div class="df-name">데이터 기반 카테고리</div>
+                  <div class="df-text">약 6만 개 임신·육아 전문 커뮤니티 게시글을 분석하여 최적의 카테고리 구성</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel" id="detail-2">
+            <div class="detail-header">
+              <div class="detail-emoji">🏠</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">Smart Home</div>
+                <div class="detail-title">가전 제품 루틴</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              임신·출산 전문 커뮤니티 크롤링으로 수집한 주차별 실제 키워드를 분석해, 임신 초·중·후기별 맞춤 루틴을 LG 가전과 연동하여 제안합니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">🔍</span>
+                <div class="df-content">
+                  <div class="df-name">커뮤니티 키워드 크롤링</div>
+                  <div class="df-text">임신·출산 전문 커뮤니티에서 주차별 실제 키워드를 수집·분석하여 데이터 기반 루틴 설계</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">📊</span>
+                <div class="df-content">
+                  <div class="df-name">초·중·후기별 맞춤 루틴</div>
+                  <div class="df-text">임신 시기별 키워드 분석 결과를 바탕으로 세탁·공기질·온도 등 최적의 가전 루틴 자동 추천</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">⚙️</span>
+                <div class="df-content">
+                  <div class="df-name">LG 가전 자동 제어</div>
+                  <div class="df-text">추천 루틴을 세탁기·건조기·공기청정기 등 LG 가전에 연동하여 원터치로 실행</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel" id="detail-3">
+            <div class="detail-header">
+              <div class="detail-emoji">🧠</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">Personality</div>
+                <div class="detail-title">MomBTI 테스트</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              간단한 테스트로 나만의 육아 성향을 분석하고, 4가지 축 기반의 MomBTI 유형과 8가지 특성을 시각적으로 확인할 수 있습니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">📋</span>
+                <div class="df-content">
+                  <div class="df-name">MomBTI 요약 및 정의 제공</div>
+                  <div class="df-text">테스트 결과로 사용자의 육아 성향을 요약·정의하고 상세하게 설명</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">📊</span>
+                <div class="df-content">
+                  <div class="df-name">4가지 축 비율 분석</div>
+                  <div class="df-text">DB 기반으로 4가지 성향 축의 비율을 계산하여 정량적 결과 제공</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">🔎</span>
+                <div class="df-content">
+                  <div class="df-name">8가지 특성 시각화</div>
+                  <div class="df-text">특성을 상세 설명하고, 사용자에게 해당하는 특성을 시각적으로 강조 표시</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel" id="detail-4">
+            <div class="detail-header">
+              <div class="detail-emoji">📝</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">Record</div>
+                <div class="detail-title">임신 다이어리</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              소중한 임신 기간의 매일을 사진과 글로 기록하고, 앨범으로 남기는 감성적 케어 기능입니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">✍️</span>
+                <div class="df-content">
+                  <div class="df-name">일기 작성·조회</div>
+                  <div class="df-text">날짜별로 임신 일기를 작성하고, 지난 기록을 언제든 돌아볼 수 있는 타임라인</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">📷</span>
+                <div class="df-content">
+                  <div class="df-name">사진 첨부 기록</div>
+                  <div class="df-text">초음파 사진, 배 사진 등 소중한 순간을 이미지와 함께 기록</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">💝</span>
+                <div class="df-content">
+                  <div class="df-name">배우자와 일기 공유</div>
+                  <div class="df-text">배우자와 함께 임신 기간의 추억을 기록하고 공유</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel" id="detail-5">
+            <div class="detail-header">
+              <div class="detail-emoji">💬</div>
+              <div class="detail-title-wrap">
+                <div class="detail-tag">AI Assistant</div>
+                <div class="detail-title">AI 전문가 챗봇</div>
+              </div>
+            </div>
+            <div class="detail-desc">
+              임신·육아 관련 궁금증이 생길 때 필요시 즉시 접근할 수 있는 맞춤 지식 응답 인터페이스입니다.
+            </div>
+            <div class="detail-features">
+              <div class="df-item">
+                <span class="df-icon">⚡</span>
+                <div class="df-content">
+                  <div class="df-name">즉시 접근 가능</div>
+                  <div class="df-text">플로팅 버튼으로 어느 화면에서든 바로 챗봇을 호출하여 질문 가능</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">🎯</span>
+                <div class="df-content">
+                  <div class="df-name">증상별·주차별 맞춤 응답</div>
+                  <div class="df-text">보건복지부 육아가이드와 충청북도 지역장애인보건의료센터 자료를<br>RAG 기술로 학습해 신뢰할 수 있는 답변 제공</div>
+                </div>
+              </div>
+              <div class="df-item">
+                <span class="df-icon">📖</span>
+                <div class="df-content">
+                  <div class="df-name">꼼꼼하고 상세하게</div>
+                  <div class="df-text">간단한 궁금증부터 복잡한 질문까지 자세히 안내<br>
+                    산모에게 민감하거나 위험할 수 있는 사항은 전문 의료진 상담을 권유합니다.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="fc" data-feature="1">
-          <span class="fc-icon">👥</span>
-          <h3>커뮤니티</h3>
-          <p>비슷한 상황의 엄마들과 경험을 나누는 공간</p>
-        </div>
-        <div class="fc" data-feature="2">
-          <span class="fc-icon">🏠</span>
-          <h3>LG 가전 연동</h3>
-          <p>세탁기, 건조기, 공기청정기 스마트 루틴 설정</p>
-        </div>
-        <div class="fc" data-feature="3">
-          <span class="fc-icon">🧠</span>
-          <h3>MomBTI 테스트</h3>
-          <p>나만의 육아 성향 분석과 맞춤 가이드 제공</p>
-        </div>
-        <div class="fc" data-feature="4">
-          <span class="fc-icon">📝</span>
-          <h3>임신 다이어리</h3>
-          <p>소중한 임신 기간의 순간을 기록하고 간직</p>
-        </div>
-        <div class="fc" data-feature="5">
-          <span class="fc-icon">💬</span>
-          <h3>AI 전문가 챗봇</h3>
-          <p>임신·육아 궁금증을 실시간 AI 상담으로 해결</p>
+
+        <div class="right-bottom">
+          <div class="qr-area">
+            <div class="qr-box">QR</div>
+            <div class="qr-text">
+              <strong>직접 체험해보세요!</strong>
+              QR 코드를 스캔하면<br/>바로 시연을 확인할 수 있습니다
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- CENTER: Phone -->
-    <div class="phone-area">
-      <div class="phone-glow"></div>
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="ps">
-          <img src="20260325_120744.png" alt="ThinQ Parent Mode" />
-        </div>
-      </div>
-      <div class="phone-label">
-        <div class="phone-label-text">Parenting Mode</div>
-      </div>
-    </div>
-
-    <!-- RIGHT: Detail Panel -->
-    <div class="right">
-      <!-- Placeholder (default) -->
-      <div class="detail-placeholder" id="placeholder">
-        <div class="ph-icon">👈</div>
-        <p>왼쪽 기능 카드를 눌러<br/>상세 설명을 확인하세요</p>
-      </div>
-
-      <!-- Feature details (hidden by default) -->
-      <div class="detail-panel" id="detail-0">
-        <div class="detail-header">
-          <div class="detail-emoji">📅</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">Core Feature</div>
-            <div class="detail-title">캘린더 & TODO</div>
+    <!-- PAGE 2: 팀원 소개 -->
+    <div class="page" id="page-team">
+      <div class="team-page">
+        <div class="team-page-title">Team <span class="hl">Last Dance</span></div>
+        <div class="team-page-sub">LG DX School 4기 &middot; 2반 4팀</div>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar">👤</div>
+            <div class="team-name">팀원 1</div>
+            <div class="team-role">역할</div>
+            <div class="team-desc">담당 업무 설명</div>
           </div>
-        </div>
-        <div class="detail-desc">
-          임신 D-Day와 가족 일정을 한곳에서 관리하고, 주차별 맞춤 할 일을 추천받아 준비 누락 없이 출산을 맞이합니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">📆</span>
-            <div class="df-content">
-              <div class="df-name">D-Day & 가족 공유 캘린더</div>
-              <div class="df-text">출산 예정일 카운트다운과 아기·가족·업무·개인 카테고리별 컬러 코드 일정을 가족 모두가 실시간 확인</div>
-            </div>
+          <div class="team-card">
+            <div class="team-avatar">👤</div>
+            <div class="team-name">팀원 2</div>
+            <div class="team-role">역할</div>
+            <div class="team-desc">담당 업무 설명</div>
           </div>
-          <div class="df-item">
-            <span class="df-icon">✅</span>
-            <div class="df-content">
-              <div class="df-name">주차별 To-Do 추천</div>
-              <div class="df-text">병원 일정, 검사 체크, 영양 관리, 준비물, 주의 사항 등 임신 주차에 맞는 맞춤 할 일 자동 추천</div>
-            </div>
+          <div class="team-card">
+            <div class="team-avatar">👤</div>
+            <div class="team-name">팀원 3</div>
+            <div class="team-role">역할</div>
+            <div class="team-desc">담당 업무 설명</div>
           </div>
-          <div class="df-item">
-            <span class="df-icon">💌</span>
-            <div class="df-content">
-              <div class="df-name">응원 메시지 & 체크리스트</div>
-              <div class="df-text">남편의 따뜻한 응원 메시지와 출산 준비물 등 가족이 함께 체크하는 공유 리스트</div>
-            </div>
+          <div class="team-card">
+            <div class="team-avatar">👤</div>
+            <div class="team-name">팀원 4</div>
+            <div class="team-role">역할</div>
+            <div class="team-desc">담당 업무 설명</div>
           </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">막연한 불안감을 해소하고, 임신·출산을 가족 모두의 여정으로 만들어 동반자적 관계를 형성합니다.</div>
-        </div>
-      </div>
-
-      <div class="detail-panel" id="detail-1">
-        <div class="detail-header">
-          <div class="detail-emoji">👥</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">Community</div>
-            <div class="detail-title">커뮤니티</div>
+          <div class="team-card">
+            <div class="team-avatar">👤</div>
+            <div class="team-name">팀원 5</div>
+            <div class="team-role">역할</div>
+            <div class="team-desc">담당 업무 설명</div>
           </div>
-        </div>
-        <div class="detail-desc">
-          비슷한 상황과 성향의 엄마들이 모여 경험을 공유하고, 깊은 정서적 공감대를 형성하는 임산부 맞춤 소통 공간입니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">📝</span>
-            <div class="df-content">
-              <div class="df-name">게시글 작성 & 소통</div>
-              <div class="df-text">임신·출산 경험을 자유롭게 나누고, 좋아요·댓글로 서로 응원하며 소통</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🏷️</span>
-            <div class="df-content">
-              <div class="df-name">MomBTI 태그 필터링</div>
-              <div class="df-text">작성자명 옆에 MomBTI 유형 태그가 표시되어 유사 성향 엄마를 빠르게 식별</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🔍</span>
-            <div class="df-content">
-              <div class="df-name">검색 & 페이지네이션</div>
-              <div class="df-text">키워드 검색과 정렬로 원하는 정보를 빠르게 탐색, 쾌적한 피드 탐색 경험</div>
-            </div>
-          </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">맘카페 의존 피로도를 줄이고, 유사 성향·상황의 엄마들과 연결해 깊은 정서적 공감대를 형성합니다.</div>
-        </div>
-      </div>
-
-      <div class="detail-panel" id="detail-2">
-        <div class="detail-header">
-          <div class="detail-emoji">🏠</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">Smart Home</div>
-            <div class="detail-title">LG 가전 연동</div>
-          </div>
-        </div>
-        <div class="detail-desc">
-          임신 주차와 컨디션에 맞춰 에어컨, 공기청정기 등 LG 가전이 최적의 물리적 환경을 자동으로 세팅합니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">😴</span>
-            <div class="df-content">
-              <div class="df-name">꿀 무드 수면 루틴</div>
-              <div class="df-text">에어컨 온도·풍량 자동 조절로 임산부에게 최적의 수면 환경 조성</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">👕</span>
-            <div class="df-content">
-              <div class="df-name">빨래 세탁-건조 연계</div>
-              <div class="df-text">노터치 세탁-건조 자동 연계 루틴으로 임산부의 가사 부담 경감</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🌬️</span>
-            <div class="df-content">
-              <div class="df-name">먼지 철벽 방어</div>
-              <div class="df-text">공기청정기가 실내 공기질을 실시간 모니터링하고 자동 정화 루틴 실행</div>
-            </div>
-          </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">엄마의 컨디션 변화에 맞춰 ThinQ 가전이 최적 실내 환경을 자동 조성합니다.</div>
-        </div>
-      </div>
-
-      <div class="detail-panel" id="detail-3">
-        <div class="detail-header">
-          <div class="detail-emoji">🧠</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">Personality</div>
-            <div class="detail-title">MomBTI 테스트</div>
-          </div>
-        </div>
-        <div class="detail-desc">
-          간단한 테스트로 엄마의 육아 성향을 파악하고, 비슷한 상황의 엄마들과 연결해 깊은 정서적 공감대를 형성합니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">📋</span>
-            <div class="df-content">
-              <div class="df-name">성향 분석 테스트</div>
-              <div class="df-text">간단한 문항으로 나만의 육아 성향을 파악하고 유형별 결과 제공</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🏷️</span>
-            <div class="df-content">
-              <div class="df-name">커뮤니티 태그 연동</div>
-              <div class="df-text">MomBTI 결과가 커뮤니티 작성자명 옆에 태그로 표시되어 유사 성향 엄마 식별</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🤝</span>
-            <div class="df-content">
-              <div class="df-name">맞춤형 커뮤니티</div>
-              <div class="df-text">유사 성향·상황의 엄마들과 연결되어 원활한 소통과 깊은 공감대 형성</div>
-            </div>
-          </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">커뮤니티 탐색 효율화와 깊은 공감으로, 세상에 없던 라이프스타일 메이트를 만듭니다.</div>
-        </div>
-      </div>
-
-      <div class="detail-panel" id="detail-4">
-        <div class="detail-header">
-          <div class="detail-emoji">📝</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">Record</div>
-            <div class="detail-title">임신 다이어리</div>
-          </div>
-        </div>
-        <div class="detail-desc">
-          소중한 임신 기간의 매일을 사진과 글로 기록하고, 앨범으로 남기는 감성적 케어 기능입니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">✍️</span>
-            <div class="df-content">
-              <div class="df-name">일기 작성·조회</div>
-              <div class="df-text">날짜별로 임신 일기를 작성하고, 지난 기록을 언제든 돌아볼 수 있는 타임라인</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">📷</span>
-            <div class="df-content">
-              <div class="df-name">사진 첨부 기록</div>
-              <div class="df-text">초음파 사진, 배 사진 등 소중한 순간을 이미지와 함께 기록</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">💝</span>
-            <div class="df-content">
-              <div class="df-name">감성 앨범</div>
-              <div class="df-text">280일간의 기록이 하나의 앨범이 되어 출산 후에도 소중한 추억으로 간직</div>
-            </div>
-          </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">기록을 통한 감성 경험을 극대화하고, 임신 여정을 특별한 추억으로 남깁니다.</div>
-        </div>
-      </div>
-
-      <div class="detail-panel" id="detail-5">
-        <div class="detail-header">
-          <div class="detail-emoji">💬</div>
-          <div class="detail-title-wrap">
-            <div class="detail-tag">AI Assistant</div>
-            <div class="detail-title">AI 전문가 챗봇</div>
-          </div>
-        </div>
-        <div class="detail-desc">
-          임신·육아 관련 궁금증이 생길 때 필요시 즉시 접근할 수 있는 맞춤 지식 응답 인터페이스입니다.
-        </div>
-        <div class="detail-features">
-          <div class="df-item">
-            <span class="df-icon">⚡</span>
-            <div class="df-content">
-              <div class="df-name">즉시 접근 가능</div>
-              <div class="df-text">플로팅 버튼으로 어느 화면에서든 바로 챗봇을 호출하여 질문 가능</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🎯</span>
-            <div class="df-content">
-              <div class="df-name">증상별·주차별 맞춤 응답</div>
-              <div class="df-text">현재 임신 주차와 증상에 기반한 개인화된 전문 지식 응답 제공</div>
-            </div>
-          </div>
-          <div class="df-item">
-            <span class="df-icon">🏥</span>
-            <div class="df-content">
-              <div class="df-name">검증된 의사 정보</div>
-              <div class="df-text">맘카페 의존 피로도를 줄이고 신뢰할 수 있는 정보를 빠르게 제공</div>
-            </div>
-          </div>
-        </div>
-        <div class="detail-value">
-          <div class="dv-label">Key Value</div>
-          <div class="dv-text">검증된 의사 정보를 한곳에 모아 정보 탐색 피로도를 줄이고 신뢰할 수 있는 답을 제공합니다.</div>
         </div>
       </div>
     </div>
@@ -749,30 +1001,71 @@
   </div>
 
   <script>
+    /* Tab navigation */
+    const tabs = document.querySelectorAll('.nav-tab');
+    const pages = document.querySelectorAll('.page');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        pages.forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + tab.dataset.page).classList.add('active');
+      });
+    });
+
+    /* Feature card click */
     const cards = document.querySelectorAll('.fc[data-feature]');
     const panels = document.querySelectorAll('.detail-panel');
     const placeholder = document.getElementById('placeholder');
+    const phoneScreen = document.getElementById('phone-screen');
+    const phoneContainer = phoneScreen.parentElement;
+
+    const screenImages = {
+      0: 'html_asset/Chalender.jpg',
+      1: 'html_asset/Community.jpg',
+      2: 'html_asset/Routine.jpg',
+      3: 'html_asset/MomBTI.jpg',
+      4: 'html_asset/Diary.jpg',
+      5: 'html_asset/ChatBot.jpg'
+    };
 
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const idx = card.dataset.feature;
-
-        // Toggle active state on cards
         cards.forEach(c => c.classList.remove('active'));
         card.classList.add('active');
-
-        // Hide all panels + placeholder, show selected
         placeholder.style.display = 'none';
         panels.forEach(p => p.classList.remove('show'));
         const target = document.getElementById('detail-' + idx);
         if (target) {
           target.classList.add('show');
-          // Re-trigger animation
           target.style.animation = 'none';
           target.offsetHeight;
           target.style.animation = '';
         }
+        // 폰 화면 이미지 변경 + 스크롤 맨 위로
+        phoneScreen.src = screenImages[idx];
+        phoneContainer.scrollTop = 0;
       });
+    });
+
+    /* Home icon click — 초기 화면으로 복귀 */
+    document.querySelector('.title-logo-icon').addEventListener('click', () => {
+      // 서비스 소개 탭 활성화
+      tabs.forEach(t => t.classList.remove('active'));
+      document.querySelector('.nav-tab[data-page="service"]').classList.add('active');
+      pages.forEach(p => p.classList.remove('active'));
+      document.getElementById('page-service').classList.add('active');
+
+      // 기능 카드 선택 해제 & 상세 패널 숨김
+      cards.forEach(c => c.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('show'));
+      placeholder.style.display = '';
+
+      // 폰 화면 초기 이미지로 복원
+      phoneScreen.src = 'html_asset/ParentingHome.jpg';
+      phoneContainer.scrollTop = 0;
     });
   </script>
 </body>
