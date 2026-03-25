@@ -2656,6 +2656,7 @@ function App() {
               onBack={goBack}
               onSuccess={goBack}
               babyNickname={pregnancySummary.babyNickname}
+              role={pregnancySummary.role}
               initialDiary={editingPregnancyDiary}
             />
           )}

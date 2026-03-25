@@ -197,7 +197,7 @@ function buildDiaryListItem(detail) {
   }
 }
 
-function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, initialDiary }) {
+function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, role, initialDiary }) {
   const isEditMode = Boolean(initialDiary?.id)
   const initialDiaryDate = initialDiary?.diaryDate || getDateKey(new Date())
   const [title, setTitle] = useState(initialDiary?.title || '')
@@ -207,7 +207,8 @@ function PregnancyDiaryWriteScreen({ userId, onBack, onSuccess, babyNickname, in
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [deletingImageIds, setDeletingImageIds] = useState([])
-  const diaryOwnerLabel = `${babyNickname || '아기'} 엄마`
+  const diaryOwnerRoleLabel = role === 'FAMILY' ? '아빠' : '엄마'
+  const diaryOwnerLabel = `${babyNickname || '아기'} ${diaryOwnerRoleLabel}`
   const diaryDate = useMemo(() => initialDiaryDate, [initialDiaryDate])
   const diaryDateLabel = useMemo(() => formatDiaryDate(new Date(`${initialDiaryDate}T00:00:00`)), [initialDiaryDate])
 
