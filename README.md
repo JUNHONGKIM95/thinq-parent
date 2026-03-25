@@ -99,29 +99,8 @@ thinq-parent/
 ---
 
 ## 라. 시스템 아키텍처
-
-```
-┌──────────────┐       HTTP/JSON       ┌────────────────┐      JDBC/SSL      ┌────────────┐
-│              │  ──────────────────►  │                │  ────────────────► │            │
-│   CLIENT     │   REST API 호출       │   BACK-END     │    SQL Query       │  DATABASE  │
-│              │  ◄──────────────────  │                │  ◄──────────────── │            │
-│  React 19    │     JSON 응답         │  Spring Boot   │    Result Set      │  Supabase  │
-│  + Vite      │                       │  4.0.3 (Java)  │                    │ PostgreSQL │
-│              │                       │                │                    │            │
-│  :5173       │                       │  :8081         │                    │  Cloud     │
-└──────┬───────┘                       └────────────────┘                    └────────────┘
-       │
-       │  HTTP (직접 호출)
-       ▼
-┌──────────────┐
-│  AI-CHATBOT  │
-│              │
-│ Google Cloud │
-│  Platform    │
-│  + Gemini    │
-│    API       │
-└──────────────┘
-```
+계층형 아키텍처 (Layered Architecture)를 적용하여 관심사를 분리하였습니다.
+![image](./image/시스템아키텍처.png)
 
 | 계층 | 역할 | 통신 |
 |------|------|------|
@@ -220,12 +199,6 @@ cd thinq-parent-backend
 
 - 서버 포트: `8081`
 - Swagger UI: `http://localhost:8081/swagger-ui.html`
-
-### 아키텍처
-
-계층형 아키텍처 (Layered Architecture)를 적용하여 관심사를 분리하였습니다.
-![image](./image/시스템아키텍처.png)
-
 
 ### API 모듈 구성 (13개 컨트롤러, 80+ 엔드포인트)
 
