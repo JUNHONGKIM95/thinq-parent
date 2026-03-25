@@ -45,11 +45,7 @@ cd thinq-parent-backend
 
 계층형 아키텍처 (Layered Architecture)를 적용하여 관심사를 분리하였습니다.
 
-```
-Controller → Service (Interface) → ServiceImpl → Repository → Entity
-                                                                 ↕
-                                                            PostgreSQL (Supabase)
-```
+
 
 ### API 모듈 구성 (13개 컨트롤러, 80+ 엔드포인트)
 
