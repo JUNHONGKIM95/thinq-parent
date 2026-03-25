@@ -337,11 +337,11 @@ cd thinq-parent-backend
 
 <table>
   <tr>
-    <td align="center"><img src="./image/team2.png" width="150" /></td>
-    <td align="center"><img src="./image/team3.png" width="150" /></td>
-    <td align="center"><img src="./image/team1.png" width="150" /></td>
-    <td align="center"><img src="./image/team5.png" width="150" /></td>
-    <td align="center"><img src="./image/team4.png" width="150" /></td>
+    <td align="center"><img src="./image/team2.png" width="120" /></td>
+    <td align="center"><img src="./image/team3.png" width="120" /></td>
+    <td align="center"><img src="./image/team1.png" width="120" /></td>
+    <td align="center"><img src="./image/team5.png" width="120" /></td>
+    <td align="center"><img src="./image/team4.png" width="120" /></td>
   </tr>
   <tr>
     <td align="center"><b>팀장 김준홍</b></td>
