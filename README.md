@@ -349,9 +349,9 @@ cd thinq-parent-backend
     <td align="center"><b>팀원 이도한</b></td>
   </tr>
   <tr>
-    <td align="center">기획, 데이터 분석</td>
+    <td align="center">기획 및 데이터 분석</td>
     <td align="center">데이터 분석</td>
-    <td align="center">디자인 기획</td>
+    <td align="center">디자인</td>
     <td align="center">프론트 엔드</td>
     <td align="center">백엔드</td>
   </tr>
