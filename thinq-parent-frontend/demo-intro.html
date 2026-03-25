@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080" />
+  <title>LG ThinQ Parent Mode</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0a0a0a;
+      cursor: pointer;
+    }
+    canvas#ballpit {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      animation: fadeInUp 1.2s ease-out;
+    }
+    .logo-wrap img {
+      height: 120px;
+      width: auto;
+      filter: brightness(2) drop-shadow(0 0 40px rgba(194,28,68,0.3));
+    }
+    .logo-sub {
+      font-size: 28px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+    }
+    .hint {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 16px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 2px;
+      animation: blink 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.7; }
+    }
+    .fade-out {
+      animation: fadeOut 0.6s ease-in forwards;
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="ballpit"></canvas>
+
+  <div class="overlay">
+    <div class="logo-wrap">
+      <img src="html_asset/logo.svg" alt="LG ThinQ" />
+      
+    </div>
+  </div>
+  <div class="hint">화면을 터치하세요</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js",
+      "three/examples/jsm/environments/RoomEnvironment.js": "https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/environments/RoomEnvironment.js"
+    }
+  }
+  </script>
+  <script type="module">
+    import {
+      Vector3, MeshPhysicalMaterial, InstancedMesh, Clock, AmbientLight,
+      SphereGeometry, ShaderChunk, Scene, Color, Object3D, SRGBColorSpace,
+      MathUtils, PMREMGenerator, Vector2, WebGLRenderer, PerspectiveCamera,
+      PointLight, ACESFilmicToneMapping, Plane, Raycaster
+    } from 'three';
+    import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
+    /* ── Three Wrapper ── */
+    class ThreeApp {
+      #config; canvas; camera; scene; renderer;
+      size = { width: 0, height: 0, wWidth: 0, wHeight: 0, ratio: 0, pixelRatio: 0 };
+      onBeforeRender = () => {};
+      onAfterResize = () => {};
+      #running = false; #visible = false; #raf; #clock = new Clock(); #time = { elapsed: 0, delta: 0 };
+      #ro; #io; #resizeTimer; cameraFov; cameraMaxAspect;
+
+      constructor(cfg) {
+        this.#config = cfg;
+        this.canvas = cfg.canvas;
+        this.canvas.style.display = 'block';
+        this.camera = new PerspectiveCamera();
+        this.cameraFov = this.camera.fov;
+        this.scene = new Scene();
+        this.renderer = new WebGLRenderer({ canvas: this.canvas, powerPreference: 'high-performance', antialias: true, alpha: true });
+        this.renderer.outputColorSpace = SRGBColorSpace;
+        this.renderer.toneMapping = ACESFilmicToneMapping;
+        this.resize();
+        this.#listen();
+      }
+
+      #listen() {
+        window.addEventListener('resize', () => { clearTimeout(this.#resizeTimer); this.#resizeTimer = setTimeout(() => this.resize(), 100); });
+        if (this.canvas.parentNode) {
+          this.#ro = new ResizeObserver(() => { clearTimeout(this.#resizeTimer); this.#resizeTimer = setTimeout(() => this.resize(), 100); });
+          this.#ro.observe(this.canvas.parentNode);
+        }
+        this.#io = new IntersectionObserver(entries => {
+          this.#visible = entries[0].isIntersecting;
+          this.#visible ? this.#start() : this.#stop();
+        }, { threshold: 0 });
+        this.#io.observe(this.canvas);
+        document.addEventListener('visibilitychange', () => {
+          if (this.#visible) { document.hidden ? this.#stop() : this.#start(); }
+        });
+        // force start
+        this.#visible = true;
+        this.#start();
+      }
+
+      resize() {
+        const w = this.canvas.parentNode?.offsetWidth || window.innerWidth;
+        const h = this.canvas.parentNode?.offsetHeight || window.innerHeight;
+        this.size.width = w; this.size.height = h; this.size.ratio = w / h;
+        this.camera.aspect = w / h;
+        if (this.cameraMaxAspect && this.camera.aspect > this.cameraMaxAspect) {
+          const t = Math.tan(MathUtils.degToRad(this.cameraFov / 2)) / (this.camera.aspect / this.cameraMaxAspect);
+          this.camera.fov = 2 * MathUtils.radToDeg(Math.atan(t));
+        } else { this.camera.fov = this.cameraFov; }
+        this.camera.updateProjectionMatrix();
+        const fov = (this.camera.fov * Math.PI) / 180;
+        this.size.wHeight = 2 * Math.tan(fov / 2) * this.camera.position.length();
+        this.size.wWidth = this.size.wHeight * this.camera.aspect;
+        this.renderer.setSize(w, h);
+        let pr = window.devicePixelRatio;
+        if (pr > 2) pr = 2;
+        this.renderer.setPixelRatio(pr);
+        this.onAfterResize(this.size);
+      }
+
+      #start() {
+        if (this.#running) return;
+        this.#running = true;
+        this.#clock.start();
+        const loop = () => {
+          this.#raf = requestAnimationFrame(loop);
+          this.#time.delta = this.#clock.getDelta();
+          this.#time.elapsed += this.#time.delta;
+          this.onBeforeRender(this.#time);
+          this.renderer.render(this.scene, this.camera);
+        };
+        loop();
+      }
+
+      #stop() { if (this.#running) { cancelAnimationFrame(this.#raf); this.#running = false; this.#clock.stop(); } }
+
+      clear() {
+        this.scene.traverse(e => {
+          if (e.isMesh && e.material) { e.material.dispose?.(); e.geometry?.dispose(); }
+        });
+        this.scene.clear();
+      }
+
+      dispose() { this.#stop(); this.clear(); this.renderer.dispose(); this.renderer.forceContextLoss(); this.#ro?.disconnect(); this.#io?.disconnect(); }
+    }
+
+    /* ── Physics ── */
+    const _v = () => new Vector3();
+    const F = _v(), I = _v(), O = _v(), V = _v(), B = _v(), N = _v(), j1 = _v(), j2 = _v(), H = _v(), T = _v();
+
+    class Physics {
+      constructor(cfg) {
+        this.config = cfg;
+        this.positionData = new Float32Array(3 * cfg.count).fill(0);
+        this.velocityData = new Float32Array(3 * cfg.count).fill(0);
+        this.sizeData = new Float32Array(cfg.count).fill(1);
+        this.center = new Vector3();
+        for (let i = 1; i < cfg.count; i++) {
+          const b = 3 * i;
+          this.positionData[b] = MathUtils.randFloatSpread(2 * cfg.maxX);
+          this.positionData[b + 1] = MathUtils.randFloatSpread(2 * cfg.maxY);
+          this.positionData[b + 2] = MathUtils.randFloatSpread(2 * cfg.maxZ);
+        }
+        this.sizeData[0] = cfg.size0;
+        for (let i = 1; i < cfg.count; i++) this.sizeData[i] = MathUtils.randFloat(cfg.minSize, cfg.maxSize);
+      }
+
+      update(time) {
+        const { config: c, positionData: p, velocityData: v, sizeData: s, center } = this;
+        let start = 0;
+        if (c.controlSphere0) {
+          start = 1;
+          F.fromArray(p, 0); F.lerp(center, 0.1).toArray(p, 0);
+          V.set(0, 0, 0).toArray(v, 0);
+        }
+        for (let i = start; i < c.count; i++) {
+          const b = 3 * i;
+          I.fromArray(p, b); B.fromArray(v, b);
+          B.y -= time.delta * c.gravity * s[i];
+          B.multiplyScalar(c.friction);
+          B.clampLength(0, c.maxVelocity);
+          I.add(B); I.toArray(p, b); B.toArray(v, b);
+        }
+        for (let i = start; i < c.count; i++) {
+          const b = 3 * i;
+          I.fromArray(p, b); B.fromArray(v, b);
+          const r = s[i];
+          for (let j = i + 1; j < c.count; j++) {
+            const ob = 3 * j;
+            O.fromArray(p, ob); N.fromArray(v, ob);
+            const or2 = s[j];
+            j1.copy(O).sub(I);
+            const dist = j1.length(), sum = r + or2;
+            if (dist < sum) {
+              const overlap = sum - dist;
+              j2.copy(j1).normalize().multiplyScalar(0.5 * overlap);
+              H.copy(j2).multiplyScalar(Math.max(B.length(), 1));
+              T.copy(j2).multiplyScalar(Math.max(N.length(), 1));
+              I.sub(j2); B.sub(H); I.toArray(p, b); B.toArray(v, b);
+              O.add(j2); N.add(T); O.toArray(p, ob); N.toArray(v, ob);
+            }
+          }
+          if (c.controlSphere0) {
+            j1.copy(F).sub(I);
+            const d = j1.length(), sr = r + s[0];
+            if (d < sr) {
+              const diff = sr - d;
+              j2.copy(j1.normalize()).multiplyScalar(diff);
+              H.copy(j2).multiplyScalar(Math.max(B.length(), 2));
+              I.sub(j2); B.sub(H);
+            }
+          }
+          if (Math.abs(I.x) + r > c.maxX) { I.x = Math.sign(I.x) * (c.maxX - r); B.x = -B.x * c.wallBounce; }
+          if (c.gravity === 0) {
+            if (Math.abs(I.y) + r > c.maxY) { I.y = Math.sign(I.y) * (c.maxY - r); B.y = -B.y * c.wallBounce; }
+          } else if (I.y - r < -c.maxY) { I.y = -c.maxY + r; B.y = -B.y * c.wallBounce; }
+          const mz = Math.max(c.maxZ, c.maxSize);
+          if (Math.abs(I.z) + r > mz) { I.z = Math.sign(I.z) * (c.maxZ - r); B.z = -B.z * c.wallBounce; }
+          I.toArray(p, b); B.toArray(v, b);
+        }
+      }
+    }
+
+    /* ── SSS Material ── */
+    class SSSMaterial extends MeshPhysicalMaterial {
+      constructor(opts) {
+        super(opts);
+        this.uniforms = {
+          thicknessDistortion: { value: 0.1 }, thicknessAmbient: { value: 0 },
+          thicknessAttenuation: { value: 0.1 }, thicknessPower: { value: 2 }, thicknessScale: { value: 10 }
+        };
+        this.defines.USE_UV = '';
+        this.onBeforeCompile = shader => {
+          Object.assign(shader.uniforms, this.uniforms);
+          shader.fragmentShader = `
+            uniform float thicknessPower; uniform float thicknessScale;
+            uniform float thicknessDistortion; uniform float thicknessAmbient; uniform float thicknessAttenuation;
+          ` + shader.fragmentShader;
+          shader.fragmentShader = shader.fragmentShader.replace('void main() {', `
+            void RE_Direct_Scattering(const in IncidentLight directLight, const in vec2 uv, const in vec3 geometryPosition, const in vec3 geometryNormal, const in vec3 geometryViewDir, const in vec3 geometryClearcoatNormal, inout ReflectedLight reflectedLight) {
+              vec3 scatteringHalf = normalize(directLight.direction + (geometryNormal * thicknessDistortion));
+              float scatteringDot = pow(saturate(dot(geometryViewDir, -scatteringHalf)), thicknessPower) * thicknessScale;
+              #ifdef USE_COLOR
+                vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * vColor;
+              #else
+                vec3 scatteringIllu = (scatteringDot + thicknessAmbient) * diffuse;
+              #endif
+              reflectedLight.directDiffuse += scatteringIllu * thicknessAttenuation * directLight.color;
+            }
+            void main() {
+          `);
+          const patched = ShaderChunk.lights_fragment_begin.replaceAll(
+            'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );',
+            `RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );
+             RE_Direct_Scattering(directLight, vUv, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, reflectedLight);`
+          );
+          shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', patched);
+        };
+      }
+    }
+
+    /* ── Spheres ── */
+    const dummy = new Object3D();
+
+    class Spheres extends InstancedMesh {
+      constructor(renderer, opts) {
+        const env = new PMREMGenerator(renderer, 0.04).fromScene(new RoomEnvironment()).texture;
+        const geo = new SphereGeometry();
+        const mat = new SSSMaterial({ envMap: env, ...opts.materialParams });
+        mat.envMapRotation.x = -Math.PI / 2;
+        super(geo, mat, opts.count);
+        this.config = opts;
+        this.physics = new Physics(opts);
+        this.ambientLight = new AmbientLight(opts.ambientColor, opts.ambientIntensity);
+        this.add(this.ambientLight);
+        this.light = new PointLight(opts.colors[0], opts.lightIntensity);
+        this.add(this.light);
+        this.setColors(opts.colors);
+      }
+
+      setColors(colors) {
+        if (Array.isArray(colors) && colors.length > 1) {
+          const cols = colors.map(c => new Color(c));
+          for (let i = 0; i < this.count; i++) {
+            const ratio = i / this.count;
+            const scaled = Math.max(0, Math.min(1, ratio)) * (cols.length - 1);
+            const idx = Math.floor(scaled);
+            const alpha = scaled - idx;
+            const start = cols[idx];
+            const end = cols[Math.min(idx + 1, cols.length - 1)];
+            const out = new Color(
+              start.r + alpha * (end.r - start.r),
+              start.g + alpha * (end.g - start.g),
+              start.b + alpha * (end.b - start.b)
+            );
+            this.setColorAt(i, out);
+            if (i === 0) this.light.color.copy(out);
+          }
+          this.instanceColor.needsUpdate = true;
+        }
+      }
+
+      update(time) {
+        this.physics.update(time);
+        for (let i = 0; i < this.count; i++) {
+          dummy.position.fromArray(this.physics.positionData, 3 * i);
+          dummy.scale.setScalar(this.config.followCursor === false && i === 0 ? 0 : this.physics.sizeData[i]);
+          dummy.updateMatrix();
+          this.setMatrixAt(i, dummy.matrix);
+          if (i === 0) this.light.position.copy(dummy.position);
+        }
+        this.instanceMatrix.needsUpdate = true;
+      }
+    }
+
+    /* ── Init ── */
+    const canvas = document.getElementById('ballpit');
+    const app = new ThreeApp({ canvas });
+    app.camera.position.set(0, 0, 20);
+    app.camera.lookAt(0, 0, 0);
+    app.cameraMaxAspect = 1.5;
+    app.resize();
+
+    const config = {
+      count: 150,
+      // Warm red/peach/coral palette
+      colors: [0xC21C44, 0xe04466, 0xf5c6b0, 0xd47a94, 0xa01838, 0xf8d5c4, 0xe8a0b4],
+      ambientColor: 0xfff5f0,
+      ambientIntensity: 0.8,
+      lightIntensity: 180,
+      materialParams: { metalness: 0.4, roughness: 0.45, clearcoat: 1, clearcoatRoughness: 0.12 },
+      minSize: 0.5,
+      maxSize: 1,
+      size0: 1,
+      gravity: 0,
+      friction: 0.9975,
+      wallBounce: 0.95,
+      maxVelocity: 0.15,
+      maxX: 5,
+      maxY: 5,
+      maxZ: 2,
+      controlSphere0: false,
+      followCursor: true
+    };
+
+    const spheres = new Spheres(app.renderer, config);
+    app.scene.add(spheres);
+
+    app.onBeforeRender = t => spheres.update(t);
+    app.onAfterResize = s => { spheres.config.maxX = s.wWidth / 2; spheres.config.maxY = s.wHeight / 2; };
+
+    /* ── Mouse interaction ── */
+    const raycaster = new Raycaster();
+    const plane = new Plane(new Vector3(0, 0, 1), 0);
+    const hitPoint = new Vector3();
+    const mouse = new Vector2();
+
+    function onPointerMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, app.camera);
+      app.camera.getWorldDirection(plane.normal);
+      raycaster.ray.intersectPlane(plane, hitPoint);
+      spheres.physics.center.copy(hitPoint);
+      spheres.config.controlSphere0 = true;
+    }
+
+    function onPointerLeave() { spheres.config.controlSphere0 = false; }
+
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerleave', onPointerLeave);
+    canvas.addEventListener('touchmove', e => {
+      if (e.touches.length > 0) {
+        e.preventDefault();
+        onPointerMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+      }
+    }, { passive: false });
+
+    /* ── Click to navigate ── */
+    let navigating = false;
+    document.addEventListener('click', () => {
+      if (navigating) return;
+      navigating = true;
+      document.querySelector('.overlay').classList.add('fade-out');
+      document.querySelector('.hint').classList.add('fade-out');
+      canvas.classList.add('fade-out');
+      setTimeout(() => { window.location.href = 'demo-booth.html'; }, 600);
+    });
+  </script>
+</body>
+</html>
