@@ -98,7 +98,7 @@ thinq-parent/
 
 ---
 
-## 라. 시스템 아키텍처
+## 4. 시스템 아키텍처
 계층형 아키텍처 (Layered Architecture)를 적용하여 관심사를 분리하였습니다.
 ![image](./image/시스템아키텍처.png)
 
@@ -111,7 +111,7 @@ thinq-parent/
 
 ---
 
-## 4. 프론트엔드 (Frontend)
+## 5. 프론트엔드 (Frontend)
 
 ### 실행 방법
 
@@ -233,7 +233,7 @@ ThinQ 홈 → 설정 → 라이프 에이전트 → 부모모드
 
 ---
 
-## 5. 백엔드 (Backend)
+## 6. 백엔드 (Backend)
 
 ### 실행 방법
 
@@ -290,7 +290,7 @@ cd thinq-parent-backend
 
 ---
 
-## 6. 데이터베이스 (Database)
+## 7. 데이터베이스 (Database)
 
 ### 구성
 
@@ -362,7 +362,7 @@ cd thinq-parent-backend
 
 ---
 
-## 7. 팀 구성
+## 8. 팀 구성
 
 ### 팀명: Last Dance
 
