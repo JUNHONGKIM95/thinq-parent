@@ -1,7 +1,7 @@
 # LG DX School 4팀 (Last Dance)
-# ThinQ 육아모드 (ThinQ Parenting Mode)
+# ThinQ 부모모드 (ThinQ Parenting Mode)
 
-임산부와 배우자를 위한 LG ThinQ 기반 통합 육아 지원 서비스
+임산부와 배우자를 위한 LG ThinQ 기반 통합 지원 서비스
 
 ---
 
