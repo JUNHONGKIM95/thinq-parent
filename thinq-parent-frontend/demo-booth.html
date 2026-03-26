@@ -11,6 +11,7 @@
     @font-face { font-family: 'LG SmartHA'; src: url('html_asset/fonts/LGSmHaB.ttf') format('truetype'); font-weight: 700; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23C21C44'/%3E%3C/svg%3E") 12 12, auto; }
+    [onclick], button, a, .fc, .nav-tab, .df-item, .team-badge, .auto-toggle, .title-logo-icon, [style*="cursor: pointer"], [style*="cursor:pointer"] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23C21C44'/%3E%3C/svg%3E") 18 18, pointer !important; }
 
     html, body {
       width: 1920px;
@@ -947,7 +948,7 @@
       <div class="left">
         <div class="team-badge" onclick="location.href='demo-intro.html'">
           <span class="dot"></span>
-          LG DX School 4기 &middot; 4팀 Last Dance
+          LG DX School 4기 &middot; 2반 4팀 Last Dance
         </div>
         <div class="title-logo">
           
@@ -1079,7 +1080,7 @@
                   <div class="df-text">성향·Needs/Pain 카테고리 기반으로 익명 글을 작성하고 자유롭게 소통</div>
                 </div>
               </div>
-              <div class="df-item" data-hl="11,16,35,72" data-scroll="top">
+              <div class="df-item" data-hl="11,16,35,72" data-scroll="top" data-restore-img="true">
                 <span class="df-icon">🏷️</span>
                 <div class="df-content">
                   <div class="df-name">MomBTI 태그 필터링</div>
@@ -1648,6 +1649,7 @@
     document.querySelectorAll('.df-item[data-hl]').forEach(item => {
       item.style.cursor = 'pointer';
       item.addEventListener('click', () => {
+        if (item.dataset.restoreImg) restorePhoneImg();
         const parts = item.dataset.hl.split(',').map(Number);
         const [top, bottom] = parts;
         const left = parts[2] || 0;
