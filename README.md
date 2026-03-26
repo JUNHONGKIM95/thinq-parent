@@ -11,6 +11,7 @@
 ### 컨셉
 ![image](./image/서비스이미지.png)
 예비 부모를 위한 맞춤형 All-in-One 케어 서비스입니다. AI 챗봇으로 출산 정보를 쉽게 얻고, MomBTI로 성향을 파악해 같은 유형의 예비맘 커뮤니티에서 소통하며 불안감을 해소합니다. 부부 공유 기능과 임산부 맞춤 가전 루틴으로 ThinQ만의 특별한 임신·출산 여정을 완성합니다.
+참고 URL : [서비스 및 팀구성원 소개 링크](https://junhongkim95.github.io/LG-ThinQ-ParentingMode-Portfolio/)
 
 ### 핵심 가치
 
@@ -124,8 +125,6 @@ npm run dev
 ### 주요 기능 및 화면 구성
 
 하단 네비게이션 4개 탭(홈, 가전육아, 커뮤니티, MY) + AI 챗봇으로 구성됩니다.
-
-참고 URL : [서비스 상세 소개 링크](https://junhongkim95.github.io/LG-ThinQ-ParentingMode-Portfolio/)
 
 #### 1) 홈 — 부모모드 대시보드
 - **부모모드 홈**: 출산 D-DAY 카운트다운, 현재 임신 주차 기반 주간 추천 할 일 카드, 배우자 응원 메시지 최신 1건 표시, 추천 가전 루틴 바로가기 카드
