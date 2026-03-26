@@ -268,6 +268,23 @@
     .page { display: none; position: absolute; inset: 0; }
     .page.active { display: block; }
 
+    /* ── View Transition (slide) ── */
+    ::view-transition-group(page-content) { overflow: hidden; }
+    ::view-transition-old(page-content),
+    ::view-transition-new(page-content) {
+      animation-duration: 0.5s;
+      animation-timing-function: ease-in-out;
+    }
+    ::view-transition-old(page-content) { animation-name: vtSlideOutLeft; }
+    ::view-transition-new(page-content) { animation-name: vtSlideInRight; }
+    .vt-backward::view-transition-old(page-content) { animation-name: vtSlideOutRight; }
+    .vt-backward::view-transition-new(page-content) { animation-name: vtSlideInLeft; }
+
+    @keyframes vtSlideOutLeft  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+    @keyframes vtSlideInRight  { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes vtSlideOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
+    @keyframes vtSlideInLeft   { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
     /* ══════════════════════════════════════
        PAGE 1: 서비스 소개
        ══════════════════════════════════════ */
@@ -1452,14 +1469,40 @@
     /* Tab navigation */
     const tabs = document.querySelectorAll('.nav-tab');
     const pages = document.querySelectorAll('.page');
+    const pageOrder = ['service', 'team'];
+    let currentPage = 'service';
+
+    function switchPage(pageName) {
+      if (pageName === currentPage) return;
+      const backward = pageOrder.indexOf(pageName) < pageOrder.indexOf(currentPage);
+      const oldPage = document.getElementById('page-' + currentPage);
+      const newPage = document.getElementById('page-' + pageName);
+
+      if (document.startViewTransition) {
+        oldPage.style.viewTransitionName = 'page-content';
+        if (backward) document.documentElement.classList.add('vt-backward');
+
+        const transition = document.startViewTransition(() => {
+          oldPage.style.viewTransitionName = '';
+          oldPage.classList.remove('active');
+          tabs.forEach(t => t.classList.remove('active'));
+          newPage.style.viewTransitionName = 'page-content';
+          newPage.classList.add('active');
+          document.querySelector(`.nav-tab[data-page="${pageName}"]`).classList.add('active');
+          currentPage = pageName;
+        });
+        transition.finished.then(() => document.documentElement.classList.remove('vt-backward'));
+      } else {
+        tabs.forEach(t => t.classList.remove('active'));
+        document.querySelector(`.nav-tab[data-page="${pageName}"]`).classList.add('active');
+        pages.forEach(p => p.classList.remove('active'));
+        newPage.classList.add('active');
+        currentPage = pageName;
+      }
+    }
 
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        pages.forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + tab.dataset.page).classList.add('active');
-      });
+      tab.addEventListener('click', () => switchPage(tab.dataset.page));
     });
 
     /* Feature card click + auto-rotate */
@@ -1593,12 +1636,7 @@
       hidePhoneHighlight();
       if (!autoPaused) stopAuto();
 
-      // 서비스 소개 탭 활성화
-      tabs.forEach(t => t.classList.remove('active'));
-      document.querySelector('.nav-tab[data-page="service"]').classList.add('active');
-      pages.forEach(p => p.classList.remove('active'));
-      document.getElementById('page-service').classList.add('active');
-
+      switchPage('service');
       selectHome();
       if (!autoPaused) resetIdleTimer();
     });
