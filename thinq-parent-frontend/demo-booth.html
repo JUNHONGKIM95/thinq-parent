@@ -84,6 +84,37 @@
       backdrop-filter: blur(20px);
       border-radius: 12px;
     }
+    .auto-toggle {
+      position: absolute;
+      top: 24px;
+      left: calc(50% + 200px);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(245,198,176,0.15);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      user-select: none;
+    }
+    .auto-toggle:hover {
+      background: rgba(245,198,176,0.1);
+      border-color: rgba(245,198,176,0.3);
+    }
+    .auto-toggle svg {
+      width: 16px;
+      height: 16px;
+      fill: rgba(255,255,255,0.5);
+      transition: fill 0.25s;
+    }
+    .auto-toggle:hover svg { fill: rgba(255,255,255,0.8); }
+    .auto-toggle.paused { border-color: rgba(194,28,68,0.4); }
+    .auto-toggle.paused svg { fill: rgba(194,28,68,0.7); }
     .nav-tab {
       padding: 0 36px;
       height: 100%;
@@ -494,6 +525,47 @@
       height: auto;
       display: block;
     }
+    /* ── Phone Highlight Overlay ── */
+    .phone-highlight {
+      position: absolute;
+      inset: 8px;
+      border-radius: 38px;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .phone-highlight.active {
+      opacity: 1;
+    }
+    .phone-highlight-top,
+    .phone-highlight-bottom,
+    .phone-highlight-left,
+    .phone-highlight-right {
+      position: absolute;
+      background: rgba(0,0,0,0.6);
+    }
+    .phone-highlight-top {
+      top: 0; left: 0; right: 0;
+      border-radius: 38px 38px 0 0;
+    }
+    .phone-highlight-bottom {
+      bottom: 0; left: 0; right: 0;
+      border-radius: 0 0 38px 38px;
+    }
+    .phone-highlight-left {
+      left: 0;
+    }
+    .phone-highlight-right {
+      right: 0;
+    }
+    .phone-highlight-border {
+      position: absolute;
+      border: 2px solid rgba(194,28,68,0.7);
+      box-shadow: 0 0 12px rgba(194,28,68,0.3), inset 0 0 12px rgba(194,28,68,0.1);
+      border-radius: 4px;
+    }
+
     .phone-label {
       text-align: center;
       margin-top: 16px;
@@ -771,10 +843,14 @@
       opacity: 0;
       transition: opacity 0.6s ease-in-out;
     }
+    .team-card {
+      transform: perspective(800px) rotateX(0deg) rotateY(0deg) scale(1);
+      transition: all 0.3s, transform 0.15s ease-out;
+      transform-style: preserve-3d;
+    }
     .team-card:hover {
       background: rgba(245,198,176,0.08);
       border-color: rgba(245,198,176,0.2);
-      transform: translateY(-4px);
     }
     .team-avatar {
       width: 135px; height: 135px;
@@ -860,6 +936,9 @@
       <div class="nav-divider"></div>
       <div class="nav-tab" data-page="team"><span class="edge-light"></span>팀원 소개</div>
     </div>
+    <div class="auto-toggle" id="auto-toggle" title="자동 재생 / 일시정지">
+      <svg id="toggle-icon" viewBox="0 0 24 24"><path id="toggle-path" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </div>
 
     <!-- PAGE 1: 서비스 소개 -->
     <div class="page active" id="page-service">
@@ -924,6 +1003,13 @@
           <div class="ps">
             <img id="phone-screen" src="html_asset/ParentingHome.jpg" alt="ThinQ Parent Mode" />
           </div>
+          <div class="phone-highlight" id="phone-highlight">
+            <div class="phone-highlight-top" id="hl-top"></div>
+            <div class="phone-highlight-bottom" id="hl-bottom"></div>
+            <div class="phone-highlight-left" id="hl-left"></div>
+            <div class="phone-highlight-right" id="hl-right"></div>
+            <div class="phone-highlight-border" id="hl-border"></div>
+          </div>
         </div>
         <div class="phone-label">
           <div class="phone-label-text">Parenting Mode</div>
@@ -950,21 +1036,21 @@
               임신 D-Day와 가족 일정을 한곳에서 관리하고, 주차별 맞춤 할 일을 추천받아 완벽히 준비된 상태로 출산을 맞이합니다.
             </div>
             <div class="detail-features">
-              <div class="df-item">
+              <div class="df-item" data-hl="10,95" data-scroll="top">
                 <span class="df-icon">📆</span>
                 <div class="df-content">
                   <div class="df-name">D-Day & 가족 공유 캘린더</div>
                   <div class="df-text">출산 예정일 카운트다운과 아기·가족·업무·개인 카테고리별 컬러로 일정을 가족 모두가 실시간 확인</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-hl="26,57" data-scroll="bottom">
                 <span class="df-icon">✅</span>
                 <div class="df-content">
                   <div class="df-name">주차별 To-Do 추천</div>
                   <div class="df-text">보건복지부 육아 가이드 기반의 주의사항·정기진찰·기본검사 항목을<br>해당 주차에 맞게 제공</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-hl="59,90" data-scroll="bottom">
                 <span class="df-icon">☑️</span>
                 <div class="df-content">
                   <div class="df-name">체크리스트</div>
@@ -993,14 +1079,14 @@
                   <div class="df-text">성향·Needs/Pain 카테고리 기반으로 익명 글을 작성하고 자유롭게 소통</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-hl="11,16,35,72" data-scroll="top">
                 <span class="df-icon">🏷️</span>
                 <div class="df-content">
                   <div class="df-name">MomBTI 태그 필터링</div>
                   <div class="df-text">작성자명 옆에 MomBTI 유형 태그가 표시되어 유사 성향 엄마를 빠르게 식별</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-swap-img="html_asset/keywordcommunity.jpg">
                 <span class="df-icon">📊</span>
                 <div class="df-content">
                   <div class="df-name">데이터 기반 카테고리</div>
@@ -1058,21 +1144,21 @@
               간단한 테스트로 나만의 육아 성향을 분석하고, 4가지 축 기반의 MomBTI 유형과 8가지 특성을 시각적으로 확인할 수 있습니다.
             </div>
             <div class="detail-features">
-              <div class="df-item">
+              <div class="df-item" data-hl="7,61" data-scroll="top">
                 <span class="df-icon">📋</span>
                 <div class="df-content">
                   <div class="df-name">MomBTI 요약 및 정의 제공</div>
                   <div class="df-text">테스트 결과로 사용자의 육아 성향을 요약·정의하고 상세하게 설명</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-hl="63,97" data-scroll="top">
                 <span class="df-icon">📊</span>
                 <div class="df-content">
                   <div class="df-name">4가지 축 비율 분석</div>
                   <div class="df-text">DB 기반으로 4가지 성향 축의 비율을 계산하여 정량적 결과 제공</div>
                 </div>
               </div>
-              <div class="df-item">
+              <div class="df-item" data-hl="3,99" data-scroll="600">
                 <span class="df-icon">🔎</span>
                 <div class="df-content">
                   <div class="df-name">8가지 특성 시각화</div>
@@ -1134,7 +1220,7 @@
                 <span class="df-icon">⚡</span>
                 <div class="df-content">
                   <div class="df-name">즉시 접근 가능</div>
-                  <div class="df-text">플로팅 버튼으로 어느 화면에서든 바로 챗봇을 호출하여 질문 가능</div>
+                  <div class="df-text">플로팅 버튼으로 바로 챗봇을 호출하여 질문 가능</div>
                 </div>
               </div>
               <div class="df-item">
@@ -1333,6 +1419,26 @@
       });
     }
     document.querySelectorAll('.team-card').forEach(attachBorderGlow);
+
+    /* ── TiltedCard on .team-card ── */
+    const ROTATE_AMP = 14;
+    const SCALE_HOVER = 1.05;
+
+    document.querySelectorAll('.team-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const offsetX = e.clientX - cx;
+        const offsetY = e.clientY - cy;
+        const rotX = (offsetY / (rect.height / 2)) * -ROTATE_AMP;
+        const rotY = (offsetX / (rect.width / 2)) * ROTATE_AMP;
+        card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${SCALE_HOVER})`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)';
+      });
+    });
     document.querySelectorAll('.nav-tab').forEach(attachBorderGlow);
 
     /* Tab navigation */
@@ -1348,7 +1454,7 @@
       });
     });
 
-    /* Feature card click */
+    /* Feature card click + auto-rotate */
     const cards = document.querySelectorAll('.fc[data-feature]');
     const panels = document.querySelectorAll('.detail-panel');
     const placeholder = document.getElementById('placeholder');
@@ -1364,42 +1470,228 @@
       5: 'html_asset/ChatBot.jpg'
     };
 
+    const totalSteps = cards.length + 1; // 0~5 cards + home
+
+    function selectCard(idx) {
+      cards.forEach(c => c.classList.remove('active'));
+      cards[idx].classList.add('active');
+      placeholder.style.display = 'none';
+      panels.forEach(p => p.classList.remove('show'));
+      const target = document.getElementById('detail-' + idx);
+      if (target) {
+        target.classList.add('show');
+        target.style.animation = 'none';
+        target.offsetHeight;
+        target.style.animation = '';
+      }
+      phoneScreen.src = screenImages[idx];
+      phoneContainer.scrollTop = 0;
+    }
+
+    function selectHome() {
+      cards.forEach(c => c.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('show'));
+      placeholder.style.display = '';
+      phoneScreen.src = 'html_asset/ParentingHome.jpg';
+      phoneContainer.scrollTop = 0;
+    }
+
+    // flow: home(0) → card0(1) → card1(2) → ... → card5(6) → home → ...
+    let autoIdx = 0;
+    let autoTimer = null;
+    let idleTimer = null;
+    const AUTO_INTERVAL = 3500;
+    const IDLE_DELAY = 10000;
+
+    function autoNext() {
+      if (autoIdx === 0) {
+        selectHome();
+      } else {
+        selectCard(autoIdx - 1);
+      }
+      autoIdx = (autoIdx + 1) % totalSteps;
+      autoTimer = setTimeout(autoNext, AUTO_INTERVAL);
+    }
+
+    function startAuto() {
+      stopAuto();
+      autoNext();
+    }
+
+    function stopAuto() {
+      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    }
+
+    function resetIdleTimer() {
+      if (idleTimer) clearTimeout(idleTimer);
+      if (autoPaused) return;
+      idleTimer = setTimeout(() => {
+        const activeCard = document.querySelector('.fc.active');
+        if (activeCard) {
+          autoIdx = (parseInt(activeCard.dataset.feature) + 2) % totalSteps;
+        } else {
+          autoIdx = 1;
+        }
+        startAuto();
+      }, IDLE_DELAY);
+    }
+
+    // manual click
     cards.forEach(card => {
       card.addEventListener('click', () => {
-        const idx = card.dataset.feature;
-        cards.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        placeholder.style.display = 'none';
-        panels.forEach(p => p.classList.remove('show'));
-        const target = document.getElementById('detail-' + idx);
-        if (target) {
-          target.classList.add('show');
-          target.style.animation = 'none';
-          target.offsetHeight;
-          target.style.animation = '';
-        }
-        // 폰 화면 이미지 변경 + 스크롤 맨 위로
-        phoneScreen.src = screenImages[idx];
-        phoneContainer.scrollTop = 0;
+        if (!autoPaused) stopAuto();
+        selectCard(parseInt(card.dataset.feature));
+        if (!autoPaused) resetIdleTimer();
       });
     });
 
+    // mouse move over feature area stops auto, starts idle timer
+    document.querySelector('.features').addEventListener('mousemove', () => {
+      if (!autoPaused && autoTimer) {
+        stopAuto();
+        resetIdleTimer();
+      }
+    });
+
+    // auto-toggle button
+    let autoPaused = false;
+    const toggleBtn = document.getElementById('auto-toggle');
+    const togglePath = document.getElementById('toggle-path');
+    const playPath = 'M8 5v14l11-7z';
+    const pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+
+    function updateToggleIcon() {
+      togglePath.setAttribute('d', autoPaused ? playPath : pausePath);
+      toggleBtn.classList.toggle('paused', autoPaused);
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      autoPaused = !autoPaused;
+      updateToggleIcon();
+      if (autoPaused) {
+        stopAuto();
+      } else {
+        startAuto();
+      }
+    });
+
+    // start auto on load
+    startAuto();
+
     /* Home icon click — 초기 화면으로 복귀 */
     document.querySelector('.title-logo-icon').addEventListener('click', () => {
+      if (!autoPaused) stopAuto();
+
       // 서비스 소개 탭 활성화
       tabs.forEach(t => t.classList.remove('active'));
       document.querySelector('.nav-tab[data-page="service"]').classList.add('active');
       pages.forEach(p => p.classList.remove('active'));
       document.getElementById('page-service').classList.add('active');
 
-      // 기능 카드 선택 해제 & 상세 패널 숨김
-      cards.forEach(c => c.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('show'));
-      placeholder.style.display = '';
+      selectHome();
+      if (!autoPaused) resetIdleTimer();
+    });
 
-      // 폰 화면 초기 이미지로 복원
-      phoneScreen.src = 'html_asset/ParentingHome.jpg';
-      phoneContainer.scrollTop = 0;
+    /* ── Phone Highlight on df-item click ── */
+    const phoneHighlight = document.getElementById('phone-highlight');
+    const hlTop = document.getElementById('hl-top');
+    const hlBottom = document.getElementById('hl-bottom');
+    const hlLeft = document.getElementById('hl-left');
+    const hlRight = document.getElementById('hl-right');
+    const hlBorder = document.getElementById('hl-border');
+
+    function showPhoneHighlight(topPct, bottomPct, leftPct, rightPct) {
+      leftPct = leftPct || 0;
+      rightPct = rightPct || 100;
+      // top dim
+      hlTop.style.height = topPct + '%';
+      hlTop.style.left = '0'; hlTop.style.right = '0';
+      // bottom dim
+      hlBottom.style.height = (100 - bottomPct) + '%';
+      hlBottom.style.left = '0'; hlBottom.style.right = '0';
+      // left dim (between top and bottom)
+      hlLeft.style.top = topPct + '%';
+      hlLeft.style.height = (bottomPct - topPct) + '%';
+      hlLeft.style.width = leftPct + '%';
+      hlLeft.style.display = leftPct > 0 ? 'block' : 'none';
+      // right dim (between top and bottom)
+      hlRight.style.top = topPct + '%';
+      hlRight.style.height = (bottomPct - topPct) + '%';
+      hlRight.style.width = (100 - rightPct) + '%';
+      hlRight.style.display = rightPct < 100 ? 'block' : 'none';
+      // border
+      hlBorder.style.top = topPct + '%';
+      hlBorder.style.height = (bottomPct - topPct) + '%';
+      hlBorder.style.left = leftPct + '%';
+      hlBorder.style.width = (rightPct - leftPct) + '%';
+      phoneHighlight.classList.add('active');
+    }
+
+    function hidePhoneHighlight() {
+      phoneHighlight.classList.remove('active');
+    }
+
+    // df-item image swap (declared early for use in data-hl handler)
+    let swappedImg = null;
+    let originalImgSrc = null;
+
+    function restorePhoneImg() {
+      if (swappedImg && originalImgSrc) {
+        phoneScreen.src = originalImgSrc;
+        swappedImg = null;
+        originalImgSrc = null;
+      }
+    }
+
+    // df-item highlight map: data-hl="top,bottom" or "top,bottom,left,right"
+    document.querySelectorAll('.df-item[data-hl]').forEach(item => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        const parts = item.dataset.hl.split(',').map(Number);
+        const [top, bottom] = parts;
+        const left = parts[2] || 0;
+        const right = parts[3] || 100;
+        // toggle: click again to hide
+        if (phoneHighlight.classList.contains('active') && hlBorder.style.top === top + '%') {
+          hidePhoneHighlight();
+          phoneContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          // scroll first, then highlight
+          const scroll = item.dataset.scroll;
+          if (scroll === 'bottom') {
+            phoneContainer.scrollTo({ top: phoneContainer.scrollHeight, behavior: 'smooth' });
+          } else if (scroll === 'top') {
+            phoneContainer.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (scroll) {
+            phoneContainer.scrollTo({ top: parseFloat(scroll), behavior: 'smooth' });
+          }
+          setTimeout(() => showPhoneHighlight(top, bottom, left, right), scroll ? 400 : 0);
+        }
+      });
+    });
+
+    document.querySelectorAll('.df-item[data-swap-img]').forEach(item => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        hidePhoneHighlight();
+        if (swappedImg === item) {
+          restorePhoneImg();
+        } else {
+          if (!originalImgSrc) originalImgSrc = phoneScreen.src;
+          phoneScreen.src = item.dataset.swapImg;
+          swappedImg = item;
+        }
+      });
+    });
+
+    // hide highlight + reset swap state when switching feature cards
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        hidePhoneHighlight();
+        swappedImg = null;
+        originalImgSrc = null;
+      });
     });
 
     /* ── ClickSpark Animation ── */
