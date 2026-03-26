@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MomBTI 검사</title>
+<style>
+:root { --primary: #ff8a8f; --primary-dark: #ff6b6b; --bg: #fff0f2; --card: #fff; --text: #1a1a2e; --sub: #999; --border: #ffcdd2; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--bg); color:var(--text); min-height:100dvh; overflow-x:hidden; }
+
+/* Screens */
+.screen { display:none; min-height:100dvh; padding:20px; max-width:480px; margin:0 auto; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* Intro */
+.intro { align-items:center; justify-content:center; text-align:center; gap:24px; }
+.intro-badge { background:linear-gradient(135deg,#ff8a8f,#ffb3b8); color:#fff; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:600; }
+.intro h1 { font-size:28px; line-height:1.3; }
+.intro h1 span { color:var(--primary); }
+.intro p { color:var(--sub); font-size:15px; line-height:1.6; }
+.intro-info { display:flex; gap:24px; justify-content:center; }
+.intro-info div { text-align:center; }
+.intro-info .num { font-size:24px; font-weight:700; color:var(--primary); }
+.intro-info .label { font-size:12px; color:var(--sub); margin-top:2px; }
+
+/* Button */
+.btn { width:100%; padding:16px; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; transition:all .2s; }
+.btn-primary { background:linear-gradient(135deg,#ff8a8f,#ffb3b8); color:#fff; }
+.btn-primary:active { background:linear-gradient(135deg,#ff6b6b,#ff8a8f); transform:scale(0.98); }
+.btn-outline { background:transparent; color:var(--primary); border:2px solid var(--primary); }
+.btn-outline:active { background:rgba(255,138,143,0.1); }
+.btn:disabled { background:#ccc; cursor:default; }
+
+/* Test */
+.test { gap:16px; }
+.progress-bar { width:100%; height:6px; background:#ffe0e3; border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#ff8a8f,#ffb3b8); border-radius:3px; transition:width .3s; }
+.progress-text { text-align:center; font-size:13px; color:var(--sub); }
+.question-card { background:var(--card); border-radius:16px; padding:24px; box-shadow:0 4px 16px rgba(255,138,143,0.12); flex:1; display:flex; flex-direction:column; gap:20px; }
+.q-number { font-size:13px; color:var(--primary); font-weight:700; }
+.q-text { font-size:17px; font-weight:600; line-height:1.5; }
+.choices { display:flex; flex-direction:column; gap:10px; flex:1; justify-content:center; }
+.choice-btn { width:100%; padding:14px 16px; border:2px solid #ffe0e3; border-radius:12px; background:#fff; font-size:15px; text-align:center; cursor:pointer; transition:all .15s; }
+.choice-btn:active { transform:scale(0.97); }
+.choice-btn.selected { border-color:#ff8a8f; background:#fff0f2; color:#ff6b6b; font-weight:600; }
+.nav-btns { display:flex; gap:10px; }
+.nav-btns .btn { flex:1; padding:14px; }
+
+/* Loading */
+.loading { align-items:center; justify-content:center; text-align:center; gap:20px; }
+.spinner { width:48px; height:48px; border:4px solid #ffe0e3; border-top-color:#ff8a8f; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Result — main app style */
+.result { align-items:center; gap:0; padding:0; }
+.result-panel { width:100%; padding:18px 24px 24px; border-radius:22px; background:rgba(255,255,255,0.9); }
+.result-hero { position:relative; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0; align-items:center; justify-content:center; overflow:visible; }
+.result-side-image { position:relative; z-index:2; width:140%; height:auto; display:block; object-fit:contain; }
+.result-hero-image { position:relative; z-index:1; width:100%; height:auto; display:block; object-fit:contain; }
+.result-summary-box { margin-top:20px; padding:14px 16px; border:1px solid #ffb3b3; border-radius:16px; background:rgba(255,251,251,0.76); }
+.result-summary-box p { margin:0; font-size:15px; font-weight:300; line-height:1.4; text-align:center; white-space:pre-line; color:#333; }
+.result-bars { margin-top:24px; display:grid; gap:12px; }
+.result-bar-group { display:grid; gap:0; }
+.result-bar-labels { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; font-size:15px; font-weight:400; color:#ff8a8f; }
+.result-bar-labels span:nth-child(2) { text-align:center; font-weight:700; font-size:13px; }
+.result-bar-labels span:last-child { text-align:right; }
+.result-bar-track { position:relative; width:100%; height:44px; padding:4px; border:1px solid #aeaeae; border-radius:999px; overflow:hidden; background:#fff; }
+.result-bar-fill { position:absolute; top:4px; bottom:4px; border-radius:999px; background:#ff8a8f; }
+.result-bar-fill.is-left { left:4px; }
+.result-bar-fill.is-right { right:4px; left:auto; }
+.result-details { margin-top:28px; display:grid; gap:10px; }
+.result-detail-card { padding:14px 10px 16px; border:1px solid #ffb5b5; border-radius:16px; background:#fff; }
+.result-detail-card.is-active { background:#fff3f3; }
+.result-detail-card h2 { font-size:15px; font-weight:400; line-height:1.2; margin:0; color:#ff8a8f; }
+.result-detail-card p { margin:10px 0 0; font-size:13px; font-weight:300; line-height:1.6; text-align:center; white-space:pre-line; color:#333; }
+.result-bottom { width:100%; padding:20px 0 10px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.branding { text-align:center; font-size:12px; color:#bbb; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro-screen" class="screen intro active">
+  <div class="intro-badge">LG ThinQ Parenting Mode</div>
+  <h1>나는 어떤 <span>엄마</span>일까?</h1>
+  <p>MomBTI 검사로 나의 육아 성향을 알아보세요.<br>24개 문항에 답하면 16가지 유형 중<br>나만의 엄마 유형을 찾아드립니다.</p>
+  <div class="intro-info">
+    <div><div class="num">24</div><div class="label">문항</div></div>
+    <div><div class="num">3분</div><div class="label">소요시간</div></div>
+    <div><div class="num">16</div><div class="label">유형</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="startTest()">검사 시작하기</button>
+</div>
+
+<!-- TEST -->
+<div id="test-screen" class="screen test">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-text" id="progress-text"></div>
+  <div class="question-card">
+    <div class="q-number" id="q-number"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>다음</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen" class="screen loading">
+  <div class="spinner"></div>
+  <p style="font-size:16px;font-weight:600;">결과를 분석 중입니다...</p>
+  <p style="font-size:13px;color:var(--sub);">24개 답변으로 나의 엄마 유형을 찾고 있어요</p>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen" class="screen result">
+  <div class="result-panel">
+    <div class="result-hero" id="result-hero"></div>
+    <div class="result-summary-box"><p id="result-summary"></p></div>
+    <div class="result-bars" id="result-bars"></div>
+    <div class="result-details" id="result-details"></div>
+  </div>
+  <div class="result-bottom">
+    <button class="btn btn-primary" onclick="resetTest()">다시 검사하기</button>
+    <div class="branding">LG ThinQ Parenting Mode — Last Dance</div>
+  </div>
+</div>
+
+<script>
+const API = 'http://' + location.hostname + ':8081';
+
+let questions = [];
+let answers = {};  // questionId -> choiceId
+let currentIdx = 0;
+let choiceData = {}; // choiceId -> { target_trait, score_value }
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+async function startTest() {
+  show('loading-screen');
+  try {
+    const res = await fetch(API + '/api/v1/mombti/questions');
+    const json = await res.json();
+    questions = json.data;
+
+    // Build choice lookup
+    questions.forEach(q => {
+      q.choices.forEach((c, i) => {
+        // Map choice traits from DB pattern
+        const qChoices = q.choices;
+        // choices[0]=매우아니다, [1]=아니다, [2]=보통, [3]=그렇다, [4]=매우그렇다
+      });
+    });
+
+    answers = {};
+    currentIdx = 0;
+    show('test-screen');
+    renderQuestion();
+  } catch(e) {
+    alert('서버에 연결할 수 없습니다.\n백엔드가 실행 중인지 확인해주세요.');
+    show('intro-screen');
+  }
+}
+
+function renderQuestion() {
+  const q = questions[currentIdx];
+  const total = questions.length;
+
+  document.getElementById('progress-fill').style.width = ((currentIdx + 1) / total * 100) + '%';
+  document.getElementById('progress-text').textContent = (currentIdx + 1) + ' / ' + total;
+  document.getElementById('q-number').textContent = 'Q' + (currentIdx + 1) + '. ' + q.dimension + ' 영역';
+  document.getElementById('q-text').textContent = q.questionText;
+
+  const choicesDiv = document.getElementById('choices');
+  choicesDiv.innerHTML = '';
+  q.choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (answers[q.questionId] === c.choiceId ? ' selected' : '');
+    btn.textContent = c.choiceText;
+    btn.onclick = () => selectChoice(q.questionId, c.choiceId);
+    choicesDiv.appendChild(btn);
+  });
+
+  document.getElementById('next-btn').textContent = currentIdx === total - 1 ? '결과 보기' : '다음';
+  document.getElementById('next-btn').disabled = !answers[q.questionId];
+}
+
+function selectChoice(qId, cId) {
+  answers[qId] = cId;
+  renderQuestion();
+}
+
+async function nextQuestion() {
+  if (currentIdx < questions.length - 1) {
+    currentIdx++;
+    renderQuestion();
+    return;
+  }
+
+  // All answered — calculate result
+  show('loading-screen');
+
+  try {
+    // 1. Create attempt (guest user)
+    const createRes = await fetch(API + '/api/v1/mombti/attempts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: 3 }) // guest uses user 3
+    });
+    const createJson = await createRes.json();
+
+    // If user already has IN_PROGRESS attempt, use it
+    let attemptId;
+    if (createJson.success) {
+      attemptId = createJson.data.attemptId;
+    } else {
+      // Fallback: create with a random guest approach
+      alert('검사 시작에 실패했습니다. 다시 시도해주세요.');
+      show('intro-screen');
+      return;
+    }
+
+    // 2. Submit answers
+    const answerList = Object.entries(answers).map(([qId, cId]) => ({
+      questionId: parseInt(qId),
+      choiceId: cId
+    }));
+
+    await fetch(API + '/api/v1/mombti/attempts/' + attemptId + '/answers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers: answerList })
+    });
+
+    // 3. Complete
+    const completeRes = await fetch(API + '/api/v1/mombti/attempts/' + attemptId + '/complete', {
+      method: 'POST'
+    });
+    const completeJson = await completeRes.json();
+
+    if (completeJson.success) {
+      showResult(completeJson.data);
+    } else {
+      alert('결과 산출에 실패했습니다: ' + completeJson.message);
+      show('intro-screen');
+    }
+  } catch(e) {
+    alert('서버 오류: ' + e.message);
+    show('intro-screen');
+  }
+}
+
+// 8 detail cards (same as main app)
+const DETAILS = [
+  { key:'P', title:'Planner, 계획형', desc:'육아와 일상을 미리 예상하고 준비하는 성향이에요.\n일정, 준비물, 루틴을 사전에 정리해두면 마음이 편해요.' },
+  { key:'R', title:'Reactive, 반응형', desc:'그때그때 상황에 맞춰 유연하게 대응하는 성향이에요.\n미리 정해두기보다 아이 상태와 현실 변화에 맞게 빠르게 조정해요.' },
+  { key:'T', title:'Thinking, 원칙형', desc:'감정보다 기준과 논리를 바탕으로 판단하는 성향이에요.\n세운 원칙과 일관성을 중요하게 여기며, 이유 있는 선택을 선호해요.' },
+  { key:'F', title:'Feeling, 감각형', desc:'기준보다 아이의 상태와 분위기를 먼저 살피는 성향이에요.\n그날의 컨디션, 감정, 흐름에 따라 더 맞는 방향을 선택해요.' },
+  { key:'I', title:'Independent, 독립처리형', desc:'문제가 생기면 먼저 스스로 찾고 해결하려는 성향이에요.\n정보 탐색과 판단을 혼자 정리한 뒤 움직이는 편이에요.' },
+  { key:'C', title:'Connected, 의존형', desc:'주변과 의견을 나누며 함께 해결하는 성향이에요.\n가족, 친구, 커뮤니티, 전문가의 경험과 조언을 적극 참고해요.' },
+  { key:'E', title:'Efficiency, 효율중심형', desc:'시간과 에너지를 아끼는 실용적인 방식을 중시하는 성향이에요.\n자동화, 간소화, 빠른 해결처럼 덜 힘들고 더 편한 선택을 선호해요.' },
+  { key:'M', title:'Meaning, 의미중심형', desc:'효율보다 경험의 가치와 정서적 만족을 더 중요하게\n여기는 성향이에요. 조금 더 손이 가더라도 아이와의 교감,\n과정의 의미, 마음의 만족을 중시해요.' },
+];
+
+function showResult(data) {
+  const profile = data.profile || {};
+  const resultType = (data.resultType || '').toUpperCase();
+
+  // Hero images (SVG = side/copy image, PNG = title image, same as main app)
+  const heroEl = document.getElementById('result-hero');
+  const svgSrc = 'assets/mombti/' + resultType + '.svg';
+  const pngSrc = 'assets/mombti/' + resultType + '.png';
+  heroEl.innerHTML =
+    `<img class="result-side-image" src="${svgSrc}" alt="${resultType}" onerror="this.style.display='none'">` +
+    `<img class="result-hero-image" src="${pngSrc}" alt="${resultType}" onerror="this.style.display='none'">`;
+
+  // Summary
+  document.getElementById('result-summary').textContent = (profile.summary || '').replace(/\\r\\n|\\r|\\n/g, '\n');
+
+  // Score bars (main app style)
+  const pairs = [
+    { leftKey:'P', rightKey:'R', leftLabel:'Planner', rightLabel:'Reactive', leftScore: data.scores?.scoreP||0, rightScore: data.scores?.scoreR||0 },
+    { leftKey:'T', rightKey:'F', leftLabel:'Thinking', rightLabel:'Feeling', leftScore: data.scores?.scoreT||0, rightScore: data.scores?.scoreF||0 },
+    { leftKey:'I', rightKey:'C', leftLabel:'Independent', rightLabel:'Connected', leftScore: data.scores?.scoreI||0, rightScore: data.scores?.scoreC||0 },
+    { leftKey:'E', rightKey:'M', leftLabel:'Efficiency', rightLabel:'Meaning', leftScore: data.scores?.scoreE||0, rightScore: data.scores?.scoreM||0 },
+  ];
+
+  let barsHtml = '';
+  pairs.forEach(p => {
+    const total = Math.max(p.leftScore + p.rightScore, 1);
+    const dominantPct = Math.round(Math.max(p.leftScore, p.rightScore) / total * 100);
+    const side = p.rightScore > p.leftScore ? 'right' : 'left';
+    const fillWidth = `max(0px, calc(${dominantPct}% - 8px))`;
+
+    barsHtml += `
+      <div class="result-bar-group">
+        <div class="result-bar-labels">
+          <span>${p.leftLabel}</span>
+          <span>${dominantPct}%</span>
+          <span>${p.rightLabel}</span>
+        </div>
+        <div class="result-bar-track">
+          <div class="result-bar-fill is-${side}" style="width:${fillWidth}"></div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('result-bars').innerHTML = barsHtml;
+
+  // Detail cards
+  let detailsHtml = '';
+  DETAILS.forEach(d => {
+    const isActive = resultType.includes(d.key);
+    detailsHtml += `
+      <div class="result-detail-card ${isActive ? 'is-active' : ''}">
+        <h2>${d.key} (${d.title})</h2>
+        <p>${d.desc}</p>
+      </div>`;
+  });
+  document.getElementById('result-details').innerHTML = detailsHtml;
+
+  show('result-screen');
+}
+
+function resetTest() {
+  answers = {};
+  currentIdx = 0;
+  show('intro-screen');
+}
+</script>
+</body>
+</html>
