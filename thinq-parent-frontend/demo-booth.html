@@ -858,11 +858,13 @@
       border-radius: 50%;
       background: linear-gradient(135deg, rgba(194,28,68,0.2), rgba(245,198,176,0.15));
       border: 3px solid rgba(245,198,176,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 60px;
       margin: 0 auto 27px;
+      overflow: hidden;
+    }
+    .team-avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
     }
     .team-name {
       font-size: 30px;
@@ -1263,31 +1265,31 @@
         <div class="team-page-sub">LG DX School 4기 &middot; 2반 4팀</div>
         <div class="team-grid">
           <div class="team-card">
-            <div class="team-avatar">👤</div>
+            <div class="team-avatar"><img src="html_asset/team/PM.png" alt="PM"></div>
             <div class="team-name">김준홍</div>
             <div class="team-role">팀장</div>
             <div class="team-desc">기획 및 데이터분석</div>
           </div>
           <div class="team-card">
-            <div class="team-avatar">👤</div>
+            <div class="team-avatar"><img src="html_asset/team/DA.png" alt="DA"></div>
             <div class="team-name">박성원</div>
             <div class="team-role">팀원</div>
             <div class="team-desc">데이터 분석</div>
           </div>
           <div class="team-card">
-            <div class="team-avatar">👤</div>
+            <div class="team-avatar"><img src="html_asset/team/Design.png" alt="Design"></div>
             <div class="team-name">박하은</div>
             <div class="team-role">팀원</div>
-            <div class="team-desc">디자인</div>
+            <div class="team-desc">기획 및 디자인</div>
           </div>
           <div class="team-card">
-            <div class="team-avatar">👤</div>
+            <div class="team-avatar"><img src="html_asset/team/FE.png" alt="FE"></div>
             <div class="team-name">송상준</div>
             <div class="team-role">팀원</div>
             <div class="team-desc">프론트엔드</div>
           </div>
           <div class="team-card">
-            <div class="team-avatar">👤</div>
+            <div class="team-avatar"><img src="html_asset/team/BE.png" alt="BE"></div>
             <div class="team-name">이도한</div>
             <div class="team-role">팀원</div>
             <div class="team-desc">백엔드</div>
@@ -1582,6 +1584,7 @@
 
     /* Home icon click — 초기 화면으로 복귀 */
     document.querySelector('.title-logo-icon').addEventListener('click', () => {
+      hidePhoneHighlight();
       if (!autoPaused) stopAuto();
 
       // 서비스 소개 탭 활성화
