@@ -28,6 +28,11 @@
       position: relative;
       overflow: hidden;
       background: linear-gradient(135deg, #1a1015 0%, #1f1520 40%, #241a22 100%);
+      animation: pageFadeIn 1s ease-out;
+    }
+    @keyframes pageFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
 
     /* ── Background ── */
@@ -260,7 +265,7 @@
     /* ══════════════════════════════════════
        PAGES
        ══════════════════════════════════════ */
-    .page { display: none; }
+    .page { display: none; position: absolute; inset: 0; }
     .page.active { display: block; }
 
     /* ══════════════════════════════════════
