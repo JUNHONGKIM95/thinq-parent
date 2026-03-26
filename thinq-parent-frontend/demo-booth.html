@@ -94,50 +94,118 @@
       color: rgba(255,255,255,0.35);
       cursor: pointer;
       position: relative;
-      
       transition: color 0.25s;
       user-select: none;
       letter-spacing: 0.5px;
       border-radius: 12px;
-      --cursor-angle: 45deg;
       --edge-proximity: 0;
+      --cursor-angle: 45deg;
       --edge-sensitivity: 30;
-      --color-sensitivity: 50;
+      --color-sensitivity: calc(var(--edge-sensitivity) + 20);
+      --border-radius: 12px;
+      --glow-padding: 10px;
       --cone-spread: 25;
+      --fill-opacity: 0.5;
+      --glow-color: hsl(0deg 0% 100% / 100%);
+      --glow-color-60: hsl(0deg 0% 100% / 60%);
+      --glow-color-50: hsl(0deg 0% 100% / 50%);
+      --glow-color-40: hsl(0deg 0% 100% / 40%);
+      --glow-color-30: hsl(0deg 0% 100% / 30%);
+      --glow-color-20: hsl(0deg 0% 100% / 20%);
+      --glow-color-10: hsl(0deg 0% 100% / 10%);
+      --gradient-one: radial-gradient(at 80% 55%, rgba(255,255,255,0.7) 0px, transparent 50%);
+      --gradient-two: radial-gradient(at 69% 34%, rgba(255,255,255,0.5) 0px, transparent 50%);
+      --gradient-three: radial-gradient(at 8% 6%, rgba(255,255,255,0.4) 0px, transparent 50%);
+      --gradient-four: radial-gradient(at 41% 38%, rgba(255,255,255,0.6) 0px, transparent 50%);
+      --gradient-five: radial-gradient(at 86% 85%, rgba(255,255,255,0.5) 0px, transparent 50%);
+      --gradient-six: radial-gradient(at 82% 18%, rgba(255,255,255,0.4) 0px, transparent 50%);
+      --gradient-seven: radial-gradient(at 51% 4%, rgba(255,255,255,0.5) 0px, transparent 50%);
+      --gradient-base: linear-gradient(rgba(255,255,255,0.5) 0 100%);
       isolation: isolate;
       overflow: visible;
+      border: none;
     }
-    .nav-tab.active{
+
+    .nav-tab.active {
       border: 1px solid rgba(255,255,255,0.15);
     }
-    .nav-tab::before {
-      content: '';
+
+    .nav-tab::before,
+    .nav-tab::after,
+    .nav-tab > .edge-light {
+      content: "";
       position: absolute;
-      inset: -1px;
+      inset: 0;
       border-radius: inherit;
-      border: 1.5px solid transparent;
-      background:
-        linear-gradient(rgba(0,0,0,0) 0 100%) padding-box,
-        conic-gradient(
-          from var(--cursor-angle) at 50% 50%,
-          rgba(255,255,255,0.7), rgba(255,255,255,0.3), rgba(255,255,255,0.7), transparent, transparent, rgba(255,255,255,0.7)
-        ) border-box;
-      mask-image: conic-gradient(
-        from var(--cursor-angle) at center,
-        black calc(var(--cone-spread) * 1%),
-        transparent calc((var(--cone-spread) + 20) * 1%),
-        transparent calc((100 - var(--cone-spread) - 20) * 1%),
-        black calc((100 - var(--cone-spread)) * 1%)
-      );
-      opacity: calc((var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
       transition: opacity 0.25s ease-out;
-      pointer-events: none;
       z-index: -1;
     }
-    .nav-tab:not(:hover)::before {
-      opacity: 0;
-      transition: opacity 0.6s ease-in-out;
+    .nav-tab:not(.active)::before,
+    .nav-tab:not(.active)::after,
+    .nav-tab:not(.active) > .edge-light {
+      opacity: 0 !important;
     }
+
+    /* colored mesh-gradient border */
+    .nav-tab::before {
+      border: 1px solid transparent;
+      background:
+        linear-gradient(rgba(0,0,0,0) 0 100%) padding-box,
+        linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box,
+        var(--gradient-one) border-box,
+        var(--gradient-two) border-box,
+        var(--gradient-three) border-box,
+        var(--gradient-four) border-box,
+        var(--gradient-five) border-box,
+        var(--gradient-six) border-box,
+        var(--gradient-seven) border-box,
+        var(--gradient-base) border-box;
+      opacity: calc((var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
+    }
+
+    /* colored mesh-gradient background fill near edges */
+    .nav-tab::after {
+      border: 1px solid transparent;
+      background:
+        var(--gradient-one) padding-box,
+        var(--gradient-two) padding-box,
+        var(--gradient-three) padding-box,
+        var(--gradient-four) padding-box,
+        var(--gradient-five) padding-box,
+        var(--gradient-six) padding-box,
+        var(--gradient-seven) padding-box,
+        var(--gradient-base) padding-box;
+      opacity: calc(var(--fill-opacity) * (var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
+      mix-blend-mode: soft-light;
+    }
+
+    /* outer glow layer */
+    .nav-tab > .edge-light {
+      inset: calc(var(--glow-padding) * -1);
+      pointer-events: none;
+      z-index: 1;
+      opacity: calc((var(--edge-proximity) - var(--edge-sensitivity)) / (100 - var(--edge-sensitivity)));
+      mix-blend-mode: plus-lighter;
+    }
+    .nav-tab > .edge-light::before {
+      content: "";
+      position: absolute;
+      inset: var(--glow-padding);
+      border-radius: inherit;
+      box-shadow:
+        inset 0 0 0 1px var(--glow-color),
+        inset 0 0 1px 0 var(--glow-color-60),
+        inset 0 0 3px 0 var(--glow-color-50),
+        inset 0 0 6px 0 var(--glow-color-40),
+        inset 0 0 15px 0 var(--glow-color-30),
+        inset 0 0 25px 2px var(--glow-color-20),
+        0 0 1px 0 var(--glow-color-60),
+        0 0 3px 0 var(--glow-color-50),
+        0 0 6px 0 var(--glow-color-40),
+        0 0 15px 0 var(--glow-color-30),
+        0 0 25px 2px var(--glow-color-20);
+    }
+
     .nav-tab:hover { color: rgba(255,255,255,0.6); }
     .nav-tab.active {
       color: #fff;
@@ -788,9 +856,9 @@
 
     <!-- TOP NAV -->
     <div class="top-nav">
-      <div class="nav-tab active" data-page="service">서비스 소개</div>
+      <div class="nav-tab active" data-page="service"><span class="edge-light"></span>서비스 소개</div>
       <div class="nav-divider"></div>
-      <div class="nav-tab" data-page="team">팀원 소개</div>
+      <div class="nav-tab" data-page="team"><span class="edge-light"></span>팀원 소개</div>
     </div>
 
     <!-- PAGE 1: 서비스 소개 -->
@@ -1233,18 +1301,35 @@
       });
     });
 
-    /* ── BorderGlow cursor tracking (.team-card + .nav-tab) ── */
+    /* ── BorderGlow cursor tracking (original getEdgeProximity) ── */
     function attachBorderGlow(el) {
       el.addEventListener('pointermove', e => {
         const rect = el.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI) + 90;
-        const maxDist = Math.hypot(rect.width, rect.height) / 2;
-        const distFromCenter = Math.hypot(e.clientX - cx, e.clientY - cy);
-        const proximity = Math.round((1 - Math.min(distFromCenter / maxDist, 1)) * 100);
-        el.style.setProperty('--cursor-angle', angle + 'deg');
-        el.style.setProperty('--edge-proximity', proximity);
+        const hw = rect.width / 2;
+        const hh = rect.height / 2;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const dx = x - hw;
+        const dy = y - hh;
+
+        // original getEdgeProximity: 0 at center, 1 at edge
+        let kx = Infinity, ky = Infinity;
+        if (dx !== 0) kx = hw / Math.abs(dx);
+        if (dy !== 0) ky = hh / Math.abs(dy);
+        const edgeProximity = Math.min(Math.max(1 / Math.min(kx, ky), 0), 1);
+
+        // original getCursorAngle
+        let angle = 0;
+        if (dx !== 0 || dy !== 0) {
+          angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+          if (angle < 0) angle += 360;
+        }
+
+        el.style.setProperty('--edge-proximity', (edgeProximity * 100).toFixed(3));
+        el.style.setProperty('--cursor-angle', angle.toFixed(3) + 'deg');
+      });
+      el.addEventListener('pointerleave', () => {
+        el.style.setProperty('--edge-proximity', 0);
       });
     }
     document.querySelectorAll('.team-card').forEach(attachBorderGlow);
