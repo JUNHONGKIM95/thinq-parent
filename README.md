@@ -125,7 +125,7 @@ npm run dev
 
 하단 네비게이션 4개 탭(홈, 가전육아, 커뮤니티, MY) + AI 챗봇으로 구성됩니다.
 
-참고 URL : html 링크 첨부?
+참고 URL : [html 링크 첨부?](https://junhongkim95.github.io/LG-ThinQ-ParentingMode-Portfolio/)
 
 #### 1) 홈 — 부모모드 대시보드
 - **부모모드 홈**: 출산 D-DAY 카운트다운, 현재 임신 주차 기반 주간 추천 할 일 카드, 배우자 응원 메시지 최신 1건 표시, 추천 가전 루틴 바로가기 카드
